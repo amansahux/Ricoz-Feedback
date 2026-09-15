@@ -1,5 +1,5 @@
 @import "tailwindcss";
-body {
+/* body {
   @apply font-inter;
 }
 
@@ -20,4 +20,4 @@ h1, h2, h3, h4, h5, h6 {
 
 .animate-fadeIn {
   animation: fadeIn 0.3s ease-out;
-}
+} */

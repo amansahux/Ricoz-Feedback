@@ -4,7 +4,7 @@ import "./app/App.css";
 import { Provider } from "react-redux";
 import { store } from "./app/store.jsx";
 import { router } from "./app/routes/routes.jsx";
-import { RouterProvider } from "react-router-dom";
+import { RouterProvider } from "react-router";
 
 const queryClient = new QueryClient();
 

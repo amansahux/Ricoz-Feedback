@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../../features/auth/state/authSlice';
 import { authAPI } from '../../features/auth/api/authAPI';

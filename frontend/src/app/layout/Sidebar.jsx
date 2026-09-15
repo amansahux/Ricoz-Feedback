@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router';
 import { BarChart3, FileText, MessageSquare, Users, Settings, Home } from 'lucide-react';
 
 export default function Sidebar() {
