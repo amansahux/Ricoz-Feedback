@@ -8,15 +8,9 @@ import surveyRoutes from './routes/survey.routes.js';
 import responseRoutes from './routes/response.routes.js';
 import analyticsRoutes from './routes/analytics.routes.js';
 import { errorMiddleware } from './middlewares/error.middleware.js';
-import { env } from './config/env.js';
 
 const app = express();
 
-// Middleware
-app.use(cors({
-  origin: env.CLIENT_URL,
-  credentials: true,
-}));
 
 app.use(express.json());
 app.use(cookieParser());
