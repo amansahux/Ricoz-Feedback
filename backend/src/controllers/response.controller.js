@@ -1,5 +1,5 @@
-import { responseService } from "../services/response.service";
-import { surveyService } from "../services/survey.service";
+import { responseService } from "../services/response.service.js";
+import { surveyService } from "../services/survey.service.js";
 
 
 export const responseController = {

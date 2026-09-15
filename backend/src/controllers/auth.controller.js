@@ -1,5 +1,5 @@
-import { getCookieOptions } from "../config/cookie";
-import { authService } from "../services/auth.service";
+import { getCookieOptions } from "../config/cookie.js";
+import { authService } from "../services/auth.service.js";
 
 export const authController = {
   async register(req, res, next) {

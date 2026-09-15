@@ -1,4 +1,4 @@
-import { analyticsService } from "../services/analytics.service";
+import { analyticsService } from "../services/analytics.service.js";
 
 
 export const analyticsController = {

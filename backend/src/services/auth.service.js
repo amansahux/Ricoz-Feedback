@@ -1,8 +1,8 @@
 import bcrypt from 'bcrypt';
-import { Organization } from '../models/organization.model';
-import { generateUniqueSlug } from '../utils/generateSlug';
-import { User } from '../models/user.models';
-import { generateToken } from '../utils/generateToken';
+import { Organization } from '../models/organization.model.js';
+import { generateUniqueSlug } from '../utils/generateSlug.js';
+import { User } from '../models/user.models.js';
+import { generateToken } from '../utils/generateToken.js';
 
 
 export const authService = {
