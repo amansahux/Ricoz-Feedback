@@ -1,14 +1,22 @@
-import { useSelector } from 'react-redux';
-import { Navigate } from 'react-router';
+import { useAuth } from "../../features/auth/hook/useAuth.jsx";
+import { Navigate, useLocation } from "react-router";
 
- function ProtectedRoute({ children }) {
-  const { authenticated, loading } = useSelector(state => state.auth);
+export default function ProtectedRoute({ children }) {
+  const { isAuthenticated, isHydrating } = useAuth();
+  const location = useLocation();
 
-
-  if (loading) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+  if (isHydrating) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-white">
+        <div className="w-10 h-10 border-4 border-red-500/20 border-t-red-500 rounded-full animate-spin mb-4" />
+        <p className="text-slate-400 font-inter text-sm animate-pulse">Restoring your session...</p>
+      </div>
+    );
   }
 
-  return authenticated ? children : <Navigate to="/login" />;
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return children;
 }
-export default ProtectedRoute;

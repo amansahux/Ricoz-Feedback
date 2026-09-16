@@ -1,130 +1,127 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router';
-import { useDispatch } from 'react-redux';
-import { setUser } from '../../state/auth.slice.jsx';
-import { authAPI } from '../../api/auth.api.jsx';
-import Button from '../../../../shared/components/Button.jsx';
-import Input from '../../../../shared/components/Input.jsx';
-import Toast from '../../../../shared/components/Toast.jsx';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Link, Navigate } from 'react-router';
+import { User, Mail, Building2, Lock, UserPlus, Sparkles, ArrowRight } from 'lucide-react';
+import { registerSchema } from '../../validation/auth.schema';
+import useAuth from '../../hook/useAuth';
+import Input from '../../../../shared/components/Input';
+import Button from '../../../../shared/components/Button';
 
 export default function Register() {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    organizationName: '',
+  const { register: registerUser, isRegistering, isAuthenticated, isHydrating, error } = useAuth();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      name: '',
+      email: '',
+      organizationName: '',
+      password: '',
+    },
+    mode: 'onTouched',
   });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+  if (!isHydrating && isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-
-    try {
-      const result = await authAPI.register(
-        formData.name,
-        formData.email,
-        formData.password,
-        formData.organizationName
-      );
-      dispatch(setUser(result.data));
-      Toast.success('Account created successfully');
-      navigate('/dashboard');
-    } catch (err) {
-      const message = err.response?.data?.message || 'Registration failed';
-      setError(message);
-      Toast.error(message);
-    } finally {
-      setLoading(false);
-    }
+  const onSubmit = async (data) => {
+    await registerUser(data);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-recoz-gray to-white flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-lg border border-gray-200 shadow-lg p-8">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-poppins font-bold text-gray-900">
-              RECOZ
-            </h1>
-            <p className="text-gray-600 text-sm mt-2">
-              Start collecting customer feedback
-            </p>
-          </div>
+    <div className="min-h-screen bg-slate-950 relative flex items-center justify-center px-4 py-12 overflow-hidden selection:bg-red-500 selection:text-white">
+      {/* Decorative Glows */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-tr from-red-600/20 to-orange-500/10 blur-[130px] rounded-full pointer-events-none" />
+      <div className="absolute top-10 left-10 w-72 h-72 bg-red-600/10 blur-[100px] rounded-full pointer-events-none" />
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="w-full max-w-lg relative z-10">
+        {/* Brand Header */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-tr from-red-600 to-red-500 text-white shadow-lg shadow-red-500/30 mb-4 ring-1 ring-white/20">
+            <Sparkles size={24} />
+          </div>
+          <h1 className="text-3xl font-extrabold tracking-tight text-white font-poppins">
+            Get started with <span className="bg-gradient-to-r from-red-500 to-orange-400 bg-clip-text text-transparent">RECOZ</span>
+          </h1>
+          <p className="text-slate-400 text-sm mt-2">
+            Build high-converting feedback loops for your organization
+          </p>
+        </div>
+
+        {/* Card */}
+        <div className="backdrop-blur-xl bg-slate-900/70 border border-slate-800/80 rounded-3xl shadow-2xl p-8 sm:p-10">
+          {error && (
+            <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex items-start gap-2.5">
+              <span className="text-red-400 font-bold">!</span>
+              <span>{error}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
             <Input
               label="Full Name"
-              name="name"
               type="text"
-              value={formData.name}
-              onChange={handleChange}
-              placeholder="John Doe"
-              required
+              icon={User}
+              placeholder="Alex Doe"
+              autoComplete="name"
+              error={errors.name?.message}
+              {...register('name')}
             />
 
             <Input
-              label="Email"
-              name="email"
+              label="Work Email"
               type="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="you@example.com"
-              required
+              icon={Mail}
+              placeholder="alex@company.com"
+              autoComplete="email"
+              error={errors.email?.message}
+              {...register('email')}
             />
 
             <Input
-              label="Organization Name"
-              name="organizationName"
+              label="Organization / Company Name"
               type="text"
-              value={formData.organizationName}
-              onChange={handleChange}
-              placeholder="My Company"
-              required
+              icon={Building2}
+              placeholder="Acme Inc."
+              autoComplete="organization"
+              error={errors.organizationName?.message}
+              {...register('organizationName')}
             />
 
             <Input
               label="Password"
-              name="password"
               type="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="••••••••"
-              required
+              icon={Lock}
+              placeholder="•••••••• (min. 6 characters)"
+              autoComplete="new-password"
+              error={errors.password?.message}
+              {...register('password')}
             />
-
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                <p className="text-red-700 text-sm">{error}</p>
-              </div>
-            )}
 
             <Button
               type="submit"
-              loading={loading}
-              className="w-full"
+              loading={isRegistering}
+              className="w-full py-3 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-600 text-white font-semibold rounded-xl shadow-lg shadow-red-600/25 hover:shadow-red-600/40 transition-all duration-200 mt-4"
             >
-              Create Account
+              <UserPlus size={18} />
+              <span>Create Account</span>
             </Button>
           </form>
 
-          <div className="mt-6 text-center">
-            <p className="text-gray-600 text-sm">
+          {/* Footer */}
+          <div className="mt-8 pt-6 border-t border-slate-800/60 text-center">
+            <p className="text-slate-400 text-sm">
               Already have an account?{' '}
-              <Link to="/login" className="text-recoz-red font-semibold hover:underline">
-                Sign in
+              <Link
+                to="/login"
+                className="text-red-400 hover:text-red-300 font-semibold inline-flex items-center gap-1 transition"
+              >
+                Sign in instead <ArrowRight size={14} />
               </Link>
             </p>
           </div>
