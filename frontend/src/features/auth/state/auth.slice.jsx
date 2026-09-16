@@ -1,11 +1,10 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { getMe, Login, Logout } from "./auth.action";
+import { getMe, Login, Logout, Register } from "./auth.action";
 
 const authSlice = createSlice({
   name: "auth",
   initialState: {
     user: null,
-    organization: null,
     isHydrating: true,
     isLoggingIn: false,
     isLoggingOut: false,
@@ -14,11 +13,9 @@ const authSlice = createSlice({
   reducers: {
     setUser: (state, action) => {
       state.user = action.payload.user;
-      state.organization = action.payload.organization;
     },
     logout: (state) => {
       state.user = null;
-      state.organization = null;
     },
     setLoading: (state, action) => {
       state.loading = action.payload;
@@ -26,6 +23,18 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(Register.pending, (state) => {
+        state.isLoggingIn = true;
+        state.error = null;
+      })
+      .addCase(Register.fulfilled, (state, action) => {
+        state.isLoggingIn = false;
+        state.user = action.payload.user;
+      })
+      .addCase(Register.rejected, (state, action) => {
+        state.isLoggingIn = false;
+        state.error = action.payload;
+      })
       .addCase(Login.pending, (state) => {
         state.isLoggingIn = true;
         state.error = null;
@@ -33,7 +42,6 @@ const authSlice = createSlice({
       .addCase(Login.fulfilled, (state, action) => {
         state.isLoggingIn = false;
         state.user = action.payload.user;
-        state.organization = action.payload.organization;
       })
       .addCase(Login.rejected, (state, action) => {
         state.isLoggingIn = false;
@@ -45,7 +53,6 @@ const authSlice = createSlice({
       })
       .addCase(getMe.fulfilled, (state, action) => {
         state.user = action.payload.user;
-        state.organization = action.payload.organization;
         state.isHydrating = false;
       })
       .addCase(getMe.rejected, (state, action) => {
