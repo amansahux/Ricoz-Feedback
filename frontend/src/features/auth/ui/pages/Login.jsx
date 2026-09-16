@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router';
 import { useDispatch } from 'react-redux';
-import { setUser } from '../state/authSlice';
-import { authAPI } from '../api/authAPI';
-import Button from '../../../shared/components/Button';
-import Input from '../../../shared/components/Input';
-import Toast from '../../../shared/components/Toast';
+import { setUser } from '../../state/auth.slice.jsx';
+import { authAPI } from '../../api/auth.api.jsx';
+import Button from '../../../../shared/components/Button.jsx';
+import Input from '../../../../shared/components/Input.jsx';
+import Toast from '../../../../shared/components/Toast.jsx';
 
-export default function Login() {
+function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -94,3 +94,4 @@ export default function Login() {
     </div>
   );
 }
+export default Login;

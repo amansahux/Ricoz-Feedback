@@ -1,9 +1,9 @@
 import { useNavigate } from 'react-router';
 import { useSelector, useDispatch } from 'react-redux';
-import { logout } from '../../features/auth/state/authSlice';
-import { authAPI } from '../../features/auth/api/authAPI';
-import Toast from '../../shared/components/Toast';
-import Sidebar from './Sidebar';
+import { authAPI } from '../../features/auth/api/auth.api.jsx';
+import { logout } from '../../features/auth/state/auth.slice.jsx';
+import Sidebar from './Sidebar.jsx';
+import Toast from '../../shared/components/Toast.jsx';
 
 
 export default function AppLayout({ children }) {

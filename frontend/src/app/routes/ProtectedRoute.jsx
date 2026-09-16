@@ -1,8 +1,9 @@
 import { useSelector } from 'react-redux';
 import { Navigate } from 'react-router';
 
-export default function ProtectedRoute({ children }) {
+ function ProtectedRoute({ children }) {
   const { authenticated, loading } = useSelector(state => state.auth);
+
 
   if (loading) {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;
@@ -10,3 +11,4 @@ export default function ProtectedRoute({ children }) {
 
   return authenticated ? children : <Navigate to="/login" />;
 }
+export default ProtectedRoute;

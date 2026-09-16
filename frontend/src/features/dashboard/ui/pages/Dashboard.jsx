@@ -10,7 +10,7 @@ import Card from '../../../../shared/Card';
 import Button from '../../../../shared/components/Button';
 
 
-export default function Dashboard() {
+ function Dashboard() {
   const navigate = useNavigate();
 
   const { data: analytics, isLoading } = useQuery({
@@ -150,3 +150,4 @@ export default function Dashboard() {
     </AppLayout>
   );
 }
+export default Dashboard;
