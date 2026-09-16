@@ -1,5 +1,6 @@
-import { createBrowserRouter } from "react-router";
+import { createBrowserRouter, Navigate } from "react-router";
 import RootLayout from "../layout/RootLayout.jsx";
+import AppLayout from "../layout/AppLayout.jsx";
 import Login from "../../features/auth/ui/pages/Login.jsx";
 import Register from "../../features/auth/ui/pages/Register.jsx";
 import ProtectedRoute from "./ProtectedRoute.jsx";
@@ -20,20 +21,21 @@ export const router = createBrowserRouter([
         element: <Register />,
       },
       {
-        path: "dashboard",
         element: (
           <ProtectedRoute>
-            <Dashboard />
+            <AppLayout />
           </ProtectedRoute>
         ),
+        children: [
+          {
+            path: "dashboard",
+            element: <Dashboard />,
+          },
+        ],
       },
       {
         index: true,
-        element: (
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        ),
+        element: <Navigate to="/dashboard" replace />,
       },
       {
         path: "*",

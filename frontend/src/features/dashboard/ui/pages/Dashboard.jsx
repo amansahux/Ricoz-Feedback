@@ -5,7 +5,6 @@ import { TrendingUp } from 'lucide-react';
 
 import apiClient from '../../../../../config/axiosInsstance';
 import Skeleton from '../../../../shared/components/Skeleton';
-import AppLayout from '../../../../app/layout/AppLayout';
 import Card from '../../../../shared/Card';
 import Button from '../../../../shared/components/Button';
 
@@ -22,24 +21,19 @@ import Button from '../../../../shared/components/Button';
   });
 
   if (isLoading) {
-    return (
-      <AppLayout>
-        <div className="p-8">
-          <Skeleton className="h-32 w-full mb-6" />
-          <Skeleton className="h-96 w-full" />
-        </div>
-      </AppLayout>
-    );
+    return <div className="p-8">
+      <Skeleton className="h-32 w-full mb-6" />
+      <Skeleton className="h-96 w-full" />
+    </div>;
   }
 
   return (
-    <AppLayout>
-      <div className="p-8">
+    <div className="p-8">
         <div className="mb-8">
           <h2 className="text-3xl font-poppins font-bold text-gray-300 mb-2">
             Welcome back
           </h2>
-          <p className="text-gray-600">
+          <p className="text-slate-400">
             Here's an overview of your customer feedback
           </p>
         </div>
@@ -131,13 +125,13 @@ import Button from '../../../../shared/components/Button';
 
         {/* Action */}
         {(!analytics?.totalResponses || analytics.totalResponses === 0) && (
-          <Card className="bg-gradient-to-br from-recoz-gray to-white border-2 border-recoz-red border-opacity-20">
+          <Card className="bg-slate-800 border-2 border-recoz-red/30">
             <div className="text-center py-8">
               <TrendingUp size={48} className="mx-auto text-recoz-red mb-4" />
-              <h3 className="text-xl font-poppins font-semibold text-gray-900 mb-2">
+              <h3 className="text-xl font-poppins font-semibold text-white mb-2">
                 No feedback yet
               </h3>
-              <p className="text-gray-600 mb-6">
+              <p className="text-slate-400 mb-6">
                 Create your first survey to start collecting customer feedback
               </p>
               <Button onClick={() => navigate('/surveys/new')}>
@@ -146,8 +140,7 @@ import Button from '../../../../shared/components/Button';
             </div>
           </Card>
         )}
-      </div>
-    </AppLayout>
+    </div>
   );
 }
 export default Dashboard;
