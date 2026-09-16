@@ -36,7 +36,7 @@ import Button from '../../../../shared/components/Button';
     <AppLayout>
       <div className="p-8">
         <div className="mb-8">
-          <h2 className="text-3xl font-poppins font-bold text-gray-900 mb-2">
+          <h2 className="text-3xl font-poppins font-bold text-gray-300 mb-2">
             Welcome back
           </h2>
           <p className="text-gray-600">
