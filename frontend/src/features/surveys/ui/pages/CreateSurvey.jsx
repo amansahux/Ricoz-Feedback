@@ -1,6 +1,4 @@
-import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router";
-import useSurveys from "../../hooks/useSurvay.jsx";
+import { useCreateSurveyBuilder } from "../../hooks/useSurvay.jsx";
 import BuilderHeader from "../components/CreateSurvey/BuilderHeader.jsx";
 import SurveyDetailsForm from "../components/CreateSurvey/SurveyDetailsForm.jsx";
 import QuestionCard from "../components/CreateSurvey/QuestionCard.jsx";
@@ -9,264 +7,42 @@ import LivePreviewPhone from "../components/CreateSurvey/LivePreviewPhone.jsx";
 import PublishSurveyModal from "../components/CreateSurvey/PublishSurveyModal.jsx";
 import ToastNotification from "../components/shared/ToastNotification.jsx";
 
-const DEFAULT_QUESTIONS = [
-  {
-    _id: "q_1",
-    type: "csat",
-    question: "How satisfied are you with your overall purchasing experience?",
-    required: true,
-  },
-  {
-    _id: "q_2",
-    type: "nps",
-    question: "How likely are you to recommend Acme to a colleague or friend?",
-    required: true,
-  },
-  {
-    _id: "q_3",
-    type: "multiple-choice",
-    question: "Which factor most influenced your decision today?",
-    required: false,
-    options: ["Product Quality", "Pricing & Value", "Fast Shipping", "Customer Service"],
-  },
-  {
-    _id: "q_4",
-    type: "textarea",
-    question: "What could we have done to make your experience even better?",
-    required: false,
-  },
-];
-
 export default function CreateSurvey() {
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const surveyIdParam = searchParams.get("surveyId");
-
   const {
-    getSurveyByIdQuery,
-    createSurveyMutation,
-    updateSurveyMutation,
-    publishSurveyMutation,
-  } = useSurveys(surveyIdParam);
-
-  // If editing an existing survey
-  const { data: existingSurveyData, isLoading: isLoadingSurvey } = getSurveyByIdQuery;
-  const createMutation = createSurveyMutation;
-  const updateMutation = updateSurveyMutation;
-  const publishMutation = publishSurveyMutation;
-
-  // Form states
-  const [title, setTitle] = useState("Post-purchase experience");
-  const [description, setDescription] = useState(
-    "We'd love to hear your thoughts on your recent order and delivery experience. Takes less than 1 minute."
-  );
-  const [questions, setQuestions] = useState(DEFAULT_QUESTIONS);
-  const [hasValidationError, setHasValidationError] = useState(false);
-  const [lastSavedAt, setLastSavedAt] = useState(null);
-  const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
-
-  // Toast feedback
-  const [toast, setToast] = useState({ visible: false, message: "", type: "success" });
-
-  const showToast = (message, type = "success") => {
-    setToast({ visible: true, message, type });
-    setTimeout(() => {
-      setToast({ visible: false, message: "", type: "success" });
-    }, 3500);
-  };
-
-  // Populate from existing survey if editing
-  useEffect(() => {
-    if (existingSurveyData?.data) {
-      const survey = existingSurveyData.data;
-      setTitle(survey.title || "");
-      setDescription(survey.description || "");
-      if (survey.questions && survey.questions.length > 0) {
-        setQuestions(survey.questions);
-      }
-    }
-  }, [existingSurveyData]);
-
-  // Handle Question Reordering & Management
-  const handleUpdateQuestion = (index, updatedQuestion) => {
-    const next = [...questions];
-    next[index] = updatedQuestion;
-    setQuestions(next);
-  };
-
-  const handleMoveUp = (index) => {
-    if (index === 0) return;
-    const next = [...questions];
-    const temp = next[index - 1];
-    next[index - 1] = next[index];
-    next[index] = temp;
-    setQuestions(next);
-  };
-
-  const handleMoveDown = (index) => {
-    if (index === questions.length - 1) return;
-    const next = [...questions];
-    const temp = next[index + 1];
-    next[index + 1] = next[index];
-    next[index] = temp;
-    setQuestions(next);
-  };
-
-  const handleDuplicate = (index) => {
-    const target = questions[index];
-    const duplicate = {
-      ...target,
-      _id: `q_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
-      question: `${target.question} (Copy)`,
-    };
-    const next = [...questions];
-    next.splice(index + 1, 0, duplicate);
-    setQuestions(next);
-    showToast("Question duplicated.");
-  };
-
-  const handleDelete = (index) => {
-    if (questions.length <= 1) {
-      showToast("Survey must contain at least 1 question", "error");
-      return;
-    }
-    const next = questions.filter((_, i) => i !== index);
-    setQuestions(next);
-    showToast("Question removed.");
-  };
-
-  const handleAddQuestion = (type = "csat") => {
-    const newQ = {
-      _id: `q_${Date.now()}`,
-      type,
-      question:
-        type === "nps"
-          ? "How likely are you to recommend us to a friend?"
-          : type === "csat"
-          ? "How satisfied are you with our service?"
-          : type === "rating"
-          ? "How would you rate your overall experience?"
-          : type === "ces"
-          ? "The company made it easy for me to handle my issue."
-          : type === "multiple-choice"
-          ? "Which aspect did you like the most?"
-          : type === "yes-no"
-          ? "Did we solve your problem today?"
-          : "Please share any additional comments:",
-      required: true,
-      options:
-        type === "multiple-choice"
-          ? ["Option 1", "Option 2", "Option 3"]
-          : type === "yes-no"
-          ? ["Yes", "No"]
-          : undefined,
-    };
-    setQuestions((prev) => [...prev, newQ]);
-    showToast(`Added new ${type.toUpperCase()} question.`);
-  };
-
-  // Save Draft logic
-  const handleSaveDraft = async () => {
-    if (createMutation.isPending || updateMutation.isPending) return;
-
-    if (!title.trim()) {
-      setHasValidationError(true);
-      showToast("Survey title is required", "error");
-      return;
-    }
-    setHasValidationError(false);
-
-    try {
-      const payload = {
-        title,
-        description,
-        questions: questions.map((q) => ({
-          type: q.type,
-          question: q.question,
-          required: Boolean(q.required),
-          options: q.options || [],
-        })),
-        status: "draft",
-      };
-
-      if (surveyIdParam && !surveyIdParam.startsWith("srv_sample_")) {
-        await updateMutation.mutateAsync({ surveyId: surveyIdParam, data: payload });
-      } else {
-        const createRes = await createMutation.mutateAsync(payload);
-        const newId = createRes?.data?._id;
-        if (newId) {
-          navigate(`/surveys/create?surveyId=${newId}`, { replace: true });
-        }
-      }
-
-      const timeStr = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-      setLastSavedAt(timeStr);
-      showToast(`Draft saved successfully at ${timeStr}`);
-    } catch (err) {
-      showToast(err.message || "Failed to save draft", "error");
-    }
-  };
-
-  // Publish flow
-  const handlePublishConfirm = async () => {
-    if (publishMutation.isPending || createMutation.isPending || updateMutation.isPending) return;
-
-    if (!title.trim()) {
-      setHasValidationError(true);
-      showToast("Survey title is required", "error");
-      setIsPublishModalOpen(false);
-      return;
-    }
-
-    try {
-      const payload = {
-        title,
-        description,
-        questions: questions.map((q) => ({
-          type: q.type,
-          question: q.question,
-          required: Boolean(q.required),
-          options: q.options || [],
-        })),
-        status: "published",
-      };
-
-      let activeId = surveyIdParam;
-
-      if (!activeId || activeId.startsWith("srv_sample_")) {
-        const createRes = await createMutation.mutateAsync(payload);
-        activeId = createRes?.data?._id;
-      } else {
-        await updateMutation.mutateAsync({ surveyId: activeId, data: payload });
-      }
-
-      setIsPublishModalOpen(false);
-      showToast("Survey published successfully! Navigating to distribution hub...");
-      setTimeout(() => {
-        navigate(`/surveys/publish?surveyId=${activeId || ""}`);
-      }, 500);
-    } catch (err) {
-      showToast(err.message || "Failed to publish survey", "error");
-    }
-  };
+    title,
+    setTitle,
+    description,
+    setDescription,
+    questions,
+    hasValidationError,
+    lastSavedAt,
+    isSaving,
+    isPublishing,
+    isPublishModalOpen,
+    openPublishModal,
+    closePublishModal,
+    handleSaveDraft,
+    handlePublishConfirm,
+    handleUpdateQuestion,
+    handleMoveUp,
+    handleMoveDown,
+    handleDuplicate,
+    handleDelete,
+    handleAddQuestion,
+    toast,
+    hideToast,
+  } = useCreateSurveyBuilder();
 
   return (
     <div className="w-full flex flex-col min-h-screen bg-[#FFFAF3]">
-      <ToastNotification toast={toast} onClose={() => setToast({ visible: false, message: "" })} />
+      <ToastNotification toast={toast} onClose={hideToast} />
 
       {/* Sticky Top Global Builder Header */}
       <BuilderHeader
         onSaveDraft={handleSaveDraft}
-        onPublish={() => {
-          if (!title.trim()) {
-            setHasValidationError(true);
-            showToast("Survey title is required", "error");
-            return;
-          }
-          setIsPublishModalOpen(true);
-        }}
-        isSaving={createMutation.isPending || updateMutation.isPending}
-        isPublishing={publishMutation.isPending}
+        onPublish={openPublishModal}
+        isSaving={isSaving}
+        isPublishing={isPublishing}
         lastSavedAt={lastSavedAt}
       />
 
@@ -325,11 +101,11 @@ export default function CreateSurvey() {
       {/* Launch Confirmation Modal */}
       <PublishSurveyModal
         isOpen={isPublishModalOpen}
-        onClose={() => setIsPublishModalOpen(false)}
+        onClose={closePublishModal}
         onConfirm={handlePublishConfirm}
         surveyTitle={title}
         questionCount={questions.length}
-        isPublishing={publishMutation.isPending}
+        isPublishing={isPublishing}
       />
     </div>
   );

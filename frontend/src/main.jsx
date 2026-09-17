@@ -6,7 +6,14 @@ import { store } from "./app/store.jsx";
 import { RouterProvider } from "react-router";
 import { router } from "./app/routes/routes.jsx";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: false,
+    },
+  },
+});
 
 createRoot(document.getElementById("root")).render(
   <Provider store={store}>

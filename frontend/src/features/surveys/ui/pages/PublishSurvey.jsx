@@ -1,6 +1,4 @@
-import { useState, useMemo } from "react";
-import { useSearchParams } from "react-router";
-import useSurveys from "../../hooks/useSurvay.jsx";
+import { usePublishSurveyHub } from "../../hooks/useSurvay.jsx";
 import ShareHeader from "../components/PublishSurvey/ShareHeader.jsx";
 import ShareTabs from "../components/PublishSurvey/ShareTabs.jsx";
 import TabLinkContent from "../components/PublishSurvey/TabLinkContent.jsx";
@@ -12,58 +10,23 @@ import ShareErrorState from "../components/PublishSurvey/ShareErrorState.jsx";
 import ToastNotification from "../components/shared/ToastNotification.jsx";
 
 export default function PublishSurvey() {
-  const [searchParams] = useSearchParams();
-  const surveyIdParam = searchParams.get("surveyId");
-
-  const { getSurveyByIdQuery, publishSurveyMutation } = useSurveys(surveyIdParam);
-  const { data: apiResponse, isLoading, isError, refetch } = getSurveyByIdQuery;
-  const publishMutation = publishSurveyMutation;
-
-  // Active tab state: 'link' | 'qr' | 'widget'
-  const [activeTab, setActiveTab] = useState("link");
-
-
-
-  // Toast feedback
-  const [toast, setToast] = useState({ visible: false, message: "", type: "success" });
-
-  const showToast = (message, type = "success") => {
-    setToast({ visible: true, message, type });
-    setTimeout(() => {
-      setToast({ visible: false, message: "", type: "success" });
-    }, 3500);
-  };
-
-  const survey = useMemo(() => {
-    if (apiResponse?.data) {
-      return apiResponse.data;
-    }
-    return {
-      _id: surveyIdParam || "srv_acme_post_purchase",
-      title: "Post-purchase experience",
-      slug: "post-purchase",
-      status: "published",
-      responseCount: 1428,
-    };
-  }, [apiResponse, surveyIdParam]);
-
-  const publicUrl = `${window.location.origin}/f/${survey.slug || survey._id}`;
-
-  const handlePublishNow = async () => {
-    try {
-      if (survey._id && !survey._id.startsWith("srv_sample_")) {
-        await publishMutation.mutateAsync(survey._id);
-      }
-
-      showToast("Status updated: Survey Published");
-    } catch (err) {
-      showToast(err.message || "Failed to publish", "error");
-    }
-  };
+  const {
+    survey,
+    publicUrl,
+    activeTab,
+    setActiveTab,
+    isLoading,
+    isError,
+    refetch,
+    handlePublishNow,
+    toast,
+    showToast,
+    hideToast,
+  } = usePublishSurveyHub();
 
   return (
     <div className="w-full max-w-5xl mx-auto flex flex-col gap-8 py-4">
-      <ToastNotification toast={toast} onClose={() => setToast({ visible: false, message: "" })} />
+      <ToastNotification toast={toast} onClose={hideToast} />
 
       {/* Header with Title & Live Telemetry Stat */}
       <ShareHeader
@@ -107,8 +70,6 @@ export default function PublishSurvey() {
           )}
         </div>
       )}
-
-
     </div>
   );
 }
