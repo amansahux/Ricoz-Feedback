@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useSearchParams } from "react-router";
 import useSurveys from "../../hooks/useSurvay.jsx";
 import ShareHeader from "../components/PublishSurvey/ShareHeader.jsx";
@@ -22,8 +22,7 @@ export default function PublishSurvey() {
   // Active tab state: 'link' | 'qr' | 'widget'
   const [activeTab, setActiveTab] = useState("link");
 
-  // Simulator state: 'loaded' | 'loading' | 'error' | 'draft'
-  const [simState, setSimState] = useState("loaded");
+
 
   // Toast feedback
   const [toast, setToast] = useState({ visible: false, message: "", type: "success" });
@@ -80,11 +79,11 @@ export default function PublishSurvey() {
       )}
 
       {/* Main Tab Content / State Switching */}
-      {simState === "loading" || (isLoading && simState === "loaded" && !survey) ? (
+      {isLoading && !survey ? (
         <ShareSkeleton />
-      ) : simState === "error" || (isError && simState === "loaded") ? (
+      ) : isError ? (
         <ShareErrorState onRetry={() => refetch()} />
-      ) : simState === "draft" || survey.status === "draft" ? (
+      ) : survey.status === "draft" ? (
         <ShareDraftState
           surveyId={survey._id}
           onPublishNow={handlePublishNow}
@@ -111,27 +110,7 @@ export default function PublishSurvey() {
         </div>
       )}
 
-      {/* State Simulator Pill (Docked Bottom Left) */}
-      <div className="fixed bottom-4 left-6 z-40 bg-white/95 backdrop-blur-md border border-[#EFE4D6] px-3.5 py-2 rounded-full shadow-lg flex items-center gap-2">
-        <span className="text-[10px] font-semibold text-[#7d7461] uppercase tracking-wider">
-          State Simulator:
-        </span>
-        <div className="flex items-center gap-1">
-          {["loaded", "loading", "error", "draft"].map((stateKey) => (
-            <button
-              key={stateKey}
-              onClick={() => setSimState(stateKey)}
-              className={`px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-all cursor-pointer capitalize ${
-                simState === stateKey
-                  ? "bg-[#bb0028] text-white shadow-xs font-semibold"
-                  : "text-[#7d7461] hover:text-[#1f1b18] hover:bg-[#FBF2EC]"
-              }`}
-            >
-              {stateKey === "loading" ? "Skeleton" : stateKey}
-            </button>
-          ))}
-        </div>
-      </div>
+
     </div>
   );
 }

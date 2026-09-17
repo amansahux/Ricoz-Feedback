@@ -12,7 +12,7 @@ import Button from "../shared/components/Button.jsx";
       <p className="text-[#71717A] mt-3 max-w-md">
         The page you're looking for doesn't exist. Head back to your dashboard.
       </p>
-      <Link to="/dashboard" className="mt-6">
+      <Link to="/dashboard" className="mt-6 ">
         <Button>Back to dashboard</Button>
       </Link>
     </div>

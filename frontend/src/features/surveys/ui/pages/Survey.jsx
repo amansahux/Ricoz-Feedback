@@ -76,7 +76,7 @@ export default function Survey() {
   const deleteMutation = useDeleteSurvey();
 
   // Local Interactive Simulator & Filter States
-  const [simState, setSimState] = useState("loaded"); // 'loaded' | 'loading' | 'empty' | 'error'
+
   const [activeFilter, setActiveFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("recent");
@@ -183,14 +183,13 @@ export default function Survey() {
       />
 
       {/* MAIN STATE RENDERING */}
-      {simState === "loading" || (isLoading && simState === "loaded" && !rawSurveys.length) ? (
+      {isLoading ? (
         <SurveySkeleton />
-      ) : simState === "error" || (isError && simState === "loaded") ? (
+      ) : isError ? (
         <SurveyErrorState error={error} onRetry={() => refetch()} />
-      ) : simState === "empty" || displayedSurveys.length === 0 ? (
+      ) : displayedSurveys.length === 0 ? (
         <SurveyEmptyState
           onSelectTemplate={() => {
-            setSimState("loaded");
             showToast("Template chosen: Executive NPS");
           }}
         />
@@ -218,27 +217,7 @@ export default function Survey() {
         isDeleting={deleteMutation.isPending}
       />
 
-      {/* UI State Simulator Pill (Docked Bottom Left) */}
-      <div className="fixed bottom-4 left-6 z-40 bg-white/95 backdrop-blur-md border border-[#EFE4D6] px-3.5 py-2 rounded-full shadow-lg flex items-center gap-2">
-        <span className="text-[10px] font-semibold text-[#7d7461] uppercase tracking-wider">
-          State Simulator:
-        </span>
-        <div className="flex items-center gap-1">
-          {["loaded", "empty", "loading", "error"].map((stateKey) => (
-            <button
-              key={stateKey}
-              onClick={() => setSimState(stateKey)}
-              className={`px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-all cursor-pointer capitalize ${
-                simState === stateKey
-                  ? "bg-[#bb0028] text-white shadow-xs font-semibold"
-                  : "text-[#7d7461] hover:text-[#1f1b18] hover:bg-[#FBF2EC]"
-              }`}
-            >
-              {stateKey === "loading" ? "Skeleton" : stateKey}
-            </button>
-          ))}
-        </div>
-      </div>
+
     </div>
   );
 }
