@@ -1,11 +1,12 @@
 import React from "react";
 import { Link } from "react-router";
-import { Save, Rocket, ArrowLeft } from "lucide-react";
+import { Save, Rocket, ArrowLeft, CheckCircle2 } from "lucide-react";
 
 export default function BuilderHeader({
   onSaveDraft,
   onPublish,
   isSaving,
+  isPublished,
   isPublishing,
   lastSavedAt,
 }) {
@@ -21,15 +22,19 @@ export default function BuilderHeader({
             <ArrowLeft size={13} />
             <span>Surveys</span>
           </Link>
+
           <span className="text-[#d1c5b0]">•</span>
-          <span className="text-[11px] uppercase tracking-widest text-[#bb0028] font-bold font-mono-tag">
-            Survey Builder
-          </span>
-          <span className="text-[#d1c5b0]">•</span>
-          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#FFF2DB] text-[#746243] text-[11px] font-medium border border-[#E6D7C3]">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
-            {lastSavedAt ? `Auto-saved ${lastSavedAt}` : "Draft • Live Sync"}
-          </span>
+          {isPublished ? (
+            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#EBF7ED] text-[#1C7332] text-[11px] font-medium border border-[#D2EED7]">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#1C7332] animate-pulse"></span>
+              Published • Live
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#FFF2DB] text-[#746243] text-[11px] font-medium border border-[#E6D7C3]">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+              {lastSavedAt ? `Auto-saved ${lastSavedAt}` : "Draft • Live Sync"}
+            </span>
+          )}
         </div>
         <h1 className="text-xl sm:text-2xl font-epilogue font-semibold text-[#1f1b18] tracking-tight mt-0.5">
           Survey builder
@@ -44,17 +49,27 @@ export default function BuilderHeader({
           className="px-4 py-2 rounded-xl bg-white border border-[#EFE4D6] hover:bg-[#FBF2EC] text-[#1f1b18] text-xs sm:text-sm font-medium flex items-center gap-2 transition shadow-xs cursor-pointer disabled:opacity-50"
         >
           <Save size={16} className="text-[#7d7461]" />
-          <span>{isSaving ? "Saving..." : "Save draft"}</span>
+          <span>{isSaving ? "Saving..." : isPublished ? "Save changes" : "Save draft"}</span>
         </button>
 
-        <button
-          onClick={onPublish}
-          disabled={isSaving || isPublishing}
-          className="px-5 py-2 rounded-xl bg-[#e61337] hover:bg-[#bb0028] text-white text-xs sm:text-sm font-semibold flex items-center gap-2 shadow-sm shadow-[#e61337]/25 transition cursor-pointer disabled:opacity-50"
-        >
-          <Rocket size={16} />
-          <span>{isPublishing ? "Publishing..." : "Publish"}</span>
-        </button>
+        {!isPublished ? (
+          <button
+            onClick={onPublish}
+            disabled={isSaving || isPublishing}
+            className="px-5 py-2 rounded-xl bg-[#e61337] hover:bg-[#bb0028] text-white text-xs sm:text-sm font-semibold flex items-center gap-2 shadow-sm shadow-[#e61337]/25 transition cursor-pointer disabled:opacity-50"
+          >
+            <Rocket size={16} />
+            <span>{isPublishing ? "Publishing..." : "Publish"}</span>
+          </button>
+        ) : (
+          <Link
+            to="/surveys"
+            className="px-5 py-2 rounded-xl bg-[#1C7332] hover:bg-[#155d28] text-white text-xs sm:text-sm font-semibold flex items-center gap-2 shadow-sm shadow-emerald-700/20 transition cursor-pointer"
+          >
+            <CheckCircle2 size={16} />
+            <span>Active in production</span>
+          </Link>
+        )}
       </div>
     </header>
   );

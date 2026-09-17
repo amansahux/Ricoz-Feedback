@@ -444,8 +444,9 @@ export const useCreateSurveyBuilder = () => {
   };
 
   const isSaving = createSurveyMutation.isPending || updateSurveyMutation.isPending;
+  const isPublished = getSurveyByIdQuery.data?.data?.status === "published";
 
-  // Single cleanly guarded save draft handler
+  // Single cleanly guarded save draft / save changes handler
   const handleSaveDraft = async () => {
     if (isSaving) return;
 
@@ -466,7 +467,8 @@ export const useCreateSurveyBuilder = () => {
           required: Boolean(q.required),
           options: q.options || [],
         })),
-        status: "draft",
+        // Once published, saving updates the published survey without downgrading it to draft
+        status: isPublished ? "published" : "draft",
       };
 
       if (surveyIdParam && !surveyIdParam.startsWith("srv_sample_")) {
@@ -481,9 +483,9 @@ export const useCreateSurveyBuilder = () => {
 
       const timeStr = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
       setLastSavedAt(timeStr);
-      showToast(`Draft saved successfully at ${timeStr}`);
+      showToast(isPublished ? `Changes saved at ${timeStr}` : `Draft saved successfully at ${timeStr}`);
     } catch (err) {
-      showToast(err.message || "Failed to save draft", "error");
+      showToast(err.message || "Failed to save", "error");
     }
   };
 
@@ -553,6 +555,7 @@ export const useCreateSurveyBuilder = () => {
     hasValidationError,
     lastSavedAt,
     isSaving,
+    isPublished,
     isPublishing: isSaving,
     isPublishModalOpen,
     openPublishModal,

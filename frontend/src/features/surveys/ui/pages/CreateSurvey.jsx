@@ -17,6 +17,7 @@ export default function CreateSurvey() {
     hasValidationError,
     lastSavedAt,
     isSaving,
+    isPublished,
     isPublishing,
     isPublishModalOpen,
     openPublishModal,
@@ -42,6 +43,7 @@ export default function CreateSurvey() {
         onSaveDraft={handleSaveDraft}
         onPublish={openPublishModal}
         isSaving={isSaving}
+        isPublished={isPublished}
         isPublishing={isPublishing}
         lastSavedAt={lastSavedAt}
       />
