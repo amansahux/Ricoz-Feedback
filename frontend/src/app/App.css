@@ -3,6 +3,10 @@
 @layer base {
   body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #FFFAF3;
+    color: #141210;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
   }
 }
 
@@ -18,8 +22,38 @@
   font-family: 'Inter', sans-serif;
 }
 
+.font-heading {
+  font-family: 'Poppins', 'Epilogue', sans-serif;
+}
+
 .font-mono-tag {
   font-family: 'JetBrains Mono', monospace;
+}
+
+/* Subtle grid pattern for luxury studio feel */
+.bg-grid-subtle {
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(225, 216, 211, 0.25) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(225, 216, 211, 0.25) 1px, transparent 1px);
+}
+
+/* Gradient glow */
+.hero-glow {
+  background: radial-gradient(circle at 50% 30%, rgba(255, 229, 191, 0.45) 0%, rgba(255, 242, 219, 0.25) 45%, transparent 70%);
+}
+
+/* Custom badge pill */
+.badge-outline {
+  border: 1px solid rgba(246, 36, 64, 0.2);
+  background-color: rgba(246, 36, 64, 0.04);
+  color: #F62440;
+}
+
+/* Card glow border */
+.card-border-glow:hover {
+  border-color: rgba(246, 36, 64, 0.3);
+  box-shadow: 0 12px 30px -6px rgba(246, 36, 64, 0.08);
 }
 
 .charcoal-grid-bg {
