@@ -192,7 +192,11 @@ export default function CreateSurvey() {
       if (surveyIdParam && !surveyIdParam.startsWith("srv_sample_")) {
         await updateMutation.mutateAsync({ surveyId: surveyIdParam, data: payload });
       } else {
-        await createMutation.mutateAsync(payload);
+        const createRes = await createMutation.mutateAsync(payload);
+        const newId = createRes?.data?._id;
+        if (newId) {
+          navigate(`/surveys/create?surveyId=${newId}`, { replace: true });
+        }
       }
 
       const timeStr = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -234,14 +238,13 @@ export default function CreateSurvey() {
         activeId = createRes?.data?._id;
       } else {
         await updateMutation.mutateAsync({ surveyId: activeId, data: payload });
-        await publishMutation.mutateAsync(activeId);
       }
 
       setIsPublishModalOpen(false);
       showToast("Survey published successfully! Navigating to distribution hub...");
       setTimeout(() => {
         navigate(`/surveys/publish?surveyId=${activeId || ""}`);
-      }, 800);
+      }, 500);
     } catch (err) {
       showToast(err.message || "Failed to publish survey", "error");
     }
