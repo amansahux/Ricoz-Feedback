@@ -12,11 +12,14 @@ const surveySchema = new mongoose.Schema(
     title: {
       type: String,
       required: true,
+      trim: true,
+      
     },
     description: String,
     slug: {
       type: String,
       required: true,
+      trim: true,
     },
     status: {
       type: String,

@@ -3,7 +3,7 @@ import { surveyService } from '../services/survey.service.js';
 export const surveyController = {
   async createSurvey(req, res, next) {
     try {
-      const { title, description, questions } = req.body;
+      const { title, description, questions, status } = req.body;
       const organizationId = req.user.organizationId;
 
       if (!title) {
@@ -17,11 +17,12 @@ export const surveyController = {
         title,
         description,
         questions,
+        status
       });
 
       res.status(201).json({
         success: true,
-        message: 'Survey created',
+        message: 'Survey created Sucessfully',
         data: survey,
       });
     } catch (error) {

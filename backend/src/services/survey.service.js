@@ -11,7 +11,7 @@ export const surveyService = {
       description: data.description,
       slug: generateUniqueSlug(data.title),
       questions: data.questions || [],
-      status: 'draft',
+      status: data.status || "draft",
     });
 
     await survey.save();
