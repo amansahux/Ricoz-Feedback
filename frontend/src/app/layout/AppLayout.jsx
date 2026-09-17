@@ -9,7 +9,7 @@ export default function AppLayout() {
   const { organization } = useAuth();
 
   return (
-    <div className="min-h-screen bg-[#0d0e12] text-[#e1e2e6] flex">
+    <div className="min-h-screen flex">
       {/* Fixed Responsive Sidebar (240px wide) */}
       <Sidebar
         isOpen={sidebarOpen}
