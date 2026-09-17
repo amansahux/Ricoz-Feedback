@@ -259,9 +259,9 @@ export default function CreateSurvey() {
       />
 
       {/* Main Dual-Column Builder Container */}
-      <div className="max-w-[1440px] mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-start pb-16">
-        {/* LEFT COLUMN: EDITOR & QUESTIONS (8 Cols) */}
-        <div className="lg:col-span-8 flex flex-col gap-6">
+      <div className="w-full overflow-hidden grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6 items-start pb-16 px-1">
+        {/* LEFT COLUMN: EDITOR & QUESTIONS */}
+        <div className="min-w-0 flex flex-col gap-6">
           {/* Section Intro Banner */}
           <div className="bg-white rounded-2xl p-5 border border-[#EFE4D6] shadow-2xs">
             <p className="text-xs sm:text-sm text-[#7d7461] font-inter leading-relaxed">
@@ -300,8 +300,8 @@ export default function CreateSurvey() {
           <QuestionTypeSelector onAddQuestion={handleAddQuestion} />
         </div>
 
-        {/* RIGHT COLUMN: STICKY PHONE PREVIEW (4 Cols) */}
-        <div className="lg:col-span-4">
+        {/* RIGHT COLUMN: STICKY PHONE PREVIEW */}
+        <div className="min-w-0 hidden lg:block">
           <LivePreviewPhone
             title={title}
             description={description}

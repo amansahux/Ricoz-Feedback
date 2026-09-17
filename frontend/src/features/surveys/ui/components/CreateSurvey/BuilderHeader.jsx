@@ -10,7 +10,7 @@ export default function BuilderHeader({
   lastSavedAt,
 }) {
   return (
-    <header className="sticky top-0 z-30 bg-[#FFFAF3]/90 backdrop-blur-md px-4 sm:px-8 py-4 border-b border-[#EFE4D6] flex flex-col sm:flex-row sm:items-center justify-between gap-4 -mx-5 sm:-mx-7 lg:-mx-8 -mt-5 sm:-mt-7 lg:-mt-8 mb-6">
+    <header className="sticky top-0 z-30 bg-[#FFFAF3]/90 backdrop-blur-md px-4 sm:px-8 py-4 border-b border-[#EFE4D6] flex flex-col sm:flex-row sm:items-center justify-between gap-4 -mx-5 sm:-mx-7 lg:-mx-8  mb-6">
       {/* Title & Breadcrumb */}
       <div className="flex flex-col">
         <div className="flex items-center gap-2">

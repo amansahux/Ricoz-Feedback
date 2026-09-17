@@ -25,6 +25,7 @@ export const useSurveys = () => {
       queryKey: ["surveys", surveyId],
       queryFn: () => getSurveyById(surveyId),
       enabled: Boolean(surveyId),
+      staleTime: 1000 * 60 * 10,
     });
 
   // 3. Create Survey
@@ -42,7 +43,9 @@ export const useSurveys = () => {
       mutationFn: ({ surveyId, data }) => updateSurvey(surveyId, data),
       onSuccess: (_, variables) => {
         queryClient.invalidateQueries({ queryKey: ["surveys"] });
-        queryClient.invalidateQueries({ queryKey: ["surveys", variables.surveyId] });
+        queryClient.invalidateQueries({
+          queryKey: ["surveys", variables.surveyId],
+        });
       },
     });
 

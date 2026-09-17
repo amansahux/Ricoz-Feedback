@@ -54,7 +54,7 @@ export default function PublishSurvey() {
       if (survey._id && !survey._id.startsWith("srv_sample_")) {
         await publishMutation.mutateAsync(survey._id);
       }
-      setSimState("loaded");
+
       showToast("Status updated: Survey Published");
     } catch (err) {
       showToast(err.message || "Failed to publish", "error");
@@ -74,9 +74,7 @@ export default function PublishSurvey() {
       />
 
       {/* 3-Tab Interactive Navigation Bar */}
-      {simState === "loaded" && (
-        <ShareTabs activeTab={activeTab} setActiveTab={setActiveTab} />
-      )}
+      <ShareTabs activeTab={activeTab} setActiveTab={setActiveTab} />
 
       {/* Main Tab Content / State Switching */}
       {isLoading && !survey ? (

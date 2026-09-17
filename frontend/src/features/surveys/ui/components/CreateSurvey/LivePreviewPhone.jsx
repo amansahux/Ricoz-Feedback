@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { Smartphone, Monitor, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 export default function LivePreviewPhone({ title, description, questions = [] }) {
-  const [deviceMode, setDeviceMode] = useState("mobile"); // 'mobile' | 'desktop'
+
   const [activeAnswers, setActiveAnswers] = useState({});
 
   const handleSelectAnswer = (qId, val) => {
@@ -11,38 +11,12 @@ export default function LivePreviewPhone({ title, description, questions = [] })
 
   return (
     <div className="sticky top-24 flex flex-col gap-3">
-      {/* Top indicator & Device Switcher */}
-      <div className="flex items-center justify-between px-1">
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-          <span className="text-[11px] font-bold uppercase tracking-wider text-[#5d3f3e] font-mono-tag">
-            Live Preview
-          </span>
-        </div>
-        <div className="flex items-center gap-1 bg-[#FBF2EC] px-2 py-1 rounded-xl border border-[#EFE4D6]">
-          <button
-            onClick={() => setDeviceMode("mobile")}
-            className={`p-1 rounded-lg transition-colors cursor-pointer ${
-              deviceMode === "mobile"
-                ? "bg-white shadow-2xs text-[#bb0028]"
-                : "text-[#7d7461] hover:text-[#1f1b18]"
-            }`}
-            title="Mobile preview"
-          >
-            <Smartphone size={15} />
-          </button>
-          <button
-            onClick={() => setDeviceMode("desktop")}
-            className={`p-1 rounded-lg transition-colors cursor-pointer ${
-              deviceMode === "desktop"
-                ? "bg-white shadow-2xs text-[#bb0028]"
-                : "text-[#7d7461] hover:text-[#1f1b18]"
-            }`}
-            title="Desktop preview"
-          >
-            <Monitor size={15} />
-          </button>
-        </div>
+      {/* Top indicator */}
+      <div className="flex items-center gap-2 px-1">
+        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+        <span className="text-[11px] font-bold uppercase tracking-wider text-[#5d3f3e] font-mono-tag">
+          Live Preview
+        </span>
       </div>
 
       {/* SMARTPHONE MOCKUP FRAME */}
