@@ -1,14 +1,14 @@
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, Navigate } from 'react-router';
-import { User, Mail, Building2, Lock, UserPlus, Sparkles, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, Lock, AlertCircle, ArrowRight, ShieldCheck } from 'lucide-react';
 import { registerSchema } from '../../validation/auth.schema';
 import useAuth from '../../hook/useAuth';
-import Input from '../../../../shared/components/Input';
-import Button from '../../../../shared/components/Button';
 
 export default function Register() {
-  const { register: registerUser, isRegistering, isAuthenticated, isHydrating, error } = useAuth();
+  const { register: registerUser, isRegistering, isAuthenticated, isHydrating, error, resetError } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -30,103 +30,299 @@ export default function Register() {
   }
 
   const onSubmit = async (data) => {
+    resetError?.();
     await registerUser(data);
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 relative flex items-center justify-center px-4 py-12 overflow-hidden selection:bg-red-500 selection:text-white">
-      {/* Decorative Glows */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-tr from-red-600/20 to-orange-500/10 blur-[130px] rounded-full pointer-events-none" />
-      <div className="absolute top-10 left-10 w-72 h-72 bg-red-600/10 blur-[100px] rounded-full pointer-events-none" />
+    <main className="w-full min-h-screen flex flex-col lg:flex-row bg-[#FFFAF3] text-[#1f1b18] antialiased selection:bg-[#F62440] selection:text-white">
+      {/* LEFT PANEL: Dark Editorial Luxury Canvas (~46% desktop width) */}
+      <section className="hidden lg:flex lg:w-[46%] w-full bg-[#121110] text-[#f9efe9] relative flex-col justify-between p-8 sm:p-12 lg:p-16 border-b lg:border-b-0 lg:border-r border-[#262321] dark-glow-grid dark-hairlines overflow-hidden">
+        {/* Subtle atmospheric lighting overlay */}
+        <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-[#F62440]/10 blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-24 -right-24 w-80 h-80 rounded-full bg-[#FFE5BF]/5 blur-3xl pointer-events-none" />
 
-      <div className="w-full max-w-lg relative z-10">
-        {/* Brand Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-tr from-red-600 to-red-500 text-white shadow-lg shadow-red-500/30 mb-4 ring-1 ring-white/20">
-            <Sparkles size={24} />
+        {/* Top: Brand Lockup & Monogram */}
+        <div className="relative z-10">
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-lg bg-[#F62440] flex items-center justify-center shadow-lg shadow-[#F62440]/25 ring-1 ring-white/15">
+              <span className="font-poppins font-bold text-white text-xl tracking-tight">R</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="font-poppins text-sm tracking-[0.14em] font-bold text-[#ffffff] uppercase leading-tight">
+                RECOZ FEEDBACK
+              </span>
+              <span className="font-inter text-[10px] text-[#d1c5b0] tracking-[0.08em] uppercase font-medium mt-0.5">
+                Enterprise Intelligence
+              </span>
+            </div>
           </div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-white font-poppins">
-            Get started with <span className="bg-gradient-to-r from-red-500 to-orange-400 bg-clip-text text-transparent">RECOZ</span>
+
+          {/* Eyebrow Pill */}
+          <div className="mt-10 sm:mt-12 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#F62440] animate-pulse" />
+            <span className="font-inter text-[11px] font-semibold tracking-wider text-[#eee1cb] uppercase">
+              Launch in minutes
+            </span>
+          </div>
+
+          {/* Main Editorial Display Headline */}
+          <h1 className="mt-6 font-poppins text-3xl sm:text-4xl lg:text-[38px] xl:text-[40px] font-semibold leading-[1.22] text-white tracking-tight">
+            Create your workspace,<br className="hidden sm:inline" />
+            publish a survey, and<br className="hidden sm:inline" />
+            start hearing your<br className="hidden sm:inline" />
+            customers today.
           </h1>
-          <p className="text-slate-400 text-sm mt-2">
-            Build high-converting feedback loops for your organization
-          </p>
+
+          {/* Value Propositions with Crimson Diamonds */}
+          <div className="mt-10 space-y-4 max-w-lg">
+            <div className="flex items-start gap-3.5">
+              <span className="text-[#F62440] text-sm mt-0.5 select-none font-bold">◆</span>
+              <p className="font-inter text-sm text-[#e1d8d3] font-normal leading-snug">
+                Public URL, QR code, and embeddable widget out of the box
+              </p>
+            </div>
+            <div className="flex items-start gap-3.5">
+              <span className="text-[#F62440] text-sm mt-0.5 select-none font-bold">◆</span>
+              <p className="font-inter text-sm text-[#e1d8d3] font-normal leading-snug">
+                Automatic NPS, CSAT, and CES computation
+              </p>
+            </div>
+            <div className="flex items-start gap-3.5">
+              <span className="text-[#F62440] text-sm mt-0.5 select-none font-bold">◆</span>
+              <p className="font-inter text-sm text-[#e1d8d3] font-normal leading-snug">
+                Sentiment and topic analysis on every response
+              </p>
+            </div>
+          </div>
         </div>
 
-        {/* Card */}
-        <div className="backdrop-blur-xl bg-slate-900/70 border border-slate-800/80 rounded-3xl shadow-2xl p-8 sm:p-10">
+        {/* Left Panel Footer: Reassurance */}
+        <div className="relative z-10 pt-10 lg:pt-16 border-t border-white/10 mt-10 flex items-center justify-between text-xs text-[#a3978d]">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-[#F62440]" />
+            <span className="font-inter tracking-normal text-[#d1c5b0]">No credit card required · Instant setup</span>
+          </div>
+          <span className="font-inter text-[10px] sm:text-[11px] text-[#7d7461] tracking-wider uppercase font-semibold">
+            SOC2 TYPE II READY
+          </span>
+        </div>
+      </section>
+
+      {/* RIGHT PANEL: Light Luxury Form Canvas (~54% desktop width) */}
+      <section className="lg:w-[54%] w-full bg-[#FFFAF3] flex items-center justify-center p-6 sm:p-12 lg:p-16 relative">
+        <div className="w-full max-w-[430px] mx-auto my-auto py-6">
+          {/* Header Section */}
+          <header className="mb-8">
+            <h2 className="font-poppins text-3xl font-semibold text-[#1f1b18] tracking-tight leading-tight">
+              Create your workspace
+            </h2>
+            <p className="mt-2 font-inter text-sm text-[#6e5c3e] leading-relaxed">
+              One account, one organization, endless customer insights.
+            </p>
+          </header>
+
+          {/* Backend Error Alert */}
           {error && (
-            <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex items-start gap-2.5">
-              <span className="text-red-400 font-bold">!</span>
-              <span>{error}</span>
+            <div className="mb-6 p-4 rounded-xl bg-red-50/90 border border-[#F62440]/30 flex items-start gap-3 text-red-950 transition-all shadow-sm">
+              <AlertCircle className="w-5 h-5 text-[#F62440] shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <h4 className="font-inter text-xs font-semibold text-[#bb0028]">Registration failed</h4>
+                <p className="font-inter text-xs text-neutral-700 mt-0.5">{error}</p>
+              </div>
             </div>
           )}
 
+          {/* Registration Form */}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
-            <Input
-              label="Full Name"
-              type="text"
-              icon={User}
-              placeholder="Alex Doe"
-              autoComplete="name"
-              error={errors.name?.message}
-              {...register('name')}
-            />
+            {/* Field 1: Your Name */}
+            <div>
+              <label
+                htmlFor="name"
+                className="block text-[11px] font-semibold uppercase tracking-wider text-[#5d3f3e] font-inter mb-1.5"
+              >
+                YOUR NAME
+              </label>
+              <div className="relative">
+                <input
+                  id="name"
+                  type="text"
+                  autoComplete="name"
+                  placeholder="Aman Sahu"
+                  disabled={isRegistering}
+                  className={`w-full h-[42px] px-3.5 bg-white border rounded-lg text-sm text-[#1f1b18] placeholder-[#926e6d]/60 font-inter focus:outline-none focus:border-[#F62440] focus:ring-2 focus:ring-[#F62440]/15 transition-all duration-150 disabled:bg-neutral-100 disabled:cursor-not-allowed ${
+                    errors.name ? 'border-[#bb0028] bg-rose-50/20 ring-1 ring-[#bb0028]/30' : 'border-[#e5e0db]'
+                  }`}
+                  {...register('name')}
+                />
+              </div>
+              {errors.name && (
+                <p className="mt-1 text-xs text-[#bb0028] font-inter flex items-center gap-1">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  <span>{errors.name.message}</span>
+                </p>
+              )}
+            </div>
 
-            <Input
-              label="Work Email"
-              type="email"
-              icon={Mail}
-              placeholder="alex@company.com"
-              autoComplete="email"
-              error={errors.email?.message}
-              {...register('email')}
-            />
+            {/* Field 2: Organization Name */}
+            <div>
+              <label
+                htmlFor="organizationName"
+                className="block text-[11px] font-semibold uppercase tracking-wider text-[#5d3f3e] font-inter mb-1.5"
+              >
+                ORGANIZATION NAME
+              </label>
+              <div className="relative">
+                <input
+                  id="organizationName"
+                  type="text"
+                  autoComplete="organization"
+                  placeholder="Acme Studio"
+                  disabled={isRegistering}
+                  className={`w-full h-[42px] px-3.5 bg-white border rounded-lg text-sm text-[#1f1b18] placeholder-[#926e6d]/60 font-inter focus:outline-none focus:border-[#F62440] focus:ring-2 focus:ring-[#F62440]/15 transition-all duration-150 disabled:bg-neutral-100 disabled:cursor-not-allowed ${
+                    errors.organizationName ? 'border-[#bb0028] bg-rose-50/20 ring-1 ring-[#bb0028]/30' : 'border-[#e5e0db]'
+                  }`}
+                  {...register('organizationName')}
+                />
+              </div>
+              {errors.organizationName ? (
+                <p className="mt-1 text-xs text-[#bb0028] font-inter flex items-center gap-1">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  <span>{errors.organizationName.message}</span>
+                </p>
+              ) : (
+                <p className="mt-1.5 text-[11px] text-[#7d7461] font-inter leading-normal">
+                  This name will appear on your public feedback pages.
+                </p>
+              )}
+            </div>
 
-            <Input
-              label="Organization / Company Name"
-              type="text"
-              icon={Building2}
-              placeholder="Acme Inc."
-              autoComplete="organization"
-              error={errors.organizationName?.message}
-              {...register('organizationName')}
-            />
+            {/* Field 3: Work Email */}
+            <div>
+              <label
+                htmlFor="email"
+                className="block text-[11px] font-semibold uppercase tracking-wider text-[#5d3f3e] font-inter mb-1.5"
+              >
+                WORK EMAIL
+              </label>
+              <div className="relative">
+                <input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="you@company.com"
+                  disabled={isRegistering}
+                  className={`w-full h-[42px] px-3.5 bg-white border rounded-lg text-sm text-[#1f1b18] placeholder-[#926e6d]/60 font-inter focus:outline-none focus:border-[#F62440] focus:ring-2 focus:ring-[#F62440]/15 transition-all duration-150 disabled:bg-neutral-100 disabled:cursor-not-allowed ${
+                    errors.email ? 'border-[#bb0028] bg-rose-50/20 ring-1 ring-[#bb0028]/30' : 'border-[#e5e0db]'
+                  }`}
+                  {...register('email')}
+                />
+              </div>
+              {errors.email && (
+                <p className="mt-1 text-xs text-[#bb0028] font-inter flex items-center gap-1">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  <span>{errors.email.message}</span>
+                </p>
+              )}
+            </div>
 
-            <Input
-              label="Password"
-              type="password"
-              icon={Lock}
-              placeholder="•••••••• (min. 6 characters)"
-              autoComplete="new-password"
-              error={errors.password?.message}
-              {...register('password')}
-            />
+            {/* Field 4: Password */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label
+                  htmlFor="password"
+                  className="block text-[11px] font-semibold uppercase tracking-wider text-[#5d3f3e] font-inter"
+                >
+                  PASSWORD
+                </label>
+                <span className="text-[11px] text-[#7d7461] font-inter">Minimum 6 characters</span>
+              </div>
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="new-password"
+                  placeholder="At least 6 characters"
+                  disabled={isRegistering}
+                  className={`w-full h-[42px] pl-3.5 pr-10 bg-white border rounded-lg text-sm text-[#1f1b18] placeholder-[#926e6d]/60 font-inter focus:outline-none focus:border-[#F62440] focus:ring-2 focus:ring-[#F62440]/15 transition-all duration-150 disabled:bg-neutral-100 disabled:cursor-not-allowed ${
+                    errors.password ? 'border-[#bb0028] bg-rose-50/20 ring-1 ring-[#bb0028]/30' : 'border-[#e5e0db]'
+                  }`}
+                  {...register('password')}
+                />
+                <button
+                  type="button"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7d7461] hover:text-[#1f1b18] transition-colors p-1"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              {errors.password && (
+                <p className="mt-1 text-xs text-[#bb0028] font-inter flex items-center gap-1">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  <span>{errors.password.message}</span>
+                </p>
+              )}
+            </div>
 
-            <Button
-              type="submit"
-              loading={isRegistering}
-              className="w-full py-3 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-600 text-white font-semibold rounded-xl shadow-lg shadow-red-600/25 hover:shadow-red-600/40 transition-all duration-200 mt-4"
-            >
-              <UserPlus size={18} />
-              <span>Create Account</span>
-            </Button>
+            {/* Terms notice */}
+            <div className="pt-1">
+              <p className="text-[11px] text-[#7d7461] font-inter leading-relaxed">
+                By creating a workspace, you agree to our{' '}
+                <span className="underline text-[#5d3f3e] cursor-pointer hover:text-[#bb0028]">Terms of Service</span> and{' '}
+                <span className="underline text-[#5d3f3e] cursor-pointer hover:text-[#bb0028]">Privacy Policy</span>.
+              </p>
+            </div>
+
+            {/* Primary Submit Button */}
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={isRegistering}
+                className="w-full h-12 bg-[#F62440] text-white font-poppins font-medium text-sm rounded-lg shadow-sm hover:bg-[#d91d35] active:bg-[#BA1227] transition duration-150 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed group shadow-md shadow-[#F62440]/20"
+              >
+                {isRegistering ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                    <span>Creating workspace...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Create workspace</span>
+                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+                  </>
+                )}
+              </button>
+            </div>
           </form>
 
-          {/* Footer */}
-          <div className="mt-8 pt-6 border-t border-slate-800/60 text-center">
-            <p className="text-slate-400 text-sm">
+          {/* Secondary Action Link */}
+          <div className="mt-8 text-center">
+            <p className="text-sm font-inter text-[#6e5c3e]">
               Already have an account?{' '}
-              <Link
-                to="/login"
-                className="text-red-400 hover:text-red-300 font-semibold inline-flex items-center gap-1 transition"
-              >
-                Sign in instead <ArrowRight size={14} />
+              <Link to="/login" className="text-[#F62440] font-medium hover:underline ml-1 inline-flex items-center">
+                Sign in
               </Link>
             </p>
           </div>
+
+          {/* Trust Note at Bottom */}
+          <div className="mt-10 pt-6 border-t border-[#efe4d6] flex items-center justify-center gap-2 text-[#7d7461]">
+            <Lock className="w-3.5 h-3.5 text-emerald-600" />
+            <span className="font-inter text-xs tracking-normal">
+              256-bit TLS Encrypted · Enterprise Grade Security
+            </span>
+          </div>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }

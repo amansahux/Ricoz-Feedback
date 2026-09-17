@@ -1,14 +1,14 @@
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, Navigate } from 'react-router';
-import { Mail, Lock, LogIn, Sparkles, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, Lock, AlertCircle, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { loginSchema } from '../../validation/auth.schema';
 import useAuth from '../../hook/useAuth';
-import Input from '../../../../shared/components/Input';
-import Button from '../../../../shared/components/Button';
 
 export default function Login() {
-  const { login, isLoggingIn, isAuthenticated, isHydrating, error } = useAuth();
+  const { login, isLoggingIn, isAuthenticated, isHydrating, error, resetError } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -28,85 +28,244 @@ export default function Login() {
   }
 
   const onSubmit = async (data) => {
+    resetError?.();
     await login(data);
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 relative flex items-center justify-center px-4 py-12 overflow-hidden selection:bg-red-500 selection:text-white">
-      {/* Background Decorative Gradients & Glows */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-tr from-red-600/20 to-orange-500/10 blur-[130px] rounded-full pointer-events-none" />
-      <div className="absolute bottom-10 -right-20 w-80 h-80 bg-red-600/10 blur-[100px] rounded-full pointer-events-none" />
+    <main className="w-full min-h-screen flex flex-col lg:flex-row bg-[#FFFAF3] text-[#1f1b18] antialiased selection:bg-[#F62440] selection:text-white">
+      {/* LEFT PANEL: Editorial Storytelling Surface (Desktop ~46%, Hidden on Mobile) */}
+      <section className="hidden lg:flex lg:w-[46%] w-full min-h-screen bg-[#121110] text-[#f9efe9] flex-col justify-between p-8 sm:p-12 lg:p-16 relative overflow-hidden charcoal-grid-bg border-b lg:border-b-0 lg:border-r border-[#262321] dark-glow-grid dark-hairlines">
+        {/* Atmospheric Ambient Glow */}
+        <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#F62440]/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-[#FFE5BF]/5 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="w-full max-w-md relative z-10">
-        {/* Brand Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-tr from-red-600 to-red-500 text-white shadow-lg shadow-red-500/30 mb-4 ring-1 ring-white/20">
-            <Sparkles size={24} />
+        {/* Top Header Brand Anchor */}
+        <div className="relative z-10 flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-xl bg-[#F62440] flex items-center justify-center shadow-lg shadow-[#F62440]/25 ring-1 ring-white/20">
+            <span className="font-poppins text-lg text-white font-bold tracking-tight">R</span>
           </div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-white font-poppins">
-            Welcome back to <span className="bg-gradient-to-r from-red-500 to-orange-400 bg-clip-text text-transparent">RECOZ</span>
-          </h1>
-          <p className="text-slate-400 text-sm mt-2">
-            Turn customer feedback into actionable insights
-          </p>
+          <div>
+            <h1 className="font-poppins text-sm font-bold tracking-[0.14em] text-white uppercase leading-tight">
+              RECOZ FEEDBACK
+            </h1>
+            <p className="font-inter text-[10px] tracking-[0.08em] text-[#f9dfb9]/80 uppercase font-medium mt-0.5">
+              Enterprise Intelligence
+            </p>
+          </div>
         </div>
 
-        {/* Card */}
-        <div className="backdrop-blur-xl bg-slate-900/70 border border-slate-800/80 rounded-3xl shadow-2xl p-8 sm:p-10">
+        {/* Center Narrative Cluster */}
+        <div className="relative z-10 max-w-xl my-auto py-10">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#FFF2DB]/10 border border-[#FFF2DB]/20 text-[#FFE5BF] mb-6">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#F62440] animate-pulse" />
+            <span className="font-inter text-[11px] tracking-widest uppercase font-semibold">
+              CUSTOMER VOICE, IN ONE PLACE
+            </span>
+          </div>
+
+          <h2 className="font-epilogue text-3xl xl:text-4xl font-semibold text-white tracking-tight leading-[1.25] mb-8">
+            Turn every piece of customer feedback into a decision you can act on.
+          </h2>
+
+          {/* Translucent Glass Testimonial Card */}
+          <div className="rounded-2xl p-6 bg-white/[0.03] backdrop-blur-xl border border-white/10 shadow-2xl relative">
+            {/* 5 Stars in Warm Peach / Gold */}
+            <div className="flex items-center gap-1 mb-3 text-[#f9dfb9]">
+              {[...Array(5)].map((_, i) => (
+                <svg key={i} className="w-4 h-4 fill-[#f9dfb9]" viewBox="0 0 24 24">
+                  <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                </svg>
+              ))}
+            </div>
+            <blockquote className="font-inter text-sm md:text-base text-neutral-200 mb-4 leading-relaxed italic">
+              "We closed 43 support tickets in the first week. Recoz surfaces the noise we used to miss."
+            </blockquote>
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs font-semibold text-[#f9dfb9] border border-white/15">
+                NC
+              </div>
+              <div>
+                <p className="font-inter text-xs text-neutral-300 font-medium">Head of CX, Northwind Coffee</p>
+                <p className="font-inter text-[11px] text-neutral-500">Global Operations Customer Experience</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Minimal Footer Anchor */}
+        <div className="relative z-10 flex items-center justify-between pt-6 border-t border-white/5 text-neutral-400">
+          <p className="font-inter text-xs">Recoz · Feedback that turns into action</p>
+          <span className="font-inter text-[11px] text-neutral-500">v3.1 Enterprise Core</span>
+        </div>
+      </section>
+
+      {/* RIGHT PANEL: Authentication Surface (Warm White Canvas #FFFAF3) */}
+      <section className="lg:w-[54%] w-full min-h-screen flex flex-col justify-between bg-[#FFFAF3] p-6 sm:p-12 lg:p-16 relative">
+        {/* Mobile Only Top Brand Header Bar */}
+        <div className="lg:hidden flex items-center justify-between pb-6 pt-2 border-b border-[#EFE4D6]">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-[#F62440] flex items-center justify-center shadow-md">
+              <span className="font-poppins text-base text-white font-bold">R</span>
+            </div>
+            <div>
+              <span className="font-poppins text-sm font-semibold tracking-tight text-[#1f1b18] block">
+                RECOZ FEEDBACK
+              </span>
+              <span className="block font-inter text-[10px] text-neutral-500 uppercase tracking-wider">
+                Enterprise Intelligence
+              </span>
+            </div>
+          </div>
+          <span className="font-inter text-[11px] px-2.5 py-0.5 rounded-full bg-[#FFF2DB] text-[#746243] font-medium border border-[#E6D7C3]/60">
+            Sign In
+          </span>
+        </div>
+        <div className="hidden lg:block" />
+
+        {/* Centered Authentication Form Box */}
+        <div className="w-full max-w-md mx-auto my-auto py-8">
+          {/* Heading Block */}
+          <div className="mb-8">
+            <h2 className="font-poppins text-3xl font-semibold text-[#1f1b18] tracking-tight mb-2">
+              Welcome back
+            </h2>
+            <p className="font-inter text-sm text-neutral-600">
+              Sign in to your Recoz workspace.
+            </p>
+          </div>
+
+          {/* Backend Error Banner */}
           {error && (
-            <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex items-start gap-2.5">
-              <span className="text-red-400 font-bold">!</span>
-              <span>{error}</span>
+            <div className="mb-6 p-4 rounded-xl bg-red-50/90 border border-[#F62440]/30 flex items-start gap-3 text-red-950 transition-all shadow-sm">
+              <AlertCircle className="w-5 h-5 text-[#F62440] shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <h4 className="font-inter text-xs font-semibold text-[#bb0028]">Authentication failed</h4>
+                <p className="font-inter text-xs text-neutral-700 mt-0.5">{error}</p>
+              </div>
             </div>
           )}
 
+          {/* Form */}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
-            <Input
-              label="Email address"
-              type="email"
-              icon={Mail}
-              placeholder="you@company.com"
-              autoComplete="email"
-              error={errors.email?.message}
-              {...register('email')}
-            />
-
-            <div className="space-y-1">
-              <Input
-                label="Password"
-                type="password"
-                icon={Lock}
-                placeholder="••••••••"
-                autoComplete="current-password"
-                error={errors.password?.message}
-                {...register('password')}
-              />
+            {/* Email Field */}
+            <div>
+              <label
+                htmlFor="email"
+                className="block font-inter text-[11px] font-semibold tracking-wider text-neutral-700 uppercase mb-2"
+              >
+                EMAIL
+              </label>
+              <div className="relative">
+                <input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="you@company.com"
+                  disabled={isLoggingIn}
+                  className={`w-full h-[46px] px-4 rounded-xl bg-white border text-[#1f1b18] font-inter text-sm placeholder:text-neutral-400 focus:outline-none focus:border-[#F62440] focus:ring-2 focus:ring-[#F62440]/15 transition-all shadow-sm disabled:bg-neutral-100 disabled:cursor-not-allowed ${
+                    errors.email ? 'border-[#bb0028] bg-rose-50/20 ring-1 ring-[#bb0028]/30' : 'border-[#EFE4D6]'
+                  }`}
+                  {...register('email')}
+                />
+              </div>
+              {errors.email && (
+                <p className="mt-1.5 text-xs text-[#bb0028] font-inter flex items-center gap-1">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  <span>{errors.email.message}</span>
+                </p>
+              )}
             </div>
 
-            <Button
+            {/* Password Field */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label
+                  htmlFor="password"
+                  className="block font-inter text-[11px] font-semibold tracking-wider text-neutral-700 uppercase"
+                >
+                  PASSWORD
+                </label>
+              </div>
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  placeholder="••••••••••••"
+                  disabled={isLoggingIn}
+                  className={`w-full h-[46px] pl-4 pr-11 rounded-xl bg-white border text-[#1f1b18] font-inter text-sm placeholder:text-neutral-400 focus:outline-none focus:border-[#F62440] focus:ring-2 focus:ring-[#F62440]/15 transition-all shadow-sm disabled:bg-neutral-100 disabled:cursor-not-allowed ${
+                    errors.password ? 'border-[#bb0028] bg-rose-50/20 ring-1 ring-[#bb0028]/30' : 'border-[#EFE4D6]'
+                  }`}
+                  {...register('password')}
+                />
+                <button
+                  type="button"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-700 focus:outline-none p-1 transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              {errors.password && (
+                <p className="mt-1.5 text-xs text-[#bb0028] font-inter flex items-center gap-1">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  <span>{errors.password.message}</span>
+                </p>
+              )}
+            </div>
+
+            {/* Primary CTA Button */}
+            <button
               type="submit"
-              loading={isLoggingIn}
-              className="w-full py-3 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-600 text-white font-semibold rounded-xl shadow-lg shadow-red-600/25 hover:shadow-red-600/40 transition-all duration-200 mt-2"
+              disabled={isLoggingIn}
+              className="w-full h-[46px] rounded-xl bg-[#F62440] hover:bg-[#D81B34] active:bg-[#BA1227] text-white font-inter text-sm font-medium tracking-wide shadow-md shadow-[#F62440]/20 hover:shadow-lg hover:shadow-[#F62440]/30 transition-all duration-150 ease-out flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed mt-6"
             >
-              <LogIn size={18} />
-              <span>Sign in to Dashboard</span>
-            </Button>
+              {isLoggingIn ? (
+                <>
+                  <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
+                  </svg>
+                  <span>Signing in...</span>
+                </>
+              ) : (
+                <>
+                  <span>Sign in</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
           </form>
 
-          {/* Footer */}
-          <div className="mt-8 pt-6 border-t border-slate-800/60 text-center">
-            <p className="text-slate-400 text-sm">
-              Don't have an account?{' '}
+          {/* Secondary Action Link */}
+          <div className="mt-8 text-center pt-2">
+            <p className="font-inter text-sm text-neutral-600">
+              New to Recoz?{' '}
               <Link
                 to="/register"
-                className="text-red-400 hover:text-red-300 font-semibold inline-flex items-center gap-1 transition"
+                className="font-medium text-[#F62440] hover:text-[#D81B34] transition-colors underline-offset-4 hover:underline"
               >
-                Create one now <ArrowRight size={14} />
+                Create workspace
               </Link>
             </p>
           </div>
         </div>
-      </div>
-    </div>
+
+        {/* Security / Trust Indicator Footnote */}
+        <div className="pt-6 border-t border-[#EFE4D6]/60 flex items-center justify-between text-neutral-500 font-inter text-xs">
+          <span className="flex items-center gap-1.5 text-neutral-600">
+            <Lock className="w-3.5 h-3.5 text-emerald-600" />
+            256-bit TLS Encrypted
+          </span>
+          <span className="text-neutral-400">Recoz Feedback Enterprise</span>
+        </div>
+      </section>
+    </main>
   );
 }
