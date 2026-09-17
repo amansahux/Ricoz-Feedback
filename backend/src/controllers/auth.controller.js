@@ -83,4 +83,23 @@ export const authController = {
       message: 'Logged out successfully',
     });
   },
+
+  async update(req, res, next) {
+    try {
+      const { name, organizationName, primaryColor, logoUrl } = req.body;
+
+      const result = await authService.updateUser(req.user.userId, name, organizationName, primaryColor, logoUrl);
+
+      res.status(200).json({
+        success: true,
+        message: 'User updated successfully',
+        data: {
+          user: result.user,
+          organization: result.organization,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
 };

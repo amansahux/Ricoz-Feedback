@@ -102,4 +102,39 @@ export const authService = {
       },
     };
   },
+  async update(userId, name, organizationName, primaryColor, logoUrl) {
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const organization = await Organization.findById(user.organizationId);
+    if (!organization) {
+      throw new Error('Organization not found');
+    }
+
+    user.name = name;
+    organization.name = organizationName;
+    organization.primaryColor = primaryColor;
+    organization.logoUrl = logoUrl;
+
+    await user.save();
+    await organization.save();
+
+    return {
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        organizationId: user.organizationId,
+      },
+      organization: {
+        id: organization._id,
+        name: organization.name,
+        slug: organization.slug,
+        logo: organization.logo,
+        primaryColor: organization.primaryColor,
+      },
+    };
+  },
 };
