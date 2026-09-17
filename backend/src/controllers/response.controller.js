@@ -26,7 +26,6 @@ export const responseController = {
       );
 
       // Validate answers
-      console.log("---> ", answers)
       if (!Array.isArray(answers) || answers.length === 0) {
         return res.status(400).json({
           success: false,
