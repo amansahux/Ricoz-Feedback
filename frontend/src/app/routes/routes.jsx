@@ -13,6 +13,7 @@ import Customer from "../../features/customers/ui/pages/Customer.jsx";
 import Analytics from "../../features/analytics/ui/pages/Analytics.jsx";
 import CreateSurvey from "../../features/surveys/ui/pages/CreateSurvey.jsx";
 import PublishSurvey from "../../features/surveys/ui/pages/PublishSurvey.jsx";
+import LandingPage from "../../features/Landing/ui/pages/LandingPage.jsx";
 
 export const router = createBrowserRouter([
   {
@@ -26,6 +27,10 @@ export const router = createBrowserRouter([
       {
         path: "register",
         element: <Register />,
+      },
+      {
+        path:"",
+        element:<LandingPage/>
       },
       {
         element: (
@@ -67,10 +72,6 @@ export const router = createBrowserRouter([
             element: <Analytics/>,
           },
         ],
-      },
-      {
-        index: true,
-        element: <Navigate to="/dashboard" replace />,
       },
       {
         path: "*",

@@ -9,7 +9,7 @@ export default function ShareSurveyModal({ survey, isOpen, onClose, onCopySucces
   if (!isOpen || !survey) return null;
 
   const publicUrl = `${window.location.origin}/f/${survey.slug || survey._id}`;
-  const embedCode = `<script src="https://recoz.app/widget.js" data-survey="${survey._id}" async></script>`;
+  const embedCode = `<script src="${window.location.origin}/widget.js" data-survey="${survey._id}" async></script>`;
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(publicUrl);
