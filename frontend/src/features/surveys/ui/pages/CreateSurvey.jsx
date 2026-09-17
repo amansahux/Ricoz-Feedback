@@ -42,13 +42,18 @@ export default function CreateSurvey() {
   const [searchParams] = useSearchParams();
   const surveyIdParam = searchParams.get("surveyId");
 
-  const { useGetSurveyById, useCreateSurvey, useUpdateSurvey, usePublishSurvey } = useSurveys();
+  const {
+    getSurveyByIdQuery,
+    createSurveyMutation,
+    updateSurveyMutation,
+    publishSurveyMutation,
+  } = useSurveys(surveyIdParam);
 
   // If editing an existing survey
-  const { data: existingSurveyData, isLoading: isLoadingSurvey } = useGetSurveyById(surveyIdParam);
-  const createMutation = useCreateSurvey();
-  const updateMutation = useUpdateSurvey();
-  const publishMutation = usePublishSurvey();
+  const { data: existingSurveyData, isLoading: isLoadingSurvey } = getSurveyByIdQuery;
+  const createMutation = createSurveyMutation;
+  const updateMutation = updateSurveyMutation;
+  const publishMutation = publishSurveyMutation;
 
   // Form states
   const [title, setTitle] = useState("Post-purchase experience");
@@ -162,6 +167,8 @@ export default function CreateSurvey() {
 
   // Save Draft logic
   const handleSaveDraft = async () => {
+    if (createMutation.isPending || updateMutation.isPending) return;
+
     if (!title.trim()) {
       setHasValidationError(true);
       showToast("Survey title is required", "error");
@@ -198,6 +205,8 @@ export default function CreateSurvey() {
 
   // Publish flow
   const handlePublishConfirm = async () => {
+    if (publishMutation.isPending || createMutation.isPending || updateMutation.isPending) return;
+
     if (!title.trim()) {
       setHasValidationError(true);
       showToast("Survey title is required", "error");

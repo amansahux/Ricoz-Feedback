@@ -65,15 +65,15 @@ const SAMPLE_SURVEYS = [
 ];
 
 export default function Survey() {
-  const { useGetAllSurveys, useDeleteSurvey } = useSurveys();
+  const { getAllSurveysQuery, deleteSurveyMutation } = useSurveys();
   const {
     data: apiResponse,
     isLoading,
     isError,
     error,
     refetch,
-  } = useGetAllSurveys();
-  const deleteMutation = useDeleteSurvey();
+  } = getAllSurveysQuery;
+  const deleteMutation = deleteSurveyMutation;
 
   // Local Interactive Simulator & Filter States
 

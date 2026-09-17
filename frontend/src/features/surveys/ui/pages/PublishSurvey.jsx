@@ -15,9 +15,9 @@ export default function PublishSurvey() {
   const [searchParams] = useSearchParams();
   const surveyIdParam = searchParams.get("surveyId");
 
-  const { useGetSurveyById, usePublishSurvey } = useSurveys();
-  const { data: apiResponse, isLoading, isError, refetch } = useGetSurveyById(surveyIdParam);
-  const publishMutation = usePublishSurvey();
+  const { getSurveyByIdQuery, publishSurveyMutation } = useSurveys(surveyIdParam);
+  const { data: apiResponse, isLoading, isError, refetch } = getSurveyByIdQuery;
+  const publishMutation = publishSurveyMutation;
 
   // Active tab state: 'link' | 'qr' | 'widget'
   const [activeTab, setActiveTab] = useState("link");
