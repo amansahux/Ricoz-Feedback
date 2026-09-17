@@ -2,7 +2,7 @@
 const Survey = () => {
   return (
     <div>
-      
+      surveys
     </div>
   )
 }
