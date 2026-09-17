@@ -10,9 +10,18 @@ export const surveyService = {
       title: data.title,
       description: data.description,
       slug: generateUniqueSlug(data.title),
-      questions: data.questions || [],
+      questions: (data.questions || []).map((q) => ({
+        ...q,
+      })),
       status: data.status || "draft",
     });
+
+    // Ensure questions carry their parent surveyId
+    if (Array.isArray(survey.questions)) {
+      survey.questions.forEach((q) => {
+        q.surveyId = survey._id;
+      });
+    }
 
     await survey.save();
     return survey;
@@ -27,6 +36,13 @@ export const surveyService = {
   },
 
   async updateSurvey(surveyId, organizationId, data) {
+    if (data.questions && Array.isArray(data.questions)) {
+      data.questions = data.questions.map((q) => ({
+        ...q,
+        surveyId: q.surveyId || surveyId,
+      }));
+    }
+
     return Survey.findOneAndUpdate(
       { _id: surveyId, organizationId },
       data,

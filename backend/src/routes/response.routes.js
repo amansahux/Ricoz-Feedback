@@ -5,7 +5,7 @@ import { authMiddleware } from '../middlewares/auth.middleware.js';
 const router = express.Router();
 
 // Public endpoint
-router.post('/public/:organizationSlug/:surveySlug', responseController.createResponse);
+router.post('/public/surveys/:organizationSlug/:surveySlug', responseController.createResponse);
 
 // Protected endpoints
 router.use(authMiddleware);

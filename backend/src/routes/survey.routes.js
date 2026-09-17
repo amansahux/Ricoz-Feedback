@@ -6,11 +6,11 @@ const router = express.Router();
 
 router.use(authMiddleware);
 
-router.post('/', authMiddleware, surveyController.createSurvey);
-router.get('/', authMiddleware, surveyController.getSurveys);
-router.get('/:id', authMiddleware, surveyController.getSurveyById);
-router.patch('/:id', authMiddleware, surveyController.updateSurvey);
-router.delete('/:id', authMiddleware, surveyController.deleteSurvey);
-router.post('/:id/publish', authMiddleware, surveyController.publishSurvey);
+router.post('/', surveyController.createSurvey);
+router.get('/', surveyController.getSurveys);
+router.get('/:id', surveyController.getSurveyById);
+router.patch('/:id', surveyController.updateSurvey);
+router.delete('/:id', surveyController.deleteSurvey);
+router.post('/:id/publish', surveyController.publishSurvey);
 
 export default router;

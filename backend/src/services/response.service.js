@@ -16,7 +16,7 @@ export const responseService = {
 
     // Process answers to extract metrics
     const survey = await Survey.findById(surveyId);
-    
+    console.log("---> survey", survey, "answers", answers)
     answers.forEach(answer => {
       const question = survey.questions.find(q => q._id.toString() === answer.questionId.toString());
       
