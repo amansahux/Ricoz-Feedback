@@ -14,6 +14,8 @@ import Analytics from "../../features/analytics/ui/pages/Analytics.jsx";
 import CreateSurvey from "../../features/surveys/ui/pages/CreateSurvey.jsx";
 import PublishSurvey from "../../features/surveys/ui/pages/PublishSurvey.jsx";
 import LandingPage from "../../features/Landing/ui/pages/LandingPage.jsx";
+import GiveFeedback from "../../features/customers/ui/pages/giveFeedback.jsx";
+
 
 export const router = createBrowserRouter([
   {
@@ -31,6 +33,10 @@ export const router = createBrowserRouter([
       {
         path:"",
         element:<LandingPage/>
+      },
+      {
+        path:"f/:organizationSlug/:surveySlug",
+        element:<GiveFeedback/>
       },
       {
         element: (
