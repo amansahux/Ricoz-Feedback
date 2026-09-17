@@ -65,12 +65,6 @@ export default function SurveyTableRow({ survey, onShare, onDelete }) {
               <span className="font-mono text-[11px] truncate">
                 /slug: {survey.slug || "custom-slug"}
               </span>
-              <span className="w-1 h-1 rounded-full bg-[#d1c5b0]"></span>
-              <span className="px-1.5 py-0.5 rounded bg-[#EAE1DB] text-[#5d3f3e] text-[10px] font-medium font-inter">
-                {survey.description
-                  ? survey.description.slice(0, 24) + "..."
-                  : "Feedback Survey"}
-              </span>
             </div>
           </div>
         </div>
@@ -139,14 +133,15 @@ export default function SurveyTableRow({ survey, onShare, onDelete }) {
       {/* Actions */}
       <td className="py-4 px-6 text-right whitespace-nowrap">
         <div className="flex items-center justify-end gap-1">
-          {/* Share Button */}
+          {/* Share Button (Blocked for drafts) */}
           <button
-            onClick={() => onShare(survey)}
-            title={isDraft ? "Publish survey to share" : "Share survey link & widget"}
-            className={`p-2 rounded-lg transition-colors cursor-pointer ${
+            onClick={() => !isDraft && onShare(survey)}
+            disabled={isDraft}
+            title={isDraft ? "Cannot share draft survey. Please publish it first." : "Share survey link & widget"}
+            className={`p-2 rounded-lg transition-colors ${
               isDraft
-                ? "text-[#a3978d] hover:text-[#1f1b18] hover:bg-[#FBF2EC]"
-                : "text-[#7d7461] hover:text-[#bb0028] hover:bg-[#FBF2EC]"
+                ? "text-[#c2b6ab] opacity-40 cursor-not-allowed"
+                : "text-[#7d7461] hover:text-[#bb0028] hover:bg-[#FBF2EC] cursor-pointer"
             }`}
           >
             <Share2 size={16} />

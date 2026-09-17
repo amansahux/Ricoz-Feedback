@@ -25,7 +25,8 @@ export default function Survey() {
     sortBy,
     setSortBy,
     shareModalSurvey,
-    setShareModalSurvey,
+    handleOpenShare,
+    closeShareModal,
     deleteModalSurvey,
     setDeleteModalSurvey,
     handleDeleteConfirm,
@@ -72,7 +73,7 @@ export default function Survey() {
       ) : (
         <SurveyTable
           surveys={surveys}
-          onShare={(survey) => setShareModalSurvey(survey)}
+          onShare={handleOpenShare}
           onDelete={(survey) => setDeleteModalSurvey(survey)}
         />
       )}
@@ -81,7 +82,7 @@ export default function Survey() {
       <ShareSurveyModal
         survey={shareModalSurvey}
         isOpen={Boolean(shareModalSurvey)}
-        onClose={() => setShareModalSurvey(null)}
+        onClose={closeShareModal}
         onCopySuccess={(msg) => showToast(msg)}
       />
 

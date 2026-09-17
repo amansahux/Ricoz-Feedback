@@ -240,6 +240,18 @@ export const useSurveyList = () => {
     return list;
   }, [rawSurveys, activeFilter, searchQuery, sortBy]);
 
+  const handleOpenShare = useCallback(
+    (survey) => {
+      if (!survey) return;
+      if (survey.status === "draft") {
+        showToast("Cannot share draft survey. Please publish it first.", "error");
+        return;
+      }
+      setShareModalSurvey(survey);
+    },
+    [showToast]
+  );
+
   const handleDeleteConfirm = async (surveyId) => {
     try {
       if (surveyId.startsWith("srv_sample_")) {
@@ -270,6 +282,8 @@ export const useSurveyList = () => {
     setSortBy,
     shareModalSurvey,
     setShareModalSurvey,
+    handleOpenShare,
+    closeShareModal: () => setShareModalSurvey(null),
     deleteModalSurvey,
     setDeleteModalSurvey,
     handleDeleteConfirm,
