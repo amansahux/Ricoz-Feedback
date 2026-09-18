@@ -1,12 +1,15 @@
-import { useParams } from 'react-router'
+import { useParams } from "react-router";
 
 const GiveFeedback = () => {
-    const params = useParams()
-    console.log("dajnjsdjksnjksd")
-    console.log(params)
+  const params = useParams();
+  console.log("dajnjsdjksnjksd");
+  console.log(params);
   return (
-    <div>give v,msdlmlfmklgfFeedback</div>
-  )
-}
+    <>
+      <div>{params?.organizationSlug}</div>
+      <div>{params?.surveySlug}</div>
+    </>
+  );
+};
 
-export default GiveFeedback
+export default GiveFeedback;
