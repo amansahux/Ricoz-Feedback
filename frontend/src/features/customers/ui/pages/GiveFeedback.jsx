@@ -1,7 +1,7 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React from "react";
 import { useParams, useSearchParams } from "react-router";
-import { AlertCircle, Lock, ShieldCheck, Loader2 } from "lucide-react";
-import { useGetPublicSurvey, useCreateResponse } from "../../hooks/useCustomer.jsx";
+import { AlertCircle, ShieldCheck, Loader2 } from "lucide-react";
+import { useGiveFeedback } from "../../hooks/useCustomer.jsx";
 import { SurveyHeader } from "../components/giveFeedback/SurveyHeader.jsx";
 import { QuestionRenderer } from "../components/giveFeedback/QuestionRenderer.jsx";
 import { CustomerDetailsSection } from "../components/giveFeedback/CustomerDetailsSection.jsx";
@@ -12,227 +12,37 @@ import {
   SurveySkeletonLoader,
 } from "../components/giveFeedback/FeedbackStates.jsx";
 
-// Fallback preview mock survey in case the survey is being designed/tested
-const DEFAULT_PREVIEW_SURVEY = {
-  _id: "preview-survey-1",
-  title: "Post Purchase Experience",
-  description:
-    "Tell us about your recent purchase experience so we can keep improving our fits, fast shipping, and concierge support.",
-  status: "published",
-  organizationId: {
-    name: "Acme Clothing",
-    slug: "acme-clothing",
-  },
-  questions: [
-    {
-      _id: "q_csat_1",
-      type: "csat",
-      question: "Overall, how satisfied are you with your purchase?",
-      required: true,
-    },
-    {
-      _id: "q_nps_2",
-      type: "nps",
-      question: "How likely are you to recommend Acme Clothing to a friend or colleague?",
-      required: true,
-    },
-    {
-      _id: "q_ces_3",
-      type: "ces",
-      question: "How easy was it to complete your checkout and delivery?",
-      required: false,
-    },
-    {
-      _id: "q_mc_4",
-      type: "multiple-choice",
-      question: "Which factor mattered most in your decision to shop with us?",
-      required: false,
-      options: [
-        "Product Quality & Craft",
-        "Fast & Reliable Delivery",
-        "Customer Support & Returns",
-        "Value for Money",
-      ],
-    },
-    {
-      _id: "q_yn_5",
-      type: "yes-no",
-      question: "Did your order arrive in perfect condition?",
-      required: false,
-    },
-    {
-      _id: "q_txt_6",
-      type: "text",
-      question: "What did you like most about the experience?",
-      required: false,
-    },
-    {
-      _id: "q_textarea_7",
-      type: "textarea",
-      question: "What could we improve for next time?",
-      required: false,
-    },
-  ],
-};
-
 const GiveFeedback = () => {
   const { organizationSlug, surveySlug } = useParams();
   const [searchParams] = useSearchParams();
   const source = searchParams.get("source") || "link";
 
-  // Form answer states: { [questionId]: value }
-  const [answersState, setAnswersState] = useState({});
-  const [customerName, setCustomerName] = useState("");
-  const [customerEmail, setCustomerEmail] = useState("");
-  const [validationErrors, setValidationErrors] = useState({});
-  const [submissionError, setSubmissionError] = useState(null);
-  const [isSubmittedSuccess, setIsSubmittedSuccess] = useState(false);
-
-  // Fetch Public Survey via React Query
+  // All business logic, caching, anti-refetching, form validation, and submissions are managed via useGiveFeedback
   const {
-    data: surveyData,
+    activeSurvey,
+    questions,
+    totalQuestions,
+    answeredCount,
+    requiredCount,
+    answersState,
+    customerName,
+    setCustomerName,
+    customerEmail,
+    setEmail,
+    validationErrors,
+    submissionError,
+    dismissSubmissionError,
+    isSubmittedSuccess,
     isLoading,
-    isError,
-    error,
+    isDraft,
+    isUnavailable,
+    errorMessage,
+    isSubmitting,
+    handleAnswerChange,
+    handleSubmit,
+    handleReset,
     refetch,
-  } = useGetPublicSurvey(organizationSlug, surveySlug, {
-    retry: 1,
-  });
-
-  // Submit response mutation
-  const createResponseMutation = useCreateResponse({
-    onSuccess: () => {
-      setIsSubmittedSuccess(true);
-      setSubmissionError(null);
-    },
-    onError: (err) => {
-      console.error("Submission failed:", err);
-      setSubmissionError(
-        err?.response?.data?.message ||
-          "There was a brief network interruption. Please review your answers and try again."
-      );
-    },
-  });
-
-  // Active survey data (use fetched or fallback if in development/preview)
-  const activeSurvey = useMemo(() => {
-    if (surveyData) return surveyData;
-    // Fallback when viewing standard test slugs
-    if (organizationSlug === "acme-clothing" || organizationSlug === "demo" || !surveyData) {
-      return {
-        ...DEFAULT_PREVIEW_SURVEY,
-        organizationId: {
-          name: organizationSlug ? organizationSlug.replace(/-/g, " ") : "Recoz Feedback",
-          slug: organizationSlug,
-        },
-      };
-    }
-    return null;
-  }, [surveyData, organizationSlug]);
-
-  const questions = activeSurvey?.questions || [];
-
-  // Track progress counts
-  const requiredQuestions = useMemo(
-    () => questions.filter((q) => q.required),
-    [questions]
-  );
-
-  const answeredCount = useMemo(() => {
-    return Object.keys(answersState).filter((key) => {
-      const val = answersState[key];
-      return val !== undefined && val !== null && val !== "";
-    }).length;
-  }, [answersState]);
-
-  const handleAnswerChange = (questionId, value) => {
-    setAnswersState((prev) => ({
-      ...prev,
-      [questionId]: value,
-    }));
-
-    // Clear error for question once answered
-    if (validationErrors[questionId]) {
-      setValidationErrors((prev) => {
-        const next = { ...prev };
-        delete next[questionId];
-        return next;
-      });
-    }
-  };
-
-  const validateForm = () => {
-    const errors = {};
-    let firstErrorElementId = null;
-
-    questions.forEach((q) => {
-      const qId = q._id;
-      const answerVal = answersState[qId];
-      if (q.required && (answerVal === undefined || answerVal === null || answerVal === "")) {
-        errors[qId] = "Please answer this required question before submitting.";
-        if (!firstErrorElementId) {
-          firstErrorElementId = `question-group-${qId}`;
-        }
-      }
-    });
-
-    setValidationErrors(errors);
-
-    if (firstErrorElementId) {
-      const el = document.getElementById(firstErrorElementId);
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
-      return false;
-    }
-
-    return true;
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setSubmissionError(null);
-
-    if (!validateForm()) {
-      return;
-    }
-
-    // Format answers array according to backend schema: [{ questionId, value }]
-    const formattedAnswers = Object.entries(answersState)
-      .filter(([_, val]) => val !== undefined && val !== null && val !== "")
-      .map(([questionId, value]) => ({
-        questionId,
-        value,
-      }));
-
-    // If no answers at all provided, prevent submission
-    if (formattedAnswers.length === 0) {
-      setSubmissionError("Please answer at least one question before submitting.");
-      return;
-    }
-
-    const payload = {
-      name: customerName?.trim() || undefined,
-      email: customerEmail?.trim() || undefined,
-      answers: formattedAnswers,
-      source: ["link", "qr", "widget"].includes(source) ? source : "link",
-    };
-
-    createResponseMutation.mutate({
-      organizationSlug: organizationSlug || activeSurvey?.organizationId?.slug || "org",
-      surveySlug: surveySlug || activeSurvey?.slug || "survey",
-      responseData: payload,
-    });
-  };
-
-  const handleReset = () => {
-    setAnswersState({});
-    setCustomerName("");
-    setCustomerEmail("");
-    setValidationErrors({});
-    setSubmissionError(null);
-    setIsSubmittedSuccess(false);
-  };
+  } = useGiveFeedback({ organizationSlug, surveySlug, source });
 
   // 1. Loading State
   if (isLoading) {
@@ -246,7 +56,7 @@ const GiveFeedback = () => {
   }
 
   // 2. Draft / Inactive state
-  if (surveyData && surveyData.status === "draft") {
+  if (isDraft) {
     return (
       <main className="w-full flex-grow py-8 md:py-14 px-4 sm:px-6 bg-[#FFFAF3] min-h-screen">
         <div className="max-w-[620px] mx-auto">
@@ -256,17 +66,17 @@ const GiveFeedback = () => {
     );
   }
 
-  // 3. 404 / Error State (when not fallback mode)
-  if (isError && !activeSurvey) {
+  // 3. 404 / Unavailable State
+  if (isUnavailable) {
     return (
       <main className="w-full flex-grow py-8 md:py-14 px-4 sm:px-6 bg-[#FFFAF3] min-h-screen">
         <div className="max-w-[620px] mx-auto">
           <UnavailableState
             message={
-              error?.response?.data?.message ||
+              errorMessage ||
               "This feedback form could not be found or is no longer accepting public responses."
             }
-            onRetry={() => refetch()}
+            onRetry={refetch}
           />
         </div>
       </main>
@@ -293,8 +103,8 @@ const GiveFeedback = () => {
               </div>
               <button
                 type="button"
-                onClick={() => setSubmissionError(null)}
-                className="text-[#BA1A1A] hover:opacity-80 p-1"
+                onClick={dismissSubmissionError}
+                className="text-[#BA1A1A] hover:opacity-80 p-1 cursor-pointer"
               >
                 <span className="sr-only">Dismiss</span>
                 ✕
@@ -323,9 +133,9 @@ const GiveFeedback = () => {
                 description={activeSurvey?.description}
                 organizationSlug={organizationSlug}
                 surveySlug={surveySlug}
-                totalQuestions={questions.length}
+                totalQuestions={totalQuestions}
                 answeredCount={answeredCount}
-                requiredCount={requiredQuestions.length}
+                requiredCount={requiredCount}
               />
 
               {/* Dynamic Question Forms */}
@@ -351,18 +161,18 @@ const GiveFeedback = () => {
                   name={customerName}
                   setName={setCustomerName}
                   email={customerEmail}
-                  setEmail={setCustomerEmail}
+                  setEmail={setEmail}
                 />
 
                 {/* Submit Button & Privacy Badging */}
                 <div className="pt-4">
                   <button
                     type="submit"
-                    disabled={createResponseMutation.isPending}
+                    disabled={isSubmitting}
                     id="submit-btn"
                     className="w-full h-12 rounded-xl bg-[#F62440] hover:bg-[#D81B34] active:bg-[#BA1227] text-[#FFFFFF] text-sm sm:text-base font-semibold shadow-warm-btn flex items-center justify-center gap-2 transition-all duration-150 transform active:scale-[0.99] disabled:opacity-60 disabled:pointer-events-none cursor-pointer"
                   >
-                    {createResponseMutation.isPending ? (
+                    {isSubmitting ? (
                       <>
                         <Loader2 className="w-5 h-5 animate-spin" />
                         <span>Submitting feedback...</span>
