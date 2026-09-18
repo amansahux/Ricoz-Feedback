@@ -2,8 +2,9 @@ import { useParams } from "react-router";
 
 const GiveFeedback = () => {
   const params = useParams();
-  console.log("dajnjsdjksnjksd");
   console.log(params);
+  console.log(params?.organizationSlug)
+  console.log(params?.surveySlug)
   return (
     <>
       <div>{params?.organizationSlug}</div>
