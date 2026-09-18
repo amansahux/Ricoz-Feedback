@@ -4,6 +4,9 @@ import { authMiddleware } from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
+// Public endpoint to load survey for respondents
+router.get('/public/:organizationSlug/:surveySlug', surveyController.getPublicSurvey);
+
 router.use(authMiddleware);
 
 router.post('/', surveyController.createSurvey);

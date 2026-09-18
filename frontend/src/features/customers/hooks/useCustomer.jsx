@@ -4,6 +4,7 @@ import {
   getResponses as getResponsesApi,
   getResponseById as getResponseByIdApi,
   updateResponseById as updateResponseByIdApi,
+  getPublicSurvey as getPublicSurveyApi,
 } from "../apis/customer.api.jsx";
 
 // Query key constants for cache management
@@ -13,6 +14,24 @@ export const RESPONSE_QUERY_KEYS = {
   list: (filters) => [...RESPONSE_QUERY_KEYS.lists(), filters],
   details: () => [...RESPONSE_QUERY_KEYS.all, "detail"],
   detail: (id) => [...RESPONSE_QUERY_KEYS.details(), id],
+  publicSurvey: (orgSlug, surveySlug) => ["public-survey", orgSlug, surveySlug],
+};
+
+/**
+ * Query Hook: Fetch a public survey by organizationSlug and surveySlug
+ */
+export const useGetPublicSurvey = (organizationSlug, surveySlug, options = {}) => {
+  return useQuery({
+    queryKey: RESPONSE_QUERY_KEYS.publicSurvey(organizationSlug, surveySlug),
+    queryFn: async () => {
+      if (!organizationSlug || !surveySlug) return null;
+      const response = await getPublicSurveyApi(organizationSlug, surveySlug);
+      return response?.data || response || null;
+    },
+    enabled: Boolean(organizationSlug && surveySlug),
+    staleTime: 1000 * 60 * 5, // 5 minutes cache
+    ...options,
+  });
 };
 
 /**

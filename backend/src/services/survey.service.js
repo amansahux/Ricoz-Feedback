@@ -1,3 +1,4 @@
+import { Organization } from "../models/organization.model.js";
 import { Response } from "../models/response.model.js";
 import { Survey } from "../models/survey.model.js";
 import { generateUniqueSlug } from "../utils/generateSlug.js";
@@ -63,13 +64,16 @@ export const surveyService = {
   },
 
   async getPublicSurvey(organizationSlug, surveySlug) {
-    return Survey.findOne({
+    const org = await Organization.findOne({ slug: organizationSlug });
+    if (!org) return null;
+
+    const survey = await Survey.findOne({
       slug: surveySlug,
+      organizationId: org._id,
       status: 'published',
-    }).populate({
-      path: 'organizationId',
-      match: { slug: organizationSlug },
-    });
+    }).populate('organizationId');
+
+    return survey;
   },
 
   async getResponseCount(surveyId) {

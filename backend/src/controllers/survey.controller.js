@@ -137,4 +137,25 @@ export const surveyController = {
       next(error);
     }
   },
+
+  async getPublicSurvey(req, res, next) {
+    try {
+      const { organizationSlug, surveySlug } = req.params;
+      const survey = await surveyService.getPublicSurvey(organizationSlug, surveySlug);
+
+      if (!survey) {
+        return res.status(404).json({
+          success: false,
+          message: 'Survey not found or inactive',
+        });
+      }
+
+      res.status(200).json({
+        success: true,
+        data: survey,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
 };

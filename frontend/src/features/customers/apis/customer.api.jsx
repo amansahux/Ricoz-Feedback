@@ -25,6 +25,24 @@ export const createResponse = async (organizationSlug, surveySlug, responseData)
 };
 
 /**
+ * Fetch public survey details for respondents.
+ * @param {string} organizationSlug
+ * @param {string} surveySlug
+ * @returns {Promise<any>}
+ */
+export const getPublicSurvey = async (organizationSlug, surveySlug) => {
+  try {
+    const response = await apiClient.get(
+      `/surveys/public/${organizationSlug}/${surveySlug}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching public survey:", error);
+    throw error;
+  }
+};
+
+/**
  * Get all responses for the authenticated organization with optional filters.
  * @param {Object} [filters={}] - Query filters (surveyId, sentiment, status, npsScore)
  * @returns {Promise<any>}
