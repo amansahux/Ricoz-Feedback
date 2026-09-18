@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearchParams } from "react-router";
+import { useSelector } from "react-redux";
 import {
   createSurvey,
   getAllSurveys,
@@ -627,7 +628,10 @@ export const usePublishSurveyHub = () => {
     };
   }, [getSurveyByIdQuery.data, surveyIdParam]);
 
-  const publicUrl = `${window.location.origin}/f/${survey.slug || survey._id}`;
+  const organization = useSelector((state) => state.auth?.organization);
+  const orgSlug = organization?.slug || "org";
+
+  const publicUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/f/${orgSlug}/${survey.slug || survey._id}`;
 
   const handlePublishNow = async () => {
     try {
