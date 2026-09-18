@@ -278,30 +278,50 @@ const renderControlByType = (type, qId, value, onChange, options = []) => {
       );
 
     // 6. Short Text
-    case "text":
+    case "text": {
+      const textVal = value || "";
+      const charCount = textVal.length;
+      const wordCount = textVal.trim() === "" ? 0 : textVal.trim().split(/\s+/).filter(Boolean).length;
       return (
-        <div className="mt-2">
-          <p className="text-xs text-[#5E5851] mb-2">A brief highlight or detail.</p>
+        <div className="mt-2 space-y-1.5">
+          <div className="flex flex-wrap items-center justify-between gap-1 text-xs text-[#5E5851]">
+            <p className="text-[11px] sm:text-xs">A brief highlight or praise for the team.</p>
+            <div className="flex items-center gap-1.5 text-[11px] font-mono text-[#8C847B] ml-auto shrink-0 bg-[#FBF2EC] px-2 py-0.5 rounded-md border border-[#EFE4D6]">
+              <span className="font-semibold text-[#1E1A17]">{wordCount}</span>
+              <span>{wordCount === 1 ? "word" : "words"}</span>
+              <span className="text-[#DAC1A2]">•</span>
+              <span>{charCount}/150</span>
+            </div>
+          </div>
           <input
             id={`input-${qId}`}
             type="text"
+            maxLength={150}
             className="w-full h-[42px] px-3.5 text-sm rounded-xl border border-[#E8DFD5] bg-[#FFFFFF] text-[#1E1A17] placeholder:text-[#8C847B] focus:border-[#F62440] focus:ring-2 focus:ring-[#F62440]/15 outline-none transition-all"
-            placeholder="Type your answer here..."
-            value={value || ""}
+            placeholder="e.g. Fabric softness, instant delivery updates, seamless returns"
+            value={textVal}
             onChange={(e) => onChange(e.target.value)}
           />
         </div>
       );
+    }
 
     // 7. Textarea (Long text)
     case "textarea":
-    default:
-      const charCount = (value || "").length;
+    default: {
+      const textVal = value || "";
+      const charCount = textVal.length;
+      const wordCount = textVal.trim() === "" ? 0 : textVal.trim().split(/\s+/).filter(Boolean).length;
       return (
-        <div className="mt-2">
-          <div className="flex items-center justify-between mb-1.5">
-            <p className="text-xs text-[#5E5851]">Constructive feedback is shared directly with our team.</p>
-            <span className="text-xs text-[#8C847B] font-mono">{charCount} / 500</span>
+        <div className="mt-2 space-y-1.5">
+          <div className="flex flex-wrap items-center justify-between gap-1 text-xs text-[#5E5851]">
+            <p className="text-[11px] sm:text-xs">Constructive feedback is shared directly with our team.</p>
+            <div className="flex items-center gap-1.5 text-[11px] font-mono text-[#8C847B] ml-auto shrink-0 bg-[#FBF2EC] px-2 py-0.5 rounded-md border border-[#EFE4D6]">
+              <span className="font-semibold text-[#1E1A17]">{wordCount}</span>
+              <span>{wordCount === 1 ? "word" : "words"}</span>
+              <span className="text-[#DAC1A2]">•</span>
+              <span>{charCount}/500</span>
+            </div>
           </div>
           <textarea
             id={`input-${qId}`}
@@ -309,11 +329,12 @@ const renderControlByType = (type, qId, value, onChange, options = []) => {
             maxLength={500}
             className="w-full p-3.5 text-sm rounded-xl border border-[#E8DFD5] bg-[#FFFFFF] text-[#1E1A17] placeholder:text-[#8C847B] focus:border-[#F62440] focus:ring-2 focus:ring-[#F62440]/15 outline-none transition-all resize-none leading-relaxed"
             placeholder="Be candid — whether it was website sizing, packaging, or tracking updates..."
-            value={value || ""}
+            value={textVal}
             onChange={(e) => onChange(e.target.value)}
           />
         </div>
       );
+    }
   }
 };
 
