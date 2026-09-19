@@ -16,6 +16,7 @@ import PublishSurvey from "../../features/surveys/ui/pages/PublishSurvey.jsx";
 import LandingPage from "../../features/Landing/ui/pages/LandingPage.jsx";
 import GiveFeedback from "../../features/customers/ui/pages/giveFeedback.jsx";
 import FeedbackDetails from "../../features/feedback/ui/pages/FeedbackDetails.jsx";
+import CustomerDetail from "../../features/customers/ui/pages/CustomerDetail.jsx";
 
 
 export const router = createBrowserRouter([
@@ -77,6 +78,10 @@ export const router = createBrowserRouter([
           {
             path: "customers",
             element: <Customer/>,
+          },
+          {
+            path: "customers/:customerId",
+            element: <CustomerDetail/>,
           },
           {
             path: "analytics",
