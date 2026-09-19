@@ -2,19 +2,21 @@ import { useState, useMemo, useCallback } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createResponse as createResponseApi,
-  getResponses as getResponsesApi,
-  getResponseById as getResponseByIdApi,
-  updateResponseById as updateResponseByIdApi,
   getPublicSurvey as getPublicSurveyApi,
 } from "../apis/customer.api.jsx";
+import {
+  FEEDBACK_QUERY_KEYS,
+  useGetResponses,
+  useGetResponseById,
+  useUpdateResponseById,
+} from "../../feedback/hooks/useFeedback.jsx";
+
+// Re-export for backward compatibility
+export { useGetResponses, useGetResponseById, useUpdateResponseById };
 
 // Standard query keys hierarchy
 export const RESPONSE_QUERY_KEYS = {
-  all: ["responses"],
-  lists: () => [...RESPONSE_QUERY_KEYS.all, "list"],
-  list: (filters) => [...RESPONSE_QUERY_KEYS.lists(), filters],
-  details: () => [...RESPONSE_QUERY_KEYS.all, "detail"],
-  detail: (id) => [...RESPONSE_QUERY_KEYS.details(), id],
+  ...FEEDBACK_QUERY_KEYS,
   publicSurvey: (orgSlug, surveySlug) => ["public-survey", orgSlug, surveySlug],
 };
 
@@ -354,74 +356,7 @@ export const useGiveFeedback = ({ organizationSlug, surveySlug, source = "link" 
 };
 
 /**
- * Query Hook: Fetch responses with filters
- */
-export const useGetResponses = (filters = {}, options = {}) => {
-  return useQuery({
-    queryKey: RESPONSE_QUERY_KEYS.list(filters),
-    queryFn: async () => {
-      const response = await getResponsesApi(filters);
-      return response?.data || response || [];
-    },
-    staleTime: 1000 * 60 * 2, // 2 minutes
-    refetchOnWindowFocus: false,
-    ...options,
-  });
-};
-
-/**
- * Query Hook: Fetch a single response by ID
- */
-export const useGetResponseById = (id, options = {}) => {
-  return useQuery({
-    queryKey: RESPONSE_QUERY_KEYS.detail(id),
-    queryFn: async () => {
-      if (!id) return null;
-      const response = await getResponseByIdApi(id);
-      return response?.data || response || null;
-    },
-    enabled: Boolean(id),
-    staleTime: 1000 * 60 * 2,
-    refetchOnWindowFocus: false,
-    ...options,
-  });
-};
-
-/**
- * Mutation Hook: Update response status & follow-up note
- */
-export const useUpdateResponseById = (options = {}) => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ id, status, followUpNote }) => {
-      if (!id) throw new Error("Response ID is required.");
-      return await updateResponseByIdApi(id, { status, followUpNote });
-    },
-    onSuccess: (data, variables, context) => {
-      if (variables?.id) {
-        queryClient.invalidateQueries({
-          queryKey: RESPONSE_QUERY_KEYS.detail(variables.id),
-        });
-      }
-      queryClient.invalidateQueries({ queryKey: RESPONSE_QUERY_KEYS.lists() });
-      queryClient.invalidateQueries({ queryKey: ["analytics"] });
-
-      if (options.onSuccess) {
-        options.onSuccess(data, variables, context);
-      }
-    },
-    onError: (error, variables, context) => {
-      if (options.onError) {
-        options.onError(error, variables, context);
-      }
-    },
-    ...options,
-  });
-};
-
-/**
- * Unified customer & response management hook
+ * Unified customer feedback submission hook
  */
 export const useCustomer = (filters = {}) => {
   const responsesQuery = useGetResponses(filters);
