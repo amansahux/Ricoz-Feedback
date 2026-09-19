@@ -15,6 +15,7 @@ import CreateSurvey from "../../features/surveys/ui/pages/CreateSurvey.jsx";
 import PublishSurvey from "../../features/surveys/ui/pages/PublishSurvey.jsx";
 import LandingPage from "../../features/Landing/ui/pages/LandingPage.jsx";
 import GiveFeedback from "../../features/customers/ui/pages/giveFeedback.jsx";
+import FeedbackDetails from "../../features/feedback/ui/pages/FeedbackDetails.jsx";
 
 
 export const router = createBrowserRouter([
@@ -68,6 +69,10 @@ export const router = createBrowserRouter([
           {
             path: "feedback",
             element:<Feedback/>,
+          },
+          {
+            path: "feedback/:feedbackId",
+            element:<FeedbackDetails/>,
           },
           {
             path: "customers",
