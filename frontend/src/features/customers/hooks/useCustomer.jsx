@@ -89,7 +89,7 @@ export const DEFAULT_PREVIEW_SURVEY = {
 };
 
 /**
- * Hook: Fetch public survey with optimized caching and zero unnecessary re-fetching
+ * Hook: Fetch public survey with optimized caching
  */
 export const useGetPublicSurvey = (organizationSlug, surveySlug, options = {}) => {
   return useQuery({
@@ -100,8 +100,8 @@ export const useGetPublicSurvey = (organizationSlug, surveySlug, options = {}) =
       return response?.data || response || null;
     },
     enabled: Boolean(organizationSlug && surveySlug),
-    staleTime: 1000 * 60 * 10, // 10 minutes cache
-    gcTime: 1000 * 60 * 30, // 30 minutes garbage collection time
+    staleTime: 1000 * 60 * 10,
+    gcTime: 1000 * 60 * 30,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,
@@ -142,7 +142,7 @@ export const useCreateResponse = (options = {}) => {
 };
 
 /**
- * Hook: Fetch all customers with search, pagination, and sorting
+ * Hook: Fetch all customers with query parameters (search, sorting, pagination)
  */
 export const useGetCustomers = (params = {}, options = {}) => {
   return useQuery({
@@ -156,7 +156,7 @@ export const useGetCustomers = (params = {}, options = {}) => {
         skip: response?.skip || 0,
       };
     },
-    staleTime: 1000 * 60 * 2, // 2 minutes
+    staleTime: 1000 * 60 * 2,
     refetchOnWindowFocus: false,
     ...options,
   });
@@ -183,11 +183,250 @@ export const useGetCustomerDetail = (customerId, options = {}) => {
 export const useGetCustomerById = useGetCustomerDetail;
 
 /**
- * Hook: Encapsulates all public feedback form business logic, state management,
- * validation, answer formatting, progress calculation, and submission.
+ * Full Feature Hook for Customer Management (/customers)
+ * Encapsulates search, sorting, client pagination, metric calculations, and toast notifications.
+ */
+export const useCustomerDirectory = (initialParams = {}) => {
+  const [searchQuery, setSearchQuery] = useState(initialParams.search || "");
+  const [sortBy, setSortBy] = useState(initialParams.sortBy || "recent"); // recent | most_feedback | high_rating | low_rating | name_asc | name_desc
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+
+  // Toast
+  const [toast, setToast] = useState({ visible: false, message: "", type: "success" });
+  const showToast = useCallback((message, type = "success") => {
+    setToast({ visible: true, message, type });
+    setTimeout(() => {
+      setToast({ visible: false, message: "", type: "success" });
+    }, 3500);
+  }, []);
+
+  const hideToast = useCallback(() => {
+    setToast({ visible: false, message: "", type: "success" });
+  }, []);
+
+  // API query
+  const queryParams = useMemo(() => {
+    return {
+      search: searchQuery.trim() || undefined,
+    };
+  }, [searchQuery]);
+
+  const { data, isLoading, isFetching, isError, error, refetch } = useGetCustomers(queryParams);
+
+  const rawCustomers = useMemo(() => {
+    return data?.customers || [];
+  }, [data]);
+
+  // Client-side sorting
+  const sortedCustomers = useMemo(() => {
+    const list = [...rawCustomers];
+
+    if (sortBy === "recent") {
+      list.sort((a, b) => {
+        const timeA = a.stats?.latestResponseAt || a.createdAt;
+        const timeB = b.stats?.latestResponseAt || b.createdAt;
+        return new Date(timeB) - new Date(timeA);
+      });
+    } else if (sortBy === "most_feedback") {
+      list.sort((a, b) => (b.stats?.totalResponses || 0) - (a.stats?.totalResponses || 0));
+    } else if (sortBy === "high_rating") {
+      list.sort((a, b) => (b.stats?.avgCsat || b.stats?.avgNps || 0) - (a.stats?.avgCsat || a.stats?.avgNps || 0));
+    } else if (sortBy === "low_rating") {
+      list.sort((a, b) => (a.stats?.avgCsat || a.stats?.avgNps || 0) - (b.stats?.avgCsat || b.stats?.avgNps || 0));
+    } else if (sortBy === "name_asc") {
+      list.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    } else if (sortBy === "name_desc") {
+      list.sort((a, b) => (b.name || "").localeCompare(a.name || ""));
+    }
+
+    return list;
+  }, [rawCustomers, sortBy]);
+
+  // Metrics summary
+  const metrics = useMemo(() => {
+    const total = data?.totalCount || rawCustomers.length;
+    const ratedCustomers = rawCustomers.filter((c) => c.stats?.avgCsat != null || c.stats?.avgNps != null);
+    
+    let avgExp = "—";
+    if (ratedCustomers.length > 0) {
+      const sum = ratedCustomers.reduce((acc, c) => {
+        const score = c.stats?.avgCsat || (c.stats?.avgNps ? (c.stats.avgNps / 2).toFixed(1) : 0);
+        return acc + Number(score);
+      }, 0);
+      avgExp = (sum / ratedCustomers.length).toFixed(1);
+    }
+
+    return {
+      totalCustomers: total,
+      avgExperience: avgExp,
+    };
+  }, [data, rawCustomers]);
+
+  // Pagination slice
+  const totalPages = Math.ceil(sortedCustomers.length / pageSize) || 1;
+  const paginatedCustomers = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return sortedCustomers.slice(start, start + pageSize);
+  }, [sortedCustomers, currentPage, pageSize]);
+
+  const hasSearch = Boolean(searchQuery.trim());
+
+  const resetFilters = useCallback(() => {
+    setSearchQuery("");
+    setSortBy("recent");
+    setCurrentPage(1);
+    showToast("Customer search reset.");
+  }, [showToast]);
+
+  return {
+    customers: paginatedCustomers,
+    allCustomers: sortedCustomers,
+    totalCount: data?.totalCount || rawCustomers.length,
+    filteredCount: sortedCustomers.length,
+    metrics,
+
+    // Statuses
+    isLoading,
+    isFetching,
+    isError,
+    error,
+    refetch,
+    isEmpty: !isLoading && !isError && rawCustomers.length === 0 && !hasSearch,
+    isNoResults: !isLoading && !isError && rawCustomers.length === 0 && hasSearch,
+
+    // Filter controls
+    searchQuery,
+    setSearchQuery: (val) => {
+      setSearchQuery(val);
+      setCurrentPage(1);
+    },
+    sortBy,
+    setSortBy,
+    hasSearch,
+    resetFilters,
+
+    // Pagination
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    pageSize,
+
+    // Toast
+    toast,
+    showToast,
+    hideToast,
+  };
+};
+
+/**
+ * Full Feature Hook for Customer Detail View (/customers/:customerId)
+ * Encapsulates single customer fetching, response history filtering, metrics, and export.
+ */
+export const useCustomerProfile = (customerId) => {
+  const [surveyFilter, setSurveyFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("newest"); // newest | high_rating | low_rating
+
+  // Toast
+  const [toast, setToast] = useState({ visible: false, message: "", type: "success" });
+  const showToast = useCallback((message, type = "success") => {
+    setToast({ visible: true, message, type });
+    setTimeout(() => {
+      setToast({ visible: false, message: "", type: "success" });
+    }, 3500);
+  }, []);
+
+  const hideToast = useCallback(() => {
+    setToast({ visible: false, message: "", type: "success" });
+  }, []);
+
+  const { data, isLoading, isFetching, isError, error, refetch } = useGetCustomerDetail(customerId);
+
+  const customer = data?.customer || null;
+  const rawResponses = useMemo(() => data?.responses || [], [data]);
+  const summary = data?.summary || {};
+
+  // Extract unique survey titles for filter dropdown
+  const uniqueSurveys = useMemo(() => {
+    const map = new Map();
+    rawResponses.forEach((r) => {
+      if (r.surveyId?._id) {
+        map.set(r.surveyId._id.toString(), r.surveyId.title || "Survey");
+      }
+    });
+    return Array.from(map.entries()).map(([id, title]) => ({ id, title }));
+  }, [rawResponses]);
+
+  // Filter & sort responses
+  const filteredResponses = useMemo(() => {
+    let list = [...rawResponses];
+
+    if (surveyFilter !== "all") {
+      list = list.filter((r) => r.surveyId?._id?.toString() === surveyFilter);
+    }
+
+    if (sortBy === "newest") {
+      list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    } else if (sortBy === "high_rating") {
+      list.sort((a, b) => (b.csatScore || b.npsScore || 0) - (a.csatScore || a.npsScore || 0));
+    } else if (sortBy === "low_rating") {
+      list.sort((a, b) => (a.csatScore || a.npsScore || 0) - (b.csatScore || b.npsScore || 0));
+    }
+
+    return list;
+  }, [rawResponses, surveyFilter, sortBy]);
+
+  const handleExportJson = () => {
+    if (!data) return;
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
+    const downloadAnchor = document.createElement("a");
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", `customer-profile-${customerId}-${Date.now()}.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+    showToast("Customer profile exported as JSON.");
+  };
+
+  const isNotFound = !isLoading && !isError && !customer;
+
+  return {
+    customerId,
+    customer,
+    responses: filteredResponses,
+    allResponses: rawResponses,
+    uniqueSurveys,
+    summary,
+
+    // Statuses
+    isLoading,
+    isFetching,
+    isError,
+    error,
+    refetch,
+    isNotFound,
+    isEmptyHistory: !isLoading && !isError && rawResponses.length === 0,
+
+    // Filters
+    surveyFilter,
+    setSurveyFilter,
+    sortBy,
+    setSortBy,
+
+    // Actions
+    handleExportJson,
+
+    // Toast
+    toast,
+    showToast,
+    hideToast,
+  };
+};
+
+/**
+ * Public Form Feedback Hook
  */
 export const useGiveFeedback = ({ organizationSlug, surveySlug, source = "link" }) => {
-  // Form State
   const [answersState, setAnswersState] = useState({});
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
@@ -195,7 +434,6 @@ export const useGiveFeedback = ({ organizationSlug, surveySlug, source = "link" 
   const [submissionError, setSubmissionError] = useState(null);
   const [isSubmittedSuccess, setIsSubmittedSuccess] = useState(false);
 
-  // 1. Fetch survey with deduplication and caching
   const {
     data: surveyData,
     isLoading,
@@ -206,7 +444,6 @@ export const useGiveFeedback = ({ organizationSlug, surveySlug, source = "link" 
     retry: 1,
   });
 
-  // 2. Submit Response Mutation
   const createResponseMutation = useCreateResponse({
     onSuccess: () => {
       setIsSubmittedSuccess(true);
@@ -221,7 +458,6 @@ export const useGiveFeedback = ({ organizationSlug, surveySlug, source = "link" 
     },
   });
 
-  // 3. Derive active survey
   const activeSurvey = useMemo(() => {
     if (surveyData) return surveyData;
     if (
@@ -243,7 +479,6 @@ export const useGiveFeedback = ({ organizationSlug, surveySlug, source = "link" 
   }, [surveyData, organizationSlug]);
 
   const questions = useMemo(() => activeSurvey?.questions || [], [activeSurvey]);
-
   const requiredQuestions = useMemo(
     () => questions.filter((q) => q.required),
     [questions]
@@ -256,7 +491,6 @@ export const useGiveFeedback = ({ organizationSlug, surveySlug, source = "link" 
     }).length;
   }, [answersState]);
 
-  // Handle single answer change & clear inline error
   const handleAnswerChange = useCallback((questionId, value) => {
     setAnswersState((prev) => ({
       ...prev,
@@ -271,7 +505,6 @@ export const useGiveFeedback = ({ organizationSlug, surveySlug, source = "link" 
     });
   }, []);
 
-  // Form Validation logic
   const validateForm = useCallback(() => {
     const errors = {};
     let firstErrorElementId = null;
@@ -303,17 +536,13 @@ export const useGiveFeedback = ({ organizationSlug, surveySlug, source = "link" 
     return true;
   }, [questions, answersState]);
 
-  // Submit Feedback Handler
   const handleSubmit = useCallback(
     async (e) => {
       if (e && e.preventDefault) e.preventDefault();
       setSubmissionError(null);
 
-      if (!validateForm()) {
-        return;
-      }
+      if (!validateForm()) return;
 
-      // Format payload answers according to backend model schema: [{ questionId, value }]
       const formattedAnswers = Object.entries(answersState)
         .filter(([_, val]) => val !== undefined && val !== null && val !== "")
         .map(([questionId, value]) => ({
@@ -353,7 +582,6 @@ export const useGiveFeedback = ({ organizationSlug, surveySlug, source = "link" 
     ]
   );
 
-  // Reset form handler
   const handleReset = useCallback(() => {
     setAnswersState({});
     setCustomerName("");
@@ -368,15 +596,12 @@ export const useGiveFeedback = ({ organizationSlug, surveySlug, source = "link" 
   }, []);
 
   return {
-    // Survey Data & Meta
     activeSurvey,
     questions,
     requiredQuestions,
     totalQuestions: questions.length,
     answeredCount,
     requiredCount: requiredQuestions.length,
-
-    // Form inputs and validation state
     answersState,
     customerName,
     setCustomerName,
@@ -386,15 +611,11 @@ export const useGiveFeedback = ({ organizationSlug, surveySlug, source = "link" 
     submissionError,
     dismissSubmissionError,
     isSubmittedSuccess,
-
-    // Statuses
     isLoading,
     isDraft: surveyData?.status === "draft",
     isUnavailable: isError && !activeSurvey,
     errorMessage: error?.response?.data?.message,
     isSubmitting: createResponseMutation.isPending,
-
-    // Action handlers
     handleAnswerChange,
     handleSubmit,
     handleReset,
@@ -403,61 +624,29 @@ export const useGiveFeedback = ({ organizationSlug, surveySlug, source = "link" 
 };
 
 /**
- * Unified customer and feedback hook
+ * Unified Root Hook
  */
 export const useCustomer = (params = {}) => {
-  const customersQuery = useGetCustomers(params);
+  const directory = useCustomerDirectory(params);
   const responsesQuery = useGetResponses(params);
   const createResponseMutation = useCreateResponse();
   const updateResponseMutation = useUpdateResponseById();
 
-  const submitResponse = async (organizationSlug, surveySlug, responseData) => {
-    return createResponseMutation.mutateAsync({
-      organizationSlug,
-      surveySlug,
-      responseData,
-    });
-  };
-
-  const updateResponse = async (id, updateData) => {
-    return updateResponseMutation.mutateAsync({
-      id,
-      ...updateData,
-    });
-  };
-
   return {
-    // Customers data & states
-    customers: customersQuery.data?.customers || [],
-    totalCustomers: customersQuery.data?.totalCount || 0,
-    isLoadingCustomers: customersQuery.isLoading,
-    isFetchingCustomers: customersQuery.isFetching,
-    customersError: customersQuery.error,
-    refetchCustomers: customersQuery.refetch,
-
-    // Responses data & states
+    ...directory,
     responses: responsesQuery.data || [],
     isLoadingResponses: responsesQuery.isLoading,
     isFetchingResponses: responsesQuery.isFetching,
     responsesError: responsesQuery.error,
     refetchResponses: responsesQuery.refetch,
-
-    // Submissions
-    submitResponse,
-    isSubmittingResponse: createResponseMutation.isPending,
-    submitResponseError: createResponseMutation.error,
-    createResponseMutation,
-
-    // Updates
-    updateResponse,
-    isUpdatingResponse: updateResponseMutation.isPending,
-    updateResponseError: updateResponseMutation.error,
-    updateResponseMutation,
-
-    // Sub-hooks
+    submitResponse: (orgSlug, surveySlug, data) =>
+      createResponseMutation.mutateAsync({ organizationSlug: orgSlug, surveySlug, responseData: data }),
+    updateResponse: (id, data) => updateResponseMutation.mutateAsync({ id, ...data }),
     useGetCustomerDetail,
     useGetCustomerById,
     useGetResponseById,
+    useCustomerDirectory,
+    useCustomerProfile,
   };
 };
 
