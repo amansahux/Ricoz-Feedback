@@ -1,5 +1,5 @@
-import React from "react";
 import { Download, Copy, ShieldCheck } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 
 export default function TabQrContent({ onCopySuccess }) {
   const handleDownload = () => {
@@ -20,63 +20,16 @@ export default function TabQrContent({ onCopySuccess }) {
           Instant scanning for offline touchpoints
         </h2>
         <p className="text-xs sm:text-sm text-[#7d7461] max-w-lg mt-2 mb-8 font-inter leading-relaxed">
-          Scan or download to print on receipts, table tents, product packaging, or counter signage.
+          Scan or download to print on receipts, table tents, product packaging,
+          or counter signage.
         </p>
 
         {/* Crisp Clean SVG QR Code Representation matching Stitch */}
         <div className="p-6 bg-white rounded-2xl border-2 border-[#EFE4D6] shadow-md inline-block relative group">
-          <svg className="w-52 h-52 sm:w-56 sm:h-56 text-[#1f1b18]" fill="currentColor" viewBox="0 0 256 256">
-            {/* Outer Corners */}
-            <rect fill="none" height="64" rx="8" stroke="currentColor" strokeWidth="12" width="64" x="16" y="16" />
-            <rect fill="currentColor" height="24" rx="4" width="24" x="36" y="36" />
-            <rect fill="none" height="64" rx="8" stroke="currentColor" strokeWidth="12" width="64" x="176" y="16" />
-            <rect fill="currentColor" height="24" rx="4" width="24" x="196" y="36" />
-            <rect fill="none" height="64" rx="8" stroke="currentColor" strokeWidth="12" width="64" x="16" y="176" />
-            <rect fill="currentColor" height="24" rx="4" width="24" x="36" y="196" />
-
-            {/* Stylized Data Matrix Dots & Paths */}
-            <circle cx="112" cy="32" r="8" />
-            <circle cx="144" cy="32" r="8" />
-            <circle cx="112" cy="64" r="8" />
-            <circle cx="144" cy="64" r="8" />
-            <rect height="16" rx="3" width="16" x="96" y="96" />
-            <rect height="16" rx="3" width="16" x="120" y="96" />
-            <rect height="16" rx="3" width="16" x="144" y="96" />
-            <rect height="16" rx="3" width="16" x="168" y="96" />
-            <rect height="16" rx="3" width="16" x="32" y="112" />
-            <rect height="16" rx="3" width="16" x="64" y="112" />
-            <rect height="16" rx="3" width="16" x="32" y="144" />
-            <rect height="16" rx="3" width="16" x="64" y="144" />
-            <rect height="16" rx="3" width="16" x="96" y="128" />
-            <rect height="16" rx="3" width="16" x="144" y="128" />
-            <rect height="16" rx="3" width="16" x="96" y="160" />
-            <rect height="16" rx="3" width="16" x="120" y="160" />
-            <rect height="16" rx="3" width="16" x="176" y="112" />
-            <rect height="16" rx="3" width="16" x="208" y="112" />
-            <rect height="16" rx="3" width="16" x="192" y="144" />
-            <rect height="16" rx="3" width="16" x="224" y="144" />
-            <rect height="16" rx="3" width="16" x="112" y="192" />
-            <rect height="16" rx="3" width="16" x="144" y="192" />
-            <rect height="16" rx="3" width="16" x="176" y="192" />
-            <rect height="16" rx="3" width="16" x="208" y="192" />
-            <rect height="16" rx="3" width="16" x="128" y="224" />
-            <rect height="16" rx="3" width="16" x="160" y="224" />
-            <rect height="16" rx="3" width="16" x="192" y="224" />
-
-            {/* Center Monogram Dot Badge */}
-            <circle cx="128" cy="128" fill="#bb0028" r="18" />
-            <text
-              fill="#ffffff"
-              fontFamily="Epilogue, sans-serif"
-              fontSize="14"
-              fontWeight="bold"
-              textAnchor="middle"
-              x="128"
-              y="133"
-            >
-              R
-            </text>
-          </svg>
+          <QRCodeSVG
+            value={{}}
+            size={220}
+          />
         </div>
 
         {/* Download Actions */}
@@ -100,7 +53,10 @@ export default function TabQrContent({ onCopySuccess }) {
         {/* Print Specs Note */}
         <div className="mt-8 pt-6 border-t border-[#EFE4D6] flex items-center gap-2 text-xs font-inter text-[#7d7461]">
           <ShieldCheck size={16} className="text-[#bb0028]" />
-          <span>High resolution 300 DPI vector-ready export • Scannable up to 2.5 meters distance</span>
+          <span>
+            High resolution 300 DPI vector-ready export • Scannable up to 2.5
+            meters distance
+          </span>
         </div>
       </div>
     </section>
