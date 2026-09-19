@@ -4,12 +4,29 @@ const customerSchema = new mongoose.Schema(
   {
     organizationId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Organization',
+      ref: "Organization",
       required: true,
       index: true,
     },
-    name: String,
-    email: String,
+    name: {
+      type: String,
+      trim: true,
+      default: "Anonymous",
+    },
+    email: {
+      type: String,
+      trim: true,
+      lowercase: true,
+    },
+    phone: {
+      type: String,
+      trim: true,
+    },
+    metadata: {
+      type: Map,
+      of: mongoose.Schema.Types.Mixed,
+      default: {},
+    },
   },
   {
     timestamps: true,
@@ -17,5 +34,6 @@ const customerSchema = new mongoose.Schema(
 );
 
 customerSchema.index({ organizationId: 1, email: 1 });
+customerSchema.index({ organizationId: 1, createdAt: -1 });
 
-export const Customer = mongoose.model('Customer', customerSchema);
+export const Customer = mongoose.model("Customer", customerSchema);
