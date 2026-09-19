@@ -3,6 +3,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createResponse as createResponseApi,
   getPublicSurvey as getPublicSurveyApi,
+  getCustomers as getCustomersApi,
+  getCustomerDetail as getCustomerDetailApi,
 } from "../apis/customer.api.jsx";
 import {
   FEEDBACK_QUERY_KEYS,
@@ -18,6 +20,9 @@ export { useGetResponses, useGetResponseById, useUpdateResponseById };
 export const RESPONSE_QUERY_KEYS = {
   ...FEEDBACK_QUERY_KEYS,
   publicSurvey: (orgSlug, surveySlug) => ["public-survey", orgSlug, surveySlug],
+  customers: () => ["customers"],
+  customerList: (params) => ["customers", "list", params],
+  customerDetail: (id) => ["customers", "detail", id],
 };
 
 // Default fallback survey for visual testing & demo flows
@@ -97,8 +102,8 @@ export const useGetPublicSurvey = (organizationSlug, surveySlug, options = {}) =
     enabled: Boolean(organizationSlug && surveySlug),
     staleTime: 1000 * 60 * 10, // 10 minutes cache
     gcTime: 1000 * 60 * 30, // 30 minutes garbage collection time
-    refetchOnWindowFocus: false, // Prevent background refetches on tab switch
-    refetchOnMount: false, // Use cached survey data without re-triggering network request
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
     refetchOnReconnect: false,
     ...options,
   });
@@ -119,6 +124,7 @@ export const useCreateResponse = (options = {}) => {
     },
     onSuccess: (data, variables, context) => {
       queryClient.invalidateQueries({ queryKey: RESPONSE_QUERY_KEYS.all });
+      queryClient.invalidateQueries({ queryKey: RESPONSE_QUERY_KEYS.customers() });
       queryClient.invalidateQueries({ queryKey: ["analytics"] });
       queryClient.invalidateQueries({ queryKey: ["surveys"] });
 
@@ -136,6 +142,47 @@ export const useCreateResponse = (options = {}) => {
 };
 
 /**
+ * Hook: Fetch all customers with search, pagination, and sorting
+ */
+export const useGetCustomers = (params = {}, options = {}) => {
+  return useQuery({
+    queryKey: RESPONSE_QUERY_KEYS.customerList(params),
+    queryFn: async () => {
+      const response = await getCustomersApi(params);
+      return {
+        customers: response?.data || [],
+        totalCount: response?.totalCount || 0,
+        limit: response?.limit || 50,
+        skip: response?.skip || 0,
+      };
+    },
+    staleTime: 1000 * 60 * 2, // 2 minutes
+    refetchOnWindowFocus: false,
+    ...options,
+  });
+};
+
+/**
+ * Hook: Fetch single customer details by ID with response telemetry
+ */
+export const useGetCustomerDetail = (customerId, options = {}) => {
+  return useQuery({
+    queryKey: RESPONSE_QUERY_KEYS.customerDetail(customerId),
+    queryFn: async () => {
+      if (!customerId) return null;
+      const response = await getCustomerDetailApi(customerId);
+      return response?.data || response || null;
+    },
+    enabled: Boolean(customerId),
+    staleTime: 1000 * 60 * 2,
+    refetchOnWindowFocus: false,
+    ...options,
+  });
+};
+
+export const useGetCustomerById = useGetCustomerDetail;
+
+/**
  * Hook: Encapsulates all public feedback form business logic, state management,
  * validation, answer formatting, progress calculation, and submission.
  */
@@ -148,7 +195,7 @@ export const useGiveFeedback = ({ organizationSlug, surveySlug, source = "link" 
   const [submissionError, setSubmissionError] = useState(null);
   const [isSubmittedSuccess, setIsSubmittedSuccess] = useState(false);
 
-  // 1. Fetch survey with deduplication and aggressive caching
+  // 1. Fetch survey with deduplication and caching
   const {
     data: surveyData,
     isLoading,
@@ -174,7 +221,7 @@ export const useGiveFeedback = ({ organizationSlug, surveySlug, source = "link" 
     },
   });
 
-  // 3. Derive active survey (with seamless fallback for testing or sample organizations)
+  // 3. Derive active survey
   const activeSurvey = useMemo(() => {
     if (surveyData) return surveyData;
     if (
@@ -356,10 +403,11 @@ export const useGiveFeedback = ({ organizationSlug, surveySlug, source = "link" 
 };
 
 /**
- * Unified customer feedback submission hook
+ * Unified customer and feedback hook
  */
-export const useCustomer = (filters = {}) => {
-  const responsesQuery = useGetResponses(filters);
+export const useCustomer = (params = {}) => {
+  const customersQuery = useGetCustomers(params);
+  const responsesQuery = useGetResponses(params);
   const createResponseMutation = useCreateResponse();
   const updateResponseMutation = useUpdateResponseById();
 
@@ -379,22 +427,36 @@ export const useCustomer = (filters = {}) => {
   };
 
   return {
+    // Customers data & states
+    customers: customersQuery.data?.customers || [],
+    totalCustomers: customersQuery.data?.totalCount || 0,
+    isLoadingCustomers: customersQuery.isLoading,
+    isFetchingCustomers: customersQuery.isFetching,
+    customersError: customersQuery.error,
+    refetchCustomers: customersQuery.refetch,
+
+    // Responses data & states
     responses: responsesQuery.data || [],
     isLoadingResponses: responsesQuery.isLoading,
     isFetchingResponses: responsesQuery.isFetching,
     responsesError: responsesQuery.error,
     refetchResponses: responsesQuery.refetch,
 
+    // Submissions
     submitResponse,
     isSubmittingResponse: createResponseMutation.isPending,
     submitResponseError: createResponseMutation.error,
     createResponseMutation,
 
+    // Updates
     updateResponse,
     isUpdatingResponse: updateResponseMutation.isPending,
     updateResponseError: updateResponseMutation.error,
     updateResponseMutation,
 
+    // Sub-hooks
+    useGetCustomerDetail,
+    useGetCustomerById,
     useGetResponseById,
   };
 };
