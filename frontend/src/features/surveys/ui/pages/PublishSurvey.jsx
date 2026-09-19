@@ -59,7 +59,11 @@ export default function PublishSurvey() {
           )}
 
           {activeTab === "qr" && (
-            <TabQrContent onCopySuccess={(msg) => showToast(msg)} />
+            <TabQrContent
+              url={publicUrl}
+              survey={survey}
+              onCopySuccess={(msg) => showToast(msg)}
+            />
           )}
 
           {activeTab === "widget" && (
