@@ -1,10 +1,10 @@
 import React from "react";
 import { Link } from "react-router";
-import { Plus, Download, SlidersHorizontal, Radio } from "lucide-react";
+import { Plus, Download, Radio } from "lucide-react";
 
 export default function FeedbackHeader({
-  totalResponses = 1428,
-  needAttentionCount = 38,
+  totalResponses = 0,
+  needAttentionCount = 0,
   onExportReport,
 }) {
   return (
@@ -34,7 +34,7 @@ export default function FeedbackHeader({
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-[#EFE4D6] shadow-2xs">
           <span className="w-2 h-2 rounded-full bg-[#635b4a]"></span>
           <span className="text-xs font-medium text-[#1f1b18] font-inter">
-            {totalResponses.toLocaleString()} responses collected
+            {Number(totalResponses || 0).toLocaleString()} responses collected
           </span>
         </div>
 
@@ -42,7 +42,7 @@ export default function FeedbackHeader({
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#ffdad8]/50 border border-[#bb0028]/20 text-[#bb0028] shadow-2xs">
           <span className="w-2 h-2 rounded-full bg-[#bb0028] animate-ping inline-flex"></span>
           <span className="text-xs font-semibold font-inter">
-            {needAttentionCount} need attention
+            {needAttentionCount || 0} need attention
           </span>
         </div>
 
