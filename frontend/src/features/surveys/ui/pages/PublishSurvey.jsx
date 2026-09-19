@@ -69,6 +69,8 @@ export default function PublishSurvey() {
           {activeTab === "widget" && (
             <TabWidgetContent
               surveyId={survey._id}
+              survey={survey}
+              publicUrl={publicUrl}
               onCopySuccess={(msg) => showToast(msg)}
             />
           )}

@@ -7,7 +7,10 @@ export default function TabQrContent({ url, survey, onCopySuccess }) {
   const [downloaded, setDownloaded] = useState(false);
   const hiddenCanvasRef = useRef(null);
 
-  const qrValue = url || (typeof window !== "undefined" ? window.location.href : "");
+  const baseRawUrl = url || (typeof window !== "undefined" ? window.location.href : "");
+  const qrValue = baseRawUrl.includes("source=")
+    ? baseRawUrl
+    : `${baseRawUrl}${baseRawUrl.includes("?") ? "&" : "?"}source=qr`;
   const surveyTitle = survey?.title || "Feedback Survey";
 
   const handleDownload = () => {
