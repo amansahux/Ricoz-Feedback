@@ -124,7 +124,7 @@ export default function TabQrContent({ url, survey, onCopySuccess }) {
         </div>
 
         {/* Destination preview */}
-        <div className="mt-4 flex items-center gap-2 max-w-md bg-[#FBF2EC] px-3.5 py-1.5 rounded-lg border border-[#EFE4D6] text-xs font-mono text-[#7d7461] truncate">
+        <div className= " hidden mt-4 md:flex items-center gap-2 max-w-md bg-[#FBF2EC] px-3.5 py-1.5 rounded-lg border border-[#EFE4D6] text-xs font-mono text-[#7d7461] truncate">
           <QrCode size={13} className="text-[#bb0028] shrink-0" />
           <span className="truncate">{qrValue}</span>
         </div>

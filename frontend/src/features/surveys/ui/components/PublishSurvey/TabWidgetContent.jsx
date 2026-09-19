@@ -5,18 +5,15 @@ import {
   MessageSquare,
   X,
   Send,
-
   Code2,
   ShieldCheck,
-
   RotateCcw,
   CheckCircle2,
   Loader2,
   Star,
-
 } from "lucide-react";
 import { useSelector } from "react-redux";
-import { createResponse } from "../../../../customers/apis/customer.api.jsx";
+import { useCreateResponse } from "../../../../customers/hooks/useCustomer.jsx";
 
 const ACCENT_COLORS = [
   { label: "Crimson", value: "#bb0028" },
@@ -36,6 +33,9 @@ export default function TabWidgetContent({
   const orgSlug = organization?.slug || "org";
   const surveySlug = survey?.slug || surveyId;
 
+  // Hook Layer Mutation
+  const createResponseMutation = useCreateResponse();
+
   // Customization state
   const [position, setPosition] = useState("bottom-right");
   const [accentColor, setAccentColor] = useState("#bb0028");
@@ -48,7 +48,6 @@ export default function TabWidgetContent({
   const [selectedScore, setSelectedScore] = useState(5);
   const [feedbackText, setFeedbackText] = useState("");
   const [testerEmail, setTesterEmail] = useState("");
-  const [isSubmittingSimulator, setIsSubmittingSimulator] = useState(false);
   const [simulatorSubmitted, setSimulatorSubmitted] = useState(false);
 
   const baseUrl =
@@ -58,7 +57,10 @@ export default function TabWidgetContent({
       : `/f/${orgSlug}/${surveySlug}`);
 
   const targetWidgetUrl = `${baseUrl}${baseUrl.includes("?") ? "&" : "?"}source=widget`;
-  const origin = typeof window !== "undefined" ? window.location.origin : "https://cdn.recoz.app";
+  const origin =
+    typeof window !== "undefined"
+      ? window.location.origin
+      : "https://cdn.recoz.app";
 
   // Generated embed code
   const scriptSnippet = `<!-- Recoz Feedback Widget -->
@@ -99,10 +101,9 @@ export default function TabWidgetContent({
           question: survey?.title || "How would you rate your experience?",
         };
 
-  // Simulate feedback submission with actual source: 'widget' tracking
+  // Simulate feedback submission with actual source: 'widget' tracking via hook layer
   const handleSimulateSubmit = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
-    setIsSubmittingSimulator(true);
 
     try {
       const answersPayload = [
@@ -114,7 +115,7 @@ export default function TabWidgetContent({
 
       if (feedbackText.trim()) {
         const textQ = survey?.questions?.find(
-          (q) => q.type === "text" || q.type === "textarea"
+          (q) => q.type === "text" || q.type === "textarea",
         );
         answersPayload.push({
           questionId: textQ?._id || "q_text_feedback",
@@ -130,8 +131,17 @@ export default function TabWidgetContent({
       };
 
       // Only invoke backend if real survey ID exists
-      if (surveyId && !surveyId.startsWith("srv_sample_") && orgSlug && surveySlug) {
-        await createResponse(orgSlug, surveySlug, payload);
+      if (
+        surveyId &&
+        !surveyId.startsWith("srv_sample_") &&
+        orgSlug &&
+        surveySlug
+      ) {
+        await createResponseMutation.mutateAsync({
+          organizationSlug: orgSlug,
+          surveySlug,
+          responseData: payload,
+        });
       }
 
       setSimulatorSubmitted(true);
@@ -140,8 +150,6 @@ export default function TabWidgetContent({
       console.warn("Simulator response simulation completed:", err);
       setSimulatorSubmitted(true);
       onCopySuccess?.("Response recorded with source: 'widget' in simulator!");
-    } finally {
-      setIsSubmittingSimulator(false);
     }
   };
 
@@ -165,7 +173,8 @@ export default function TabWidgetContent({
             Embed lightweight floating feedback
           </h2>
           <p className="text-xs sm:text-sm text-[#7d7461] max-w-2xl font-inter leading-relaxed">
-            Add this lightweight Recoz widget script to your website. Responses are automatically tagged with{" "}
+            Add this lightweight Recoz widget script to your website. Responses
+            are automatically tagged with{" "}
             <span className="font-semibold text-[#1f1b18] bg-[#FFF2DB] px-1.5 py-0.5 rounded border border-[#F9DFB9]">
               source: "widget"
             </span>{" "}
@@ -289,7 +298,9 @@ export default function TabWidgetContent({
                   <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
                 </div>
                 <span className="ml-2 text-xs font-mono text-neutral-400">
-                  {embedMode === "script" ? "HTML Script Embed" : "HTML Iframe Embed"}
+                  {embedMode === "script"
+                    ? "HTML Script Embed"
+                    : "HTML Iframe Embed"}
                 </span>
               </div>
               <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-white/10 text-white/70">
@@ -301,7 +312,9 @@ export default function TabWidgetContent({
             <div className="p-5 font-mono text-xs leading-relaxed overflow-x-auto text-neutral-200">
               {embedMode === "script" ? (
                 <>
-                  <span className="text-neutral-500">&lt;!-- Recoz Feedback Widget --&gt;</span>
+                  <span className="text-neutral-500">
+                    &lt;!-- Recoz Feedback Widget --&gt;
+                  </span>
                   <br />
                   <span className="text-pink-400">&lt;script</span>{" "}
                   <span className="text-amber-300">async</span>
@@ -309,10 +322,12 @@ export default function TabWidgetContent({
                   &nbsp;&nbsp;<span className="text-sky-300">src</span>=
                   <span className="text-emerald-300">"{origin}/widget.js"</span>
                   <br />
-                  &nbsp;&nbsp;<span className="text-sky-300">data-survey-url</span>=
+                  &nbsp;&nbsp;
+                  <span className="text-sky-300">data-survey-url</span>=
                   <span className="text-emerald-300">"{targetWidgetUrl}"</span>
                   <br />
-                  &nbsp;&nbsp;<span className="text-sky-300">data-position</span>=
+                  &nbsp;&nbsp;
+                  <span className="text-sky-300">data-position</span>=
                   <span className="text-emerald-300">"{position}"</span>
                   <br />
                   &nbsp;&nbsp;<span className="text-sky-300">data-accent</span>=
@@ -325,7 +340,9 @@ export default function TabWidgetContent({
                 </>
               ) : (
                 <>
-                  <span className="text-neutral-500">&lt;!-- Recoz Feedback Responsive Iframe --&gt;</span>
+                  <span className="text-neutral-500">
+                    &lt;!-- Recoz Feedback Responsive Iframe --&gt;
+                  </span>
                   <br />
                   <span className="text-pink-400">&lt;iframe</span>
                   <br />
@@ -342,7 +359,11 @@ export default function TabWidgetContent({
                   <span className="text-emerald-300">"0"</span>
                   <br />
                   &nbsp;&nbsp;<span className="text-sky-300">style</span>=
-                  <span className="text-emerald-300">"border-radius: 16px; border: 1px solid #EFE4D6; max-width: 640px; margin: 0 auto; display: block;"</span>&gt;
+                  <span className="text-emerald-300">
+                    "border-radius: 16px; border: 1px solid #EFE4D6; max-width:
+                    640px; margin: 0 auto; display: block;"
+                  </span>
+                  &gt;
                   <br />
                   <span className="text-pink-400">&lt;/iframe&gt;</span>
                 </>
@@ -360,7 +381,9 @@ export default function TabWidgetContent({
               {copiedSnippet ? <Check size={16} /> : <Copy size={16} />}
               <span>{copiedSnippet ? "Copied Snippet!" : "Copy snippet"}</span>
             </button>
-            <span className="text-xs text-[#7d7461] font-mono">Payload: ~2.8kb gzipped</span>
+            <span className="text-xs text-[#7d7461] font-mono">
+              Payload: ~2.8kb gzipped
+            </span>
           </div>
 
           {/* Integration instructions */}
@@ -370,7 +393,11 @@ export default function TabWidgetContent({
               Quick Installation Guide
             </span>
             <p className="leading-relaxed">
-              Paste this snippet right before the closing <code className="text-[#bb0028] bg-[#FBF2EC] px-1 py-0.5 rounded font-mono">&lt;/body&gt;</code> tag on any HTML page, React app, Shopify, or WordPress store.
+              Paste this snippet right before the closing{" "}
+              <code className="text-[#bb0028] bg-[#FBF2EC] px-1 py-0.5 rounded font-mono">
+                &lt;/body&gt;
+              </code>{" "}
+              tag on any HTML page, React app, Shopify, or WordPress store.
             </p>
           </div>
         </div>
@@ -471,7 +498,10 @@ export default function TabWidgetContent({
                     Thank you for your feedback!
                   </span>
                   <p className="text-[11px] text-[#7d7461] font-mono leading-tight">
-                    Recorded in DB with <span className="text-emerald-700 font-bold">source: "widget"</span>
+                    Recorded in DB with{" "}
+                    <span className="text-emerald-700 font-bold">
+                      source: "widget"
+                    </span>
                   </p>
                   <button
                     type="button"
@@ -483,7 +513,10 @@ export default function TabWidgetContent({
                 </div>
               ) : (
                 /* Interactive Form */
-                <form onSubmit={handleSimulateSubmit} className="flex flex-col gap-2.5">
+                <form
+                  onSubmit={handleSimulateSubmit}
+                  className="flex flex-col gap-2.5"
+                >
                   <span className="text-[11px] font-semibold text-[#1f1b18] font-inter">
                     {primaryQuestion.question}
                   </span>
@@ -519,7 +552,12 @@ export default function TabWidgetContent({
                               : "text-[#d1c5b0]"
                           }`}
                         >
-                          <Star size={18} fill={selectedScore >= star ? "currentColor" : "none"} />
+                          <Star
+                            size={18}
+                            fill={
+                              selectedScore >= star ? "currentColor" : "none"
+                            }
+                          />
                         </button>
                       ))}
                     </div>
@@ -567,11 +605,11 @@ export default function TabWidgetContent({
 
                   <button
                     type="submit"
-                    disabled={isSubmittingSimulator}
+                    disabled={createResponseMutation.isPending}
                     style={{ backgroundColor: accentColor }}
                     className="w-full py-1.5 text-white rounded-xl text-xs font-semibold hover:opacity-90 transition-opacity cursor-pointer flex items-center justify-center gap-1 disabled:opacity-50"
                   >
-                    {isSubmittingSimulator ? (
+                    {createResponseMutation.isPending ? (
                       <Loader2 size={13} className="animate-spin" />
                     ) : (
                       <>
@@ -586,11 +624,11 @@ export default function TabWidgetContent({
           </div>
 
           <p className="text-[11px] text-[#7d7461] text-center mt-3 font-inter">
-            Click the launcher button above to open and test live widget submission.
+            Click the launcher button above to open and test live widget
+            submission.
           </p>
         </div>
       </div>
     </section>
   );
 }
-
