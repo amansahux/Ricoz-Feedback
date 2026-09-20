@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import { useSelector } from "react-redux";
 import { Lock } from "lucide-react";
 
 export const SurveyHeader = ({
@@ -11,9 +12,25 @@ export const SurveyHeader = ({
   answeredCount = 0,
   requiredCount = 0,
 }) => {
+  const [imgError, setImgError] = useState(false);
+  const authOrg = useSelector((state) => state.auth?.organization);
+
   const orgName =
     organization?.name ||
+    authOrg?.name ||
     (organizationSlug ? organizationSlug.replace(/-/g, " ") : "Recoz Feedback");
+
+  const logo =
+    organization?.logo ||
+    organization?.logoUrl ||
+    authOrg?.logo ||
+    authOrg?.logoUrl;
+
+  const primaryColor =
+    organization?.primaryColor ||
+    authOrg?.primaryColor ||
+    "#F62440";
+
   const monogram =
     orgName
       .split(" ")
@@ -35,10 +52,24 @@ export const SurveyHeader = ({
         {/* Left: Monogram and Org details */}
         <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1 max-w-full">
           <div
-            className="w-9 h-9 sm:w-10 sm:h-10 shrink-0 rounded-xl bg-[#FFF2DB] border border-[#E6D7C3] flex items-center justify-center text-[#92001D] font-bold text-sm sm:text-base shadow-xs uppercase select-none"
+            className="w-9 h-9 sm:w-10 sm:h-10 shrink-0 rounded-xl bg-[#FFF2DB] border border-[#E6D7C3] flex items-center justify-center overflow-hidden shadow-xs uppercase select-none"
             id="org-monogram-badge"
           >
-            {monogram}
+            {logo && !imgError ? (
+              <img
+                src={logo}
+                alt={orgName}
+                onError={() => setImgError(true)}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <span
+                className="w-full h-full flex items-center justify-center font-bold text-sm sm:text-base text-white"
+                style={{ backgroundColor: primaryColor }}
+              >
+                {monogram}
+              </span>
+            )}
           </div>
           <div className="min-w-0 flex-1">
             <span
@@ -109,9 +140,12 @@ export const SurveyHeader = ({
           </div>
           <div className="w-full h-1.5 bg-[#FFF2DB] rounded-full overflow-hidden">
             <div
-              className="h-full bg-[#F62440] rounded-full transition-all duration-300 ease-out"
+              className="h-full rounded-full transition-all duration-300 ease-out"
               id="progress-bar-fill"
-              style={{ width: `${Math.max(5, progressPct)}%` }}
+              style={{
+                width: `${Math.max(5, progressPct)}%`,
+                backgroundColor: primaryColor,
+              }}
             />
           </div>
         </div>
