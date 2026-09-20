@@ -27,8 +27,8 @@ export const SurveyHeader = ({
     authOrg?.logoUrl;
 
   const primaryColor =
-    organization?.primaryColor ||
-    authOrg?.primaryColor ||
+    // organization?.primaryColor ||
+    // authOrg?.primaryColor ||
     "#F62440";
 
   const monogram =
