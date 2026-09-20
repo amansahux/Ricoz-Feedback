@@ -55,9 +55,21 @@ export const useGetAnalyticsTrends = (days = 30, options = {}) => {
  */
 export const useAnalytics = (initialConfig = {}) => {
   const [range, setRange] = useState(initialConfig.defaultRange || "30d");
+  const [isExporting, setIsExporting] = useState(false);
+  const [toast, setToast] = useState({ visible: false, message: "", type: "success" });
+
+  const showToast = useCallback((message, type = "success") => {
+    setToast({ visible: true, message, type });
+    setTimeout(() => {
+      setToast({ visible: false, message: "", type: "success" });
+    }, 3500);
+  }, []);
+
+  const hideToast = useCallback(() => {
+    setToast({ visible: false, message: "", type: "success" });
+  }, []);
 
   const overviewQuery = useGetAnalyticsOverview(range);
-
   const overviewData = overviewQuery.data || null;
 
   // Extracted summary metrics with safe defaults
@@ -116,6 +128,34 @@ export const useAnalytics = (initialConfig = {}) => {
     }
   }, []);
 
+  // Export report as JSON file
+  const handleExportReport = useCallback(() => {
+    if (!overviewData) {
+      showToast("No analytics data available to export.", "error");
+      return;
+    }
+    try {
+      setIsExporting(true);
+      const dataStr =
+        "data:text/json;charset=utf-8," +
+        encodeURIComponent(JSON.stringify(overviewData, null, 2));
+      const downloadAnchor = document.createElement("a");
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute(
+        "download",
+        `recoz-analytics-${range}-${new Date().toISOString().split("T")[0]}.json`
+      );
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      showToast("Analytics report exported successfully.");
+    } catch (err) {
+      showToast("Failed to export analytics report.", "error");
+    } finally {
+      setIsExporting(false);
+    }
+  }, [overviewData, range, showToast]);
+
   return {
     range,
     setRange: handleRangeChange,
@@ -131,6 +171,11 @@ export const useAnalytics = (initialConfig = {}) => {
     isError: overviewQuery.isError,
     error: overviewQuery.error,
     refetch: overviewQuery.refetch,
+    isExporting,
+    handleExportReport,
+    toast,
+    showToast,
+    hideToast,
   };
 };
 
