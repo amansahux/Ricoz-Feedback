@@ -113,10 +113,10 @@ export const authService = {
       throw new Error('Organization not found');
     }
 
-    user.name = name;
-    organization.name = organizationName;
-    organization.primaryColor = primaryColor;
-    organization.logoUrl = logoUrl;
+    if (name !== undefined) user.name = name;
+    if (organizationName !== undefined) organization.name = organizationName;
+    if (primaryColor !== undefined) organization.primaryColor = primaryColor;
+    if (logoUrl !== undefined) organization.logo = logoUrl;
 
     await user.save();
     await organization.save();
@@ -136,6 +136,9 @@ export const authService = {
         primaryColor: organization.primaryColor,
       },
     };
+  },
+  async updateUser(userId, name, organizationName, primaryColor, logoUrl) {
+    return this.update(userId, name, organizationName, primaryColor, logoUrl);
   },
   async changePasswordService(userId, currentPassword, newPassword) {
     const user = await User.findById(userId).select('+password');
