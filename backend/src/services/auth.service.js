@@ -137,4 +137,20 @@ export const authService = {
       },
     };
   },
+  async changePasswordService(userId, currentPassword, newPassword) {
+    const user = await User.findById(userId).select('+password');
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isPasswordValid) {
+      throw new Error('Invalid current password');
+    }
+
+    user.password = await bcrypt.hash(newPassword, 10);
+    await user.save();
+
+    return { success: true };
+  }
 };

@@ -102,4 +102,31 @@ export const authController = {
       next(error);
     }
   },
+  async changePassword(req, res, next) {
+    try {
+      const { currentPassword, newPassword } = req.body;
+
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({
+          success: false,
+          message: 'Current and new passwords are required',
+        });
+      }
+
+      await authService.changePasswordService(req.user.userId, currentPassword, newPassword);
+
+      res.status(200).json({
+        success: true,
+        message: 'Password changed successfully',
+      });
+    } catch (error) {
+      if (error.message.includes('Invalid')) {
+        return res.status(400).json({
+          success: false,
+          message: error.message,
+        });
+      }
+      next(error);
+    }
+  },
 };
