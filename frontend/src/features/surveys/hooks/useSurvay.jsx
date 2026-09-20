@@ -204,6 +204,19 @@ export const useSurveyList = () => {
     return SAMPLE_SURVEYS;
   }, [apiResponse]);
 
+  // Org-wide avg CSAT from backend aggregation
+  const avgCsat = useMemo(() => {
+    if (apiResponse?.avgCsat != null) {
+      return apiResponse.avgCsat;
+    }
+    return null;
+  }, [apiResponse]);
+
+  // Total responses across all surveys
+  const totalResponses = useMemo(() => {
+    return rawSurveys.reduce((acc, s) => acc + (s.responseCount || 0), 0);
+  }, [rawSurveys]);
+
   const filterCounts = useMemo(() => {
     return {
       all: rawSurveys.length,
@@ -271,6 +284,8 @@ export const useSurveyList = () => {
     surveys: displayedSurveys,
     rawSurveys,
     filterCounts,
+    totalResponses,
+    avgCsat,
     isLoading,
     isError,
     error,

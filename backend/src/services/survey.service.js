@@ -29,7 +29,47 @@ export const surveyService = {
   },
 
   async getSurveys(organizationId) {
-    return Survey.find({ organizationId }).sort({ createdAt: -1 });
+    const surveys = await Survey.find({ organizationId }).sort({ createdAt: -1 }).lean();
+
+    // Aggregate response counts and avg CSAT per survey in one query
+    const surveyIds = surveys.map((s) => s._id);
+    const stats = await Response.aggregate([
+      { $match: { surveyId: { $in: surveyIds } } },
+      {
+        $group: {
+          _id: '$surveyId',
+          responseCount: { $sum: 1 },
+          avgCsatScore: { $avg: '$csatScore' },
+        },
+      },
+    ]);
+
+    const statsMap = {};
+    stats.forEach((s) => {
+      statsMap[s._id.toString()] = {
+        responseCount: s.responseCount,
+        avgCsatScore: s.avgCsatScore,
+      };
+    });
+
+    // Enrich each survey with its stats
+    const enrichedSurveys = surveys.map((survey) => {
+      const surveyStats = statsMap[survey._id.toString()] || {};
+      return {
+        ...survey,
+        responseCount: surveyStats.responseCount || 0,
+        avgCsatScore: surveyStats.avgCsatScore || null,
+      };
+    });
+
+    // Compute org-wide avg CSAT across all responses that have a csatScore
+    const orgCsatAgg = await Response.aggregate([
+      { $match: { organizationId: organizationId, csatScore: { $ne: null } } },
+      { $group: { _id: null, avgCsat: { $avg: '$csatScore' } } },
+    ]);
+    const orgAvgCsat = orgCsatAgg.length > 0 ? orgCsatAgg[0].avgCsat : null;
+
+    return { surveys: enrichedSurveys, avgCsat: orgAvgCsat };
   },
 
   async getSurveyById(surveyId, organizationId) {

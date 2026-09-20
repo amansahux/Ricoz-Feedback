@@ -33,11 +33,12 @@ export const surveyController = {
   async getSurveys(req, res, next) {
     try {
       const organizationId = req.user.organizationId;
-      const surveys = await surveyService.getSurveys(organizationId);
+      const result = await surveyService.getSurveys(organizationId);
 
       res.status(200).json({
         success: true,
-        data: surveys,
+        data: result.surveys,
+        avgCsat: result.avgCsat,
       });
     } catch (error) {
       next(error);

@@ -14,6 +14,8 @@ export default function Survey() {
     surveys,
     rawSurveys,
     filterCounts,
+    totalResponses,
+    avgCsat,
     isLoading,
     isError,
     error,
@@ -36,6 +38,11 @@ export default function Survey() {
     hideToast,
   } = useSurveyList();
 
+  // Format avg CSAT for display: scale 1-5 → percentage, or show "N/A"
+  const formattedAvgCsat = avgCsat != null
+    ? `${((avgCsat / 5) * 100).toFixed(1)}%`
+    : "N/A";
+
   return (
     <div className="w-full max-w-[1440px] mx-auto flex flex-col gap-6 py-2">
       {/* Toast Feedback */}
@@ -44,8 +51,8 @@ export default function Survey() {
       {/* Header Block with quick metrics */}
       <SurveyHeader
         totalSurveys={filterCounts.published}
-        totalResponses={rawSurveys.reduce((acc, curr) => acc + (curr.responseCount || 0), 0)}
-        avgCsat="94.2%"
+        totalResponses={totalResponses}
+        avgCsat={formattedAvgCsat}
       />
 
       {/* Filter and Search Toolbar */}
