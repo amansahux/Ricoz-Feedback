@@ -1,15 +1,20 @@
 import React, { useState } from "react";
 import { Link } from "react-router";
+import { useSelector } from "react-redux";
 import { X, Copy, Check, Code, QrCode, ShieldCheck, ExternalLink } from "lucide-react";
 
 export default function ShareSurveyModal({ survey, isOpen, onClose, onCopySuccess }) {
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
+  const organization = useSelector((state) => state.auth?.organization);
 
   if (!isOpen || !survey) return null;
 
-  const publicUrl = `${window.location.origin}/f/${survey.slug || survey._id}`;
-  const embedCode = `<script src="${window.location.origin}/widget.js" data-survey="${survey._id}" async></script>`;
+  const orgSlug = organization?.slug || survey?.organizationId?.slug || "org";
+  const surveySlug = survey?.slug || survey?._id;
+
+  const publicUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/f/${orgSlug}/${surveySlug}`;
+  const embedCode = `<script async src="${typeof window !== "undefined" ? window.location.origin : ""}/widget.js" data-survey-url="${publicUrl}?source=widget"></script>`;
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(publicUrl);
