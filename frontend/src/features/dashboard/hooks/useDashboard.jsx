@@ -28,9 +28,6 @@ export const useDashboard = (initialConfig = {}) => {
   // State: Selected sentiment filter in Donut/Verbatim view ('all' | 'positive' | 'neutral' | 'negative')
   const [sentimentFilter, setSentimentFilter] = useState("all");
 
-  // State: Demo/Simulation UI state switcher ('loaded' | 'zero' | 'skeleton' | 'error' | 'auto')
-  const [stateMode, setStateMode] = useState("auto");
-
   // State: Toast notifications
   const [toast, setToast] = useState({ visible: false, message: "", type: "success" });
 
@@ -252,18 +249,16 @@ export const useDashboard = (initialConfig = {}) => {
     };
   }, [rawResponses, sentimentFilter, user]);
 
-  // Determine current active effective state
+  // Loading, Error, and Empty state flags
   const isDataLoading = overviewQuery.isLoading || feedbackQuery.isLoading;
   const isDataError = overviewQuery.isError || feedbackQuery.isError;
-  const hasZeroData = !isDataLoading && !isDataError && (overviewData?.summary?.totalResponses?.value === 0 || rawResponses.length === 0);
-
-  const effectiveState = useMemo(() => {
-    if (stateMode !== "auto") return stateMode;
-    if (isDataLoading) return "skeleton";
-    if (isDataError) return "error";
-    if (hasZeroData) return "loaded"; // Show loaded with sample/real data for rich experience
-    return "loaded";
-  }, [stateMode, isDataLoading, isDataError, hasZeroData]);
+  const hasNoData = useMemo(() => {
+    if (isDataLoading) return false;
+    return (
+      (!overviewData || overviewData.summary?.totalResponses?.value === 0) &&
+      rawResponses.length === 0
+    );
+  }, [overviewData, rawResponses, isDataLoading]);
 
   // Range change handler
   const handleRangeChange = useCallback((newRange) => {
@@ -323,14 +318,6 @@ export const useDashboard = (initialConfig = {}) => {
     sentimentFilter,
     setSentimentFilter,
 
-    // Prototype State Switcher
-    stateMode,
-    setStateMode: (mode) => {
-      setStateMode(mode);
-      showToast(`View switched to: ${mode.toUpperCase()} state`);
-    },
-    effectiveState,
-
     // Transformed Metric & Chart Data
     summary,
     responseVolume,
@@ -340,6 +327,7 @@ export const useDashboard = (initialConfig = {}) => {
     rawResponses,
 
     // Status queries
+    hasNoData,
     isLoading: isDataLoading,
     isError: isDataError,
     error: overviewQuery.error || feedbackQuery.error,

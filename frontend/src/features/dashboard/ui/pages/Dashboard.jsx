@@ -9,7 +9,7 @@ import DashboardRecentFeedback from "../components/DashboardRecentFeedback.jsx";
 import DashboardZeroState from "../components/DashboardZeroState.jsx";
 import DashboardSkeleton from "../components/DashboardSkeleton.jsx";
 import DashboardErrorState from "../components/DashboardErrorState.jsx";
-import { CheckCircle2, AlertCircle, X, SlidersHorizontal } from "lucide-react";
+import { CheckCircle2, AlertCircle, X } from "lucide-react";
 
 export default function Dashboard() {
   const {
@@ -21,15 +21,15 @@ export default function Dashboard() {
     setChartView,
     sentimentFilter,
     setSentimentFilter,
-    stateMode,
-    setStateMode,
-    effectiveState,
     summary,
     responseVolume,
     sentimentMix,
     topTopics,
     latestFeedback,
     rawResponses,
+    hasNoData,
+    isLoading,
+    isError,
     refetch,
     handleExportReport,
     handleTriggerAction,
@@ -72,82 +72,18 @@ export default function Dashboard() {
         onExportReport={handleExportReport}
       />
 
-      {/* 2. Interactive Prototype State Mode Switcher Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-white rounded-2xl border border-[#EFE4D6] shadow-xs">
-        <div className="flex items-center gap-2">
-          <SlidersHorizontal size={14} className="text-[#6e5c3e]" />
-          <span className="text-xs font-mono-tag font-bold text-[#6e5c3e] uppercase tracking-wider">
-            UI State Explorer:
-          </span>
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-        </div>
-
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <button
-            onClick={() => setStateMode("auto")}
-            className={`px-2.5 py-1 text-xs font-inter rounded-xl transition-all cursor-pointer ${
-              stateMode === "auto"
-                ? "bg-[#bb0028] text-white font-bold shadow-xs"
-                : "bg-[#FBF2EC] text-[#7d7461] hover:text-[#1f1b18]"
-            }`}
-          >
-            Live Sync
-          </button>
-          <button
-            onClick={() => setStateMode("loaded")}
-            className={`px-2.5 py-1 text-xs font-inter rounded-xl transition-all cursor-pointer ${
-              stateMode === "loaded"
-                ? "bg-[#F9DFB9] text-[#1f1b18] font-bold border border-[#DBC39F] shadow-xs"
-                : "bg-[#FBF2EC] text-[#7d7461] hover:text-[#1f1b18]"
-            }`}
-          >
-            Loaded
-          </button>
-          <button
-            onClick={() => setStateMode("zero")}
-            className={`px-2.5 py-1 text-xs font-inter rounded-xl transition-all cursor-pointer ${
-              stateMode === "zero"
-                ? "bg-[#F9DFB9] text-[#1f1b18] font-bold border border-[#DBC39F] shadow-xs"
-                : "bg-[#FBF2EC] text-[#7d7461] hover:text-[#1f1b18]"
-            }`}
-          >
-            Zero-State
-          </button>
-          <button
-            onClick={() => setStateMode("skeleton")}
-            className={`px-2.5 py-1 text-xs font-inter rounded-xl transition-all cursor-pointer ${
-              stateMode === "skeleton"
-                ? "bg-[#F9DFB9] text-[#1f1b18] font-bold border border-[#DBC39F] shadow-xs"
-                : "bg-[#FBF2EC] text-[#7d7461] hover:text-[#1f1b18]"
-            }`}
-          >
-            Skeleton
-          </button>
-          <button
-            onClick={() => setStateMode("error")}
-            className={`px-2.5 py-1 text-xs font-inter rounded-xl transition-all cursor-pointer ${
-              stateMode === "error"
-                ? "bg-[#F9DFB9] text-[#1f1b18] font-bold border border-[#DBC39F] shadow-xs"
-                : "bg-[#FBF2EC] text-[#7d7461] hover:text-[#1f1b18]"
-            }`}
-          >
-            Error State
-          </button>
-        </div>
-      </div>
-
-      {/* 3. State-Based Rendering Canvas */}
-      {effectiveState === "skeleton" ? (
+      {/* State-Based Rendering Canvas */}
+      {isLoading ? (
         <DashboardSkeleton />
-      ) : effectiveState === "error" ? (
+      ) : isError ? (
         <DashboardErrorState
           onRetry={refetch}
           onTriggerAction={handleTriggerAction}
         />
-      ) : effectiveState === "zero" ? (
+      ) : hasNoData ? (
         <DashboardZeroState
           onTriggerAction={handleTriggerAction}
-          onSwitchLoaded={() => setStateMode("loaded")}
+          onSwitchLoaded={() => {}}
         />
       ) : (
         /* Loaded View: Executive Intelligence Grid */
@@ -178,7 +114,7 @@ export default function Dashboard() {
           </div>
 
           {/* Bottom Row: Top Topics (approx 40%) + Recent Customer Verbatim (approx 60%) */}
-          {/* <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
             <div className="lg:col-span-5">
               <DashboardTopicsCard
                 topics={topTopics}
@@ -191,8 +127,8 @@ export default function Dashboard() {
                 totalCount={rawResponses.length || 1}
                 onTriggerAction={handleTriggerAction}
               />
-            </div> */}
-          {/* </div> */}
+            </div>
+          </div>
         </div>
       )}
     </div>
