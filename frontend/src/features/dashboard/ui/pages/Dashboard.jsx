@@ -1,9 +1,200 @@
+import React from "react";
+import { useDashboard } from "../../hooks/useDashboard.jsx";
+import DashboardHeader from "../components/DashboardHeader.jsx";
+import DashboardMetricsGrid from "../components/DashboardMetricsGrid.jsx";
+import DashboardVolumeChart from "../components/DashboardVolumeChart.jsx";
+import DashboardSentimentDonut from "../components/DashboardSentimentDonut.jsx";
+import DashboardTopicsCard from "../components/DashboardTopicsCard.jsx";
+import DashboardRecentFeedback from "../components/DashboardRecentFeedback.jsx";
+import DashboardZeroState from "../components/DashboardZeroState.jsx";
+import DashboardSkeleton from "../components/DashboardSkeleton.jsx";
+import DashboardErrorState from "../components/DashboardErrorState.jsx";
+import { CheckCircle2, AlertCircle, X, SlidersHorizontal } from "lucide-react";
 
+export default function Dashboard() {
+  const {
+    user,
+    organization,
+    range,
+    setRange,
+    chartView,
+    setChartView,
+    sentimentFilter,
+    setSentimentFilter,
+    stateMode,
+    setStateMode,
+    effectiveState,
+    summary,
+    responseVolume,
+    sentimentMix,
+    topTopics,
+    latestFeedback,
+    rawResponses,
+    refetch,
+    handleExportReport,
+    handleTriggerAction,
+    toast,
+    hideToast,
+  } = useDashboard();
 
-const Dashboard = () => {
   return (
-    <div>Dashboard</div>
-  )
-}
+    <div className="w-full max-w-[1440px] mx-auto flex flex-col gap-6 font-inter pb-12">
+      {/* Toast Notification Banner */}
+      {toast?.visible && (
+        <div
+          className={`fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-xl border text-xs sm:text-sm font-medium transition-all duration-200 animate-in fade-in slide-in-from-bottom-2 ${
+            toast.type === "error"
+              ? "bg-rose-50 text-[#bb0028] border-rose-200"
+              : "bg-[#1f1b18] text-white border-white/10"
+          }`}
+        >
+          {toast.type === "error" ? (
+            <AlertCircle size={18} className="text-[#bb0028] shrink-0" />
+          ) : (
+            <CheckCircle2 size={18} className="text-[#F9DFB9] shrink-0" />
+          )}
+          <span>{toast.message}</span>
+          <button
+            onClick={hideToast}
+            className="ml-2 hover:opacity-75 p-0.5 rounded cursor-pointer"
+            aria-label="Close notification"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
 
-export default Dashboard
+      {/* 1. Header Section */}
+      <DashboardHeader
+        userName={user?.name || "Aman"}
+        range={range}
+        onRangeChange={setRange}
+        onExportReport={handleExportReport}
+      />
+
+      {/* 2. Interactive Prototype State Mode Switcher Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-white rounded-2xl border border-[#EFE4D6] shadow-xs">
+        <div className="flex items-center gap-2">
+          <SlidersHorizontal size={14} className="text-[#6e5c3e]" />
+          <span className="text-xs font-mono-tag font-bold text-[#6e5c3e] uppercase tracking-wider">
+            UI State Explorer:
+          </span>
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+        </div>
+
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <button
+            onClick={() => setStateMode("auto")}
+            className={`px-2.5 py-1 text-xs font-inter rounded-xl transition-all cursor-pointer ${
+              stateMode === "auto"
+                ? "bg-[#bb0028] text-white font-bold shadow-xs"
+                : "bg-[#FBF2EC] text-[#7d7461] hover:text-[#1f1b18]"
+            }`}
+          >
+            Live Sync
+          </button>
+          <button
+            onClick={() => setStateMode("loaded")}
+            className={`px-2.5 py-1 text-xs font-inter rounded-xl transition-all cursor-pointer ${
+              stateMode === "loaded"
+                ? "bg-[#F9DFB9] text-[#1f1b18] font-bold border border-[#DBC39F] shadow-xs"
+                : "bg-[#FBF2EC] text-[#7d7461] hover:text-[#1f1b18]"
+            }`}
+          >
+            Loaded
+          </button>
+          <button
+            onClick={() => setStateMode("zero")}
+            className={`px-2.5 py-1 text-xs font-inter rounded-xl transition-all cursor-pointer ${
+              stateMode === "zero"
+                ? "bg-[#F9DFB9] text-[#1f1b18] font-bold border border-[#DBC39F] shadow-xs"
+                : "bg-[#FBF2EC] text-[#7d7461] hover:text-[#1f1b18]"
+            }`}
+          >
+            Zero-State
+          </button>
+          <button
+            onClick={() => setStateMode("skeleton")}
+            className={`px-2.5 py-1 text-xs font-inter rounded-xl transition-all cursor-pointer ${
+              stateMode === "skeleton"
+                ? "bg-[#F9DFB9] text-[#1f1b18] font-bold border border-[#DBC39F] shadow-xs"
+                : "bg-[#FBF2EC] text-[#7d7461] hover:text-[#1f1b18]"
+            }`}
+          >
+            Skeleton
+          </button>
+          <button
+            onClick={() => setStateMode("error")}
+            className={`px-2.5 py-1 text-xs font-inter rounded-xl transition-all cursor-pointer ${
+              stateMode === "error"
+                ? "bg-[#F9DFB9] text-[#1f1b18] font-bold border border-[#DBC39F] shadow-xs"
+                : "bg-[#FBF2EC] text-[#7d7461] hover:text-[#1f1b18]"
+            }`}
+          >
+            Error State
+          </button>
+        </div>
+      </div>
+
+      {/* 3. State-Based Rendering Canvas */}
+      {effectiveState === "skeleton" ? (
+        <DashboardSkeleton />
+      ) : effectiveState === "error" ? (
+        <DashboardErrorState
+          onRetry={refetch}
+          onTriggerAction={handleTriggerAction}
+        />
+      ) : effectiveState === "zero" ? (
+        <DashboardZeroState
+          onTriggerAction={handleTriggerAction}
+          onSwitchLoaded={() => setStateMode("loaded")}
+        />
+      ) : (
+        /* Loaded View: Executive Intelligence Grid */
+        <div className="space-y-6">
+          {/* KPI 4-Metric Cards */}
+          <DashboardMetricsGrid
+            summary={summary}
+            onTriggerAction={handleTriggerAction}
+          />
+
+          {/* Middle Row: Response Volume (approx 65%) + Sentiment Mix Donut (approx 35%) */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+            <div className="lg:col-span-8">
+              <DashboardVolumeChart
+                responseVolume={responseVolume}
+                chartView={chartView}
+                onViewChange={setChartView}
+              />
+            </div>
+            <div className="lg:col-span-4">
+              <DashboardSentimentDonut
+                sentimentMix={sentimentMix}
+                activeFilter={sentimentFilter}
+                onFilterChange={setSentimentFilter}
+                onTriggerAction={handleTriggerAction}
+              />
+            </div>
+          </div>
+
+          {/* Bottom Row: Top Topics (approx 40%) + Recent Customer Verbatim (approx 60%) */}
+          {/* <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+            <div className="lg:col-span-5">
+              <DashboardTopicsCard
+                topics={topTopics}
+                onTriggerAction={handleTriggerAction}
+              />
+            </div>
+            <div className="lg:col-span-7">
+              <DashboardRecentFeedback
+                feedback={latestFeedback}
+                totalCount={rawResponses.length || 1}
+                onTriggerAction={handleTriggerAction}
+              />
+            </div> */}
+          {/* </div> */}
+        </div>
+      )}
+    </div>
+  );
+}
