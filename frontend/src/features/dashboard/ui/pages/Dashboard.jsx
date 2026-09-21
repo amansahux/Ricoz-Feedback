@@ -113,7 +113,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Bottom Row: Top Topics (approx 40%) + Recent Customer Verbatim (approx 60%) */}
+          {/* Bottom Row: Top Topics (approx 40%) + Recent Customer Verbatim (approx 60%)
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
             <div className="lg:col-span-5">
               <DashboardTopicsCard
@@ -128,7 +128,7 @@ export default function Dashboard() {
                 onTriggerAction={handleTriggerAction}
               />
             </div>
-          </div>
+          </div> */}
         </div>
       )}
     </div>
