@@ -11,59 +11,7 @@ import {
   updateSurvey,
 } from "../apis/surveys.api.jsx";
 
-// Initial fallback mock data matching Stitch visual fidelity if backend database is fresh
-export const SAMPLE_SURVEYS = [
-  {
-    _id: "srv_sample_1",
-    title: "Product Onboarding CSAT",
-    slug: "onb-csat-v2",
-    description: "Onboarding CSAT",
-    status: "published",
-    questions: [{}, {}, {}, {}, {}],
-    responseCount: 542,
-    createdAt: new Date("2026-09-15T10:00:00Z").toISOString(),
-  },
-  {
-    _id: "srv_sample_2",
-    title: "Executive Experience NPS",
-    slug: "exec-experience",
-    description: "Post-Purchase NPS",
-    status: "published",
-    questions: [{}, {}, {}],
-    responseCount: 1142,
-    createdAt: new Date("2026-09-12T10:00:00Z").toISOString(),
-  },
-  {
-    _id: "srv_sample_3",
-    title: "Quarterly Feature Feedback",
-    slug: "q3-feedback",
-    description: "Experience",
-    status: "draft",
-    questions: [{}, {}, {}, {}, {}, {}],
-    responseCount: 0,
-    createdAt: new Date("2026-09-02T10:00:00Z").toISOString(),
-  },
-  {
-    _id: "srv_sample_4",
-    title: "Churn Exit Interview",
-    slug: "churn-exit",
-    description: "Detractor Flow",
-    status: "published",
-    questions: [{}, {}, {}, {}],
-    responseCount: 158,
-    createdAt: new Date("2026-08-28T10:00:00Z").toISOString(),
-  },
-  {
-    _id: "srv_sample_5",
-    title: "Beta Tester Pulse v1.0",
-    slug: "beta-v1-archive",
-    description: "Archived",
-    status: "archived",
-    questions: [{}, {}, {}, {}, {}, {}, {}, {}],
-    responseCount: 210,
-    createdAt: new Date("2026-07-14T10:00:00Z").toISOString(),
-  },
-];
+
 
 export const DEFAULT_BUILDER_QUESTIONS = [
   {
@@ -198,10 +146,13 @@ export const useSurveyList = () => {
   }, []);
 
   const rawSurveys = useMemo(() => {
-    if (apiResponse?.data && Array.isArray(apiResponse.data) && apiResponse.data.length > 0) {
+    if (apiResponse?.data && Array.isArray(apiResponse.data)) {
       return apiResponse.data;
     }
-    return SAMPLE_SURVEYS;
+    if (Array.isArray(apiResponse)) {
+      return apiResponse;
+    }
+    return [];
   }, [apiResponse]);
 
   // Org-wide avg CSAT from backend aggregation

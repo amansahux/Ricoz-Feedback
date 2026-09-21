@@ -29,7 +29,7 @@ export default function SurveyEmptyState({ onSelectTemplate }) {
           className="px-4 py-2.5 rounded-xl bg-[#bb0028] text-white text-xs sm:text-sm font-semibold hover:bg-[#a10022] transition-colors shadow-sm flex items-center gap-1.5"
         >
           <Plus size={16} />
-          <span>+ Create survey</span>
+          <span>Create survey</span>
         </Link>
       </div>
     </div>
