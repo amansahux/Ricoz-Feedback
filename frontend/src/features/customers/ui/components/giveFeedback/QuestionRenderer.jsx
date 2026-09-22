@@ -14,10 +14,7 @@ export const QuestionRenderer = ({
 }) => {
   const { _id, type, question: titleText, required, options } = question;
   const qId = _id || `q_${index}`;
-  const primaryColor = organization?.primaryColor;
-
-  // const primaryColor = organization?.primaryColor;
-  // console.log(primaryColor)
+  const primaryColor = organization?.primaryColor || "#F62440";
 
   return (
     <fieldset
@@ -36,7 +33,7 @@ export const QuestionRenderer = ({
             {index + 1}. {titleText}
           </span>
           {required && (
-            <span className="text-[#F62440] font-bold" title="Required">
+            <span style={{ color: primaryColor }} className="font-bold" title="Required">
               *
             </span>
           )}
@@ -44,7 +41,7 @@ export const QuestionRenderer = ({
       </div>
 
       {/* Render Specific Input according to question type */}
-      {renderControlByType(type, qId, value, onChange, options)}
+      {renderControlByType(type, qId, value, onChange, options, primaryColor)}
 
       {/* Inline Validation Error */}
       {error && (
@@ -60,7 +57,7 @@ export const QuestionRenderer = ({
   );
 };
 
-const renderControlByType = (type, qId, value, onChange, options = []) => {
+const renderControlByType = (type, qId, value, onChange, options = [], primaryColor = "#F62440") => {
   switch (type) {
     // 1. CSAT / Rating (1 to 5 scale)
     case "csat":
@@ -80,9 +77,19 @@ const renderControlByType = (type, qId, value, onChange, options = []) => {
               return (
                 <label
                   key={score}
+                  style={
+                    isSelected
+                      ? {
+                          borderColor: primaryColor,
+                          boxShadow: `0 0 0 1px ${primaryColor}`,
+                          backgroundColor: `${primaryColor}15`,
+                          color: primaryColor,
+                        }
+                      : {}
+                  }
                   className={`relative flex flex-col items-center justify-center min-h-[50px] p-2 rounded-xl border cursor-pointer transition-all duration-150 select-none ${
                     isSelected
-                      ? "border-[#F62440] bg-[#FFF2DB]/80 ring-1 ring-[#F62440] shadow-xs"
+                      ? "shadow-xs font-bold"
                       : "border-[#E8DFD5] bg-[#FFFFFF] hover:border-[#DAC1A2] hover:bg-[#FFF2DB]/40 text-[#1E1A17]"
                   }`}
                 >
@@ -140,11 +147,20 @@ const renderControlByType = (type, qId, value, onChange, options = []) => {
               return (
                 <label
                   key={score}
+                  style={
+                    isSelected
+                      ? {
+                          backgroundColor: primaryColor,
+                          borderColor: primaryColor,
+                          color: "#FFFFFF",
+                        }
+                      : {}
+                  }
                   className={`flex flex-col items-center justify-center h-11 rounded-lg border cursor-pointer transition-all duration-150 select-none ${
                     score === 10 ? "col-span-2 sm:col-span-1" : ""
                   } ${
                     isSelected
-                      ? "bg-[#F62440] text-white border-[#F62440] shadow-sm font-bold scale-[1.03]"
+                      ? "shadow-sm font-bold scale-[1.03]"
                       : "border-[#E8DFD5] bg-[#FFFFFF] hover:border-[#DAC1A2] hover:bg-[#FFF2DB]/40 text-[#1E1A17] font-semibold"
                   }`}
                 >
@@ -185,9 +201,19 @@ const renderControlByType = (type, qId, value, onChange, options = []) => {
               return (
                 <label
                   key={score}
+                  style={
+                    isSelected
+                      ? {
+                          borderColor: primaryColor,
+                          boxShadow: `0 0 0 1px ${primaryColor}`,
+                          backgroundColor: `${primaryColor}15`,
+                          color: primaryColor,
+                        }
+                      : {}
+                  }
                   className={`flex flex-col items-center justify-center h-11 rounded-xl border cursor-pointer transition-all duration-150 select-none ${
                     isSelected
-                      ? "border-[#F62440] bg-[#FFF2DB] text-[#92001D] font-bold ring-1 ring-[#F62440]"
+                      ? "font-bold"
                       : "border-[#E8DFD5] bg-[#FFFFFF] hover:border-[#DAC1A2] hover:bg-[#FFF2DB]/40 text-[#1E1A17] font-semibold"
                   }`}
                 >
@@ -228,16 +254,25 @@ const renderControlByType = (type, qId, value, onChange, options = []) => {
               return (
                 <label
                   key={i}
+                  style={
+                    isSelected
+                      ? {
+                          borderColor: primaryColor,
+                          backgroundColor: `${primaryColor}10`,
+                        }
+                      : {}
+                  }
                   className={`flex items-center gap-3 p-3.5 rounded-xl border cursor-pointer transition-all duration-150 select-none ${
                     isSelected
-                      ? "border-[#F62440] bg-[#FFF2DB]/70 shadow-xs"
+                      ? "shadow-xs"
                       : "border-[#E8DFD5] bg-[#FFFFFF] hover:border-[#DAC1A2] hover:bg-[#FFF2DB]/30"
                   }`}
                 >
                   <input
                     type="radio"
                     name={`q_${qId}`}
-                    className="w-4 h-4 text-[#F62440] focus:ring-[#F62440] border-[#DAC1A2]"
+                    style={{ accentColor: primaryColor }}
+                    className="w-4 h-4 border-[#DAC1A2]"
                     value={opt}
                     checked={isSelected}
                     onChange={() => onChange(opt)}
@@ -266,9 +301,19 @@ const renderControlByType = (type, qId, value, onChange, options = []) => {
               return (
                 <label
                   key={val}
+                  style={
+                    isSelected
+                      ? {
+                          borderColor: primaryColor,
+                          boxShadow: `0 0 0 1px ${primaryColor}`,
+                          backgroundColor: `${primaryColor}15`,
+                          color: primaryColor,
+                        }
+                      : {}
+                  }
                   className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border cursor-pointer transition-all duration-150 select-none ${
                     isSelected
-                      ? "border-[#F62440] bg-[#FFF2DB] text-[#92001D] font-semibold ring-1 ring-[#F62440]"
+                      ? "font-semibold"
                       : "border-[#E8DFD5] bg-[#FFFFFF] hover:border-[#DAC1A2] hover:bg-[#FFF2DB]/30 text-[#1E1A17]"
                   }`}
                 >
@@ -282,11 +327,13 @@ const renderControlByType = (type, qId, value, onChange, options = []) => {
                   />
                   {icon === "check" ? (
                     <CheckCircle2
-                      className={`w-4 h-4 ${isSelected ? "text-[#92001D]" : "text-[#5E5851]"}`}
+                      style={isSelected ? { color: primaryColor } : {}}
+                      className={`w-4 h-4 ${isSelected ? "" : "text-[#5E5851]"}`}
                     />
                   ) : (
                     <X
-                      className={`w-4 h-4 ${isSelected ? "text-[#92001D]" : "text-[#5E5851]"}`}
+                      style={isSelected ? { color: primaryColor } : {}}
+                      className={`w-4 h-4 ${isSelected ? "" : "text-[#5E5851]"}`}
                     />
                   )}
                   <span className="text-sm font-semibold">{label}</span>
@@ -322,7 +369,15 @@ const renderControlByType = (type, qId, value, onChange, options = []) => {
             id={`input-${qId}`}
             type="text"
             maxLength={150}
-            className="w-full h-[42px] px-3.5 text-sm rounded-xl border border-[#E8DFD5] bg-[#FFFFFF] text-[#1E1A17] placeholder:text-[#8C847B] focus:border-[#F62440] focus:ring-2 focus:ring-[#F62440]/15 outline-none transition-all"
+            onFocus={(e) => {
+              e.target.style.borderColor = primaryColor;
+              e.target.style.boxShadow = `0 0 0 2px ${primaryColor}25`;
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = "#E8DFD5";
+              e.target.style.boxShadow = "none";
+            }}
+            className="w-full h-[42px] px-3.5 text-sm rounded-xl border border-[#E8DFD5] bg-[#FFFFFF] text-[#1E1A17] placeholder:text-[#8C847B] outline-none transition-all"
             placeholder="e.g. Fabric softness, instant delivery updates, seamless returns"
             value={textVal}
             onChange={(e) => onChange(e.target.value)}
@@ -357,7 +412,15 @@ const renderControlByType = (type, qId, value, onChange, options = []) => {
             id={`input-${qId}`}
             rows={3}
             maxLength={500}
-            className="w-full p-3.5 text-sm rounded-xl border border-[#E8DFD5] bg-[#FFFFFF] text-[#1E1A17] placeholder:text-[#8C847B] focus:border-[#F62440] focus:ring-2 focus:ring-[#F62440]/15 outline-none transition-all resize-none leading-relaxed"
+            onFocus={(e) => {
+              e.target.style.borderColor = primaryColor;
+              e.target.style.boxShadow = `0 0 0 2px ${primaryColor}25`;
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = "#E8DFD5";
+              e.target.style.boxShadow = "none";
+            }}
+            className="w-full p-3.5 text-sm rounded-xl border border-[#E8DFD5] bg-[#FFFFFF] text-[#1E1A17] placeholder:text-[#8C847B] outline-none transition-all resize-none leading-relaxed"
             placeholder="Be candid — whether it was website sizing, packaging, or tracking updates..."
             value={textVal}
             onChange={(e) => onChange(e.target.value)}

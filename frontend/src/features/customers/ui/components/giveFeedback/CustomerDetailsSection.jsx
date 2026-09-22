@@ -1,4 +1,3 @@
-import React from "react";
 import { User } from "lucide-react";
 
 export const CustomerDetailsSection = ({
@@ -8,12 +7,12 @@ export const CustomerDetailsSection = ({
   email,
   setEmail,
 }) => {
-  const primaryColor = organization?.primaryColor;
+  const primaryColor = organization?.primaryColor || "#F62440";
   return (
     <section className="pt-6 border-t border-[#EFE4D6]">
       <div className="rounded-xl bg-[#FFF2DB]/40 border border-[#E6D7C3] p-4.5 sm:p-5">
         <div className="flex items-center gap-2 mb-1.5">
-          <User className="w-4 h-4 text-[#92001D]" />
+          <User className="w-4 h-4" style={{ color: primaryColor }} />
           <span className="text-xs uppercase tracking-wider text-[#5E5851] font-bold">
             Your Details (Optional)
           </span>
@@ -36,7 +35,15 @@ export const CustomerDetailsSection = ({
               placeholder="e.g. Alex Morgan"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full h-[40px] px-3.5 text-sm rounded-lg border border-[#E8DFD5] bg-[#FFFFFF] text-[#1E1A17] placeholder:text-[#8C847B] focus:border-[#F62440] focus:ring-2 focus:ring-[#F62440]/15 outline-none transition-all"
+              onFocus={(e) => {
+                e.target.style.borderColor = primaryColor;
+                e.target.style.boxShadow = `0 0 0 2px ${primaryColor}25`;
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = "#E8DFD5";
+                e.target.style.boxShadow = "none";
+              }}
+              className="w-full h-[40px] px-3.5 text-sm rounded-lg border border-[#E8DFD5] bg-[#FFFFFF] text-[#1E1A17] placeholder:text-[#8C847B] outline-none transition-all"
             />
           </div>
           <div>
@@ -53,7 +60,15 @@ export const CustomerDetailsSection = ({
               placeholder="e.g. alex@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full h-[40px] px-3.5 text-sm rounded-lg border border-[#E8DFD5] bg-[#FFFFFF] text-[#1E1A17] placeholder:text-[#8C847B] focus:border-[#F62440] focus:ring-2 focus:ring-[#F62440]/15 outline-none transition-all"
+              onFocus={(e) => {
+                e.target.style.borderColor = primaryColor;
+                e.target.style.boxShadow = `0 0 0 2px ${primaryColor}25`;
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = "#E8DFD5";
+                e.target.style.boxShadow = "none";
+              }}
+              className="w-full h-[40px] px-3.5 text-sm rounded-lg border border-[#E8DFD5] bg-[#FFFFFF] text-[#1E1A17] placeholder:text-[#8C847B] outline-none transition-all"
             />
           </div>
         </div>
