@@ -2,11 +2,13 @@ import React from "react";
 import { User } from "lucide-react";
 
 export const CustomerDetailsSection = ({
+  organization,
   name,
   setName,
   email,
   setEmail,
 }) => {
+  const primaryColor = organization?.primaryColor;
   return (
     <section className="pt-6 border-t border-[#EFE4D6]">
       <div className="rounded-xl bg-[#FFF2DB]/40 border border-[#E6D7C3] p-4.5 sm:p-5">

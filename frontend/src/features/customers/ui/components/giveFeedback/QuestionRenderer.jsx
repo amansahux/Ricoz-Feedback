@@ -5,6 +5,7 @@ import { AlertCircle, CheckCircle2, X } from "lucide-react";
  * Question Renderer: Renders question based on question type (rating, nps, csat, ces, multiple-choice, yes-no, text, textarea)
  */
 export const QuestionRenderer = ({
+  organization,
   question,
   index,
   value,
@@ -13,6 +14,10 @@ export const QuestionRenderer = ({
 }) => {
   const { _id, type, question: titleText, required, options } = question;
   const qId = _id || `q_${index}`;
+  const primaryColor = organization?.primaryColor;
+
+  // const primaryColor = organization?.primaryColor;
+  // console.log(primaryColor)
 
   return (
     <fieldset
@@ -127,7 +132,11 @@ const renderControlByType = (type, qId, value, onChange, options = []) => {
             role="radiogroup"
           >
             {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((score) => {
-              const isSelected = value !== undefined && value !== null && value !== "" && Number(value) === score;
+              const isSelected =
+                value !== undefined &&
+                value !== null &&
+                value !== "" &&
+                Number(value) === score;
               return (
                 <label
                   key={score}
@@ -204,10 +213,15 @@ const renderControlByType = (type, qId, value, onChange, options = []) => {
 
     // 4. Multiple Choice (Radio choices)
     case "multiple-choice":
-      const choices = options && options.length > 0 ? options : ["Option A", "Option B", "Option C"];
+      const choices =
+        options && options.length > 0
+          ? options
+          : ["Option A", "Option B", "Option C"];
       return (
         <div className="mt-2">
-          <p className="text-xs text-[#5E5851] mb-2.5">Select the single primary option.</p>
+          <p className="text-xs text-[#5E5851] mb-2.5">
+            Select the single primary option.
+          </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {choices.map((opt, i) => {
               const isSelected = value === opt;
@@ -228,7 +242,9 @@ const renderControlByType = (type, qId, value, onChange, options = []) => {
                     checked={isSelected}
                     onChange={() => onChange(opt)}
                   />
-                  <span className="text-sm text-[#1E1A17] font-medium">{opt}</span>
+                  <span className="text-sm text-[#1E1A17] font-medium">
+                    {opt}
+                  </span>
                 </label>
               );
             })}
@@ -265,9 +281,13 @@ const renderControlByType = (type, qId, value, onChange, options = []) => {
                     onChange={() => onChange(val)}
                   />
                   {icon === "check" ? (
-                    <CheckCircle2 className={`w-4 h-4 ${isSelected ? "text-[#92001D]" : "text-[#5E5851]"}`} />
+                    <CheckCircle2
+                      className={`w-4 h-4 ${isSelected ? "text-[#92001D]" : "text-[#5E5851]"}`}
+                    />
                   ) : (
-                    <X className={`w-4 h-4 ${isSelected ? "text-[#92001D]" : "text-[#5E5851]"}`} />
+                    <X
+                      className={`w-4 h-4 ${isSelected ? "text-[#92001D]" : "text-[#5E5851]"}`}
+                    />
                   )}
                   <span className="text-sm font-semibold">{label}</span>
                 </label>
@@ -281,11 +301,16 @@ const renderControlByType = (type, qId, value, onChange, options = []) => {
     case "text": {
       const textVal = value || "";
       const charCount = textVal.length;
-      const wordCount = textVal.trim() === "" ? 0 : textVal.trim().split(/\s+/).filter(Boolean).length;
+      const wordCount =
+        textVal.trim() === ""
+          ? 0
+          : textVal.trim().split(/\s+/).filter(Boolean).length;
       return (
         <div className="mt-2 space-y-1.5">
           <div className="flex flex-wrap items-center justify-between gap-1 text-xs text-[#5E5851]">
-            <p className="text-[11px] sm:text-xs">A brief highlight or praise for the team.</p>
+            <p className="text-[11px] sm:text-xs">
+              A brief highlight or praise for the team.
+            </p>
             <div className="flex items-center gap-1.5 text-[11px] font-mono text-[#8C847B] ml-auto shrink-0 bg-[#FBF2EC] px-2 py-0.5 rounded-md border border-[#EFE4D6]">
               <span className="font-semibold text-[#1E1A17]">{wordCount}</span>
               <span>{wordCount === 1 ? "word" : "words"}</span>
@@ -311,11 +336,16 @@ const renderControlByType = (type, qId, value, onChange, options = []) => {
     default: {
       const textVal = value || "";
       const charCount = textVal.length;
-      const wordCount = textVal.trim() === "" ? 0 : textVal.trim().split(/\s+/).filter(Boolean).length;
+      const wordCount =
+        textVal.trim() === ""
+          ? 0
+          : textVal.trim().split(/\s+/).filter(Boolean).length;
       return (
         <div className="mt-2 space-y-1.5">
           <div className="flex flex-wrap items-center justify-between gap-1 text-xs text-[#5E5851]">
-            <p className="text-[11px] sm:text-xs">Constructive feedback is shared directly with our team.</p>
+            <p className="text-[11px] sm:text-xs">
+              Constructive feedback is shared directly with our team.
+            </p>
             <div className="flex items-center gap-1.5 text-[11px] font-mono text-[#8C847B] ml-auto shrink-0 bg-[#FBF2EC] px-2 py-0.5 rounded-md border border-[#EFE4D6]">
               <span className="font-semibold text-[#1E1A17]">{wordCount}</span>
               <span>{wordCount === 1 ? "word" : "words"}</span>

@@ -99,15 +99,16 @@ const GiveFeedback = () => {
                 <p className="text-sm font-semibold text-[#BA1A1A]">
                   We couldn't submit your feedback.
                 </p>
-                <p className="text-xs text-[#5E5851] mt-0.5">{submissionError}</p>
+                <p className="text-xs text-[#5E5851] mt-0.5">
+                  {submissionError}
+                </p>
               </div>
               <button
                 type="button"
                 onClick={dismissSubmissionError}
                 className="text-[#BA1A1A] hover:opacity-80 p-1 cursor-pointer"
               >
-                <span className="sr-only">Dismiss</span>
-                ✕
+                <span className="sr-only">Dismiss</span>✕
               </button>
             </div>
           )}
@@ -116,7 +117,9 @@ const GiveFeedback = () => {
           {isSubmittedSuccess ? (
             <ThankYouState
               organizationName={
-                activeSurvey?.organizationId?.name || organizationSlug || "the team"
+                activeSurvey?.organizationId?.name ||
+                organizationSlug ||
+                "the team"
               }
               onReset={handleReset}
             />
@@ -126,6 +129,7 @@ const GiveFeedback = () => {
               className="bg-[#FFFFFF] border border-[#E8DFD5] rounded-2xl shadow-warm-card p-6 sm:p-9 transition-all duration-200"
               id="survey-content-card"
             >
+            
               {/* Header Section */}
               <SurveyHeader
                 organization={activeSurvey?.organizationId}
@@ -148,6 +152,7 @@ const GiveFeedback = () => {
                 {questions.map((q, idx) => (
                   <QuestionRenderer
                     key={q._id || idx}
+                    organization={activeSurvey?.organizationId}
                     question={q}
                     index={idx}
                     value={answersState[q._id]}
@@ -158,6 +163,7 @@ const GiveFeedback = () => {
 
                 {/* Optional Customer Identity Details */}
                 <CustomerDetailsSection
+                  organization={activeSurvey?.organizationId}
                   name={customerName}
                   setName={setCustomerName}
                   email={customerEmail}
@@ -170,7 +176,8 @@ const GiveFeedback = () => {
                     type="submit"
                     disabled={isSubmitting}
                     id="submit-btn"
-                    className="w-full h-12 rounded-xl bg-[#F62440] hover:bg-[#D81B34] active:bg-[#BA1227] text-[#FFFFFF] text-sm sm:text-base font-semibold shadow-warm-btn flex items-center justify-center gap-2 transition-all duration-150 transform active:scale-[0.99] disabled:opacity-60 disabled:pointer-events-none cursor-pointer"
+                    className="w-full h-12 rounded-xl text-[#FFFFFF] text-sm sm:text-base font-semibold shadow-warm-btn flex items-center justify-center gap-2 transition-all duration-150 transform active:scale-[0.99] hover:brightness-90 active:brightness-75 disabled:opacity-60 disabled:pointer-events-none cursor-pointer"
+                    style={{ backgroundColor: activeSurvey?.organizationId?.primaryColor || '#F62440' }}
                   >
                     {isSubmitting ? (
                       <>
@@ -184,7 +191,9 @@ const GiveFeedback = () => {
 
                   <div className="flex items-center justify-center gap-2 mt-3.5 text-xs text-[#8C847B]">
                     <ShieldCheck className="w-4 h-4 text-[#8C847B]" />
-                    <span>256-bit encrypted · Respects your privacy · Never shared</span>
+                    <span>
+                      256-bit encrypted · Respects your privacy · Never shared
+                    </span>
                   </div>
                 </div>
               </form>

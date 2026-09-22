@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { useSelector } from "react-redux";
 import { Lock } from "lucide-react";
 
 export const SurveyHeader = ({
@@ -13,23 +12,17 @@ export const SurveyHeader = ({
   requiredCount = 0,
 }) => {
   const [imgError, setImgError] = useState(false);
-  const authOrg = useSelector((state) => state.auth?.organization);
 
   const orgName =
     organization?.name ||
-    authOrg?.name ||
     (organizationSlug ? organizationSlug.replace(/-/g, " ") : "Recoz Feedback");
 
   const logo =
     organization?.logo ||
-    organization?.logoUrl ||
-    authOrg?.logo ||
-    authOrg?.logoUrl;
+    organization?.logoUrl;
 
   const primaryColor =
-    // organization?.primaryColor ||
-    // authOrg?.primaryColor ||
-    "#F62440";
+    organization?.primaryColor;
 
   const monogram =
     orgName
