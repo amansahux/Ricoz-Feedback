@@ -25,11 +25,11 @@ app.use(
       directives: {
         ...helmet.contentSecurityPolicy.getDefaultDirectives(),
         'default-src': ["'self'"],
-        'img-src': ["'self'", 'data:', 'blob:', 'https://lh3.googleusercontent.com', 'https://*.googleusercontent.com'],
+        'img-src': ["'self'", 'data:', 'blob:', 'https://lh3.googleusercontent.com', 'https://*.googleusercontent.com', 'https://ik.imagekit.io', 'https://ik.imagekit.io/recoz'],
         'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
         'font-src': ["'self'", 'data:', 'https://fonts.gstatic.com'],
         'script-src': ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-        'connect-src': ["'self'", env.CLIENT_URL, 'http://localhost:5173', 'http://localhost:5000'],
+        'connect-src': ["'self'", env.CLIENT_URL, 'http://localhost:5173', 'http://localhost:5000', 'https://ik.imagekit.io'],
         'frame-src': ["'self'"],
       },
     },
