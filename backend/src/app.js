@@ -10,9 +10,11 @@ import surveyRoutes from './routes/survey.routes.js';
 import responseRoutes from './routes/response.routes.js';
 import analyticsRoutes from './routes/analytics.routes.js';
 import customerRoutes from './routes/customer.routes.js';
-import { errorMiddleware } from './middlewares/error.middleware.js';
 import { env } from './config/env.js';
-import './services/email.service.js'; 
+import './services/email.service.js';
+import { errorMiddleware } from './middlewares/error.middleware.js';
+import { Strategy as GoogleStrategy } from "passport-google-oauth20";
+import passport from "passport";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -37,8 +39,16 @@ app.use(
     crossOriginEmbedderPolicy: false,
   })
 );
+// 3. implement passport authentication using google oauth
+passport.use(new GoogleStrategy({
+  clientID: env.GOOGLE_CLIENT_ID,
+  clientSecret: env.GOOGLE_CLIENT_SECRET,
+  callbackURL: `${env.CLIENT_URL}/api/auth/google/callback`,
+}, (accessToken, refreshToken, profile, done) => {
+  return done(null, profile);
+}));
 
-// 3. Rate Limiter (General API limiter)
+// 4. Rate Limiter (General API limiter)
 const limiter = rateLimit({
   windowMs: 5 * 60 * 1000, // 5 minutes
   max: 300, // Max 300 requests per 5 minutes
@@ -61,25 +71,26 @@ app.use(limiter);
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, '..', 'public')));
+app.use(passport.initialize());
 
-// 4. API Routes
+// 5. API Routes
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/surveys', surveyRoutes);
 app.use('/api/responses', responseRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/customers', customerRoutes);
 
-// 5. Health check
+// 6. Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'Recoz Feedback API' });
 });
 
-// 6. Public Frontend SPA fallback
+// 7. Public Frontend SPA fallback
 app.get('{*splat}', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
 });
 
-// 7. Error handling middleware
+// 8. Error handling middleware
 app.use(errorMiddleware);
 
 export default app;

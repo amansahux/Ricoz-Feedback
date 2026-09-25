@@ -155,5 +155,48 @@ export const authService = {
     await user.save();
 
     return { success: true };
+  },
+   async googleCallback() {
+  try {
+    if (!req.user) {
+      return res.redirect(
+        env.node_env === "development"
+          ? "http://localhost:5173/login"
+          : "https://snitch-kd3p.onrender.com/login",
+      );
+    }
+
+    const { id, displayName, emails } = req.user;
+    const email = emails[0].value;
+    let user = await userModel.findOne({ email });
+
+    if (!user) {
+      // Sign up the user
+      user = await userModel.create({
+        username: displayName,
+        email: email,
+        googleId: id,
+        verified: true,
+      });
+    }
+
+    const token = generateToken(user._id, user.email, "24h");
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000,
+      sameSite: "lax",
+      secure: false,
+    });
+
+    return res.redirect(
+      config.node_env === "development"
+        ? "http://localhost:5173"
+        : "https://snitch-kd3p.onrender.com",
+    );
+  } catch (error) {
+    console.error(error);
+    return next(error);
   }
+}
 };

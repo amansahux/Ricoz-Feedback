@@ -1,6 +1,8 @@
 import express from 'express';
 import { authController } from '../controllers/auth.controller.js';
 import { authMiddleware } from '../middlewares/auth.middleware.js';
+import passport from "passport";
+import { env } from '../config/env.js';
 
 const router = express.Router();
 
@@ -10,5 +12,18 @@ router.get('/me', authMiddleware, authController.getMe);
 router.post('/logout', authMiddleware, authController.logout);
 router.patch('/update-profile', authMiddleware, authController.update);
 router.patch('/change-password', authMiddleware, authController.changePassword);
+authRouter.get(
+  "/google",
+  passport.authenticate("google", { scope: ["profile", "email"] }),
+);
+authRouter.get(
+  "/google/callback",
+  passport.authenticate("google", {
+    session: false,
+    failureRedirect:
+      `${env.CLIENT_URL}/login` || "http://localhost:5173/login",
+  }),
+  authController.googleCallback,
+);
 
 export default router;

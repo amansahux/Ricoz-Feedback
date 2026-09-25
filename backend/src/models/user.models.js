@@ -12,15 +12,26 @@ const userSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
     },
-    password: {
-      type: String,
-      required: true,
-      select: false, // Don't return password by default
-    },
     organizationId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Organization',
       required: true,
+    },
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true
+    },
+    password: {
+      type: String,
+      minlength: 6,
+      required: function () {
+        return !this.googleId;
+      },
+    },
+    verified: {
+      type: Boolean,
+      default: false,
     },
   },
   {
