@@ -5,8 +5,8 @@ dotenv.config();
 export const env = {
   PORT: process.env.PORT || 5000,
   MONGO_URI: process.env.MONGO_URI,
- ACCESS_TOKEN_SECRET: process.env.ACCESS_TOKEN_SECRET,
- REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET,
+  ACCESS_TOKEN_SECRET: process.env.ACCESS_TOKEN_SECRET,
+  REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET,
   CLIENT_URL: process.env.CLIENT_URL || 'http://localhost:5173',
   NODE_ENV: process.env.NODE_ENV || 'development',
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
@@ -16,8 +16,21 @@ export const env = {
   SERVER_URL: process.env.SERVER_URL || `http://localhost:${process.env.PORT || 5000}`,
 };
 
-// Validate required env vars
-if (!env.MONGO_URI || !env.ACCESS_TOKEN_SECRET || !env.REFRESH_TOKEN_SECRET || !env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET || !env.GOOGLE_REFRESH_TOKEN || !env.GOOGLE_EMAIL_ID) {
-  throw new Error('Missing required environment variables: MONGO_URI, ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REFRESH_TOKEN, GOOGLE_EMAIL_ID');
+// Required environment variable keys
+const requiredEnvVars = [
+  'MONGO_URI',
+  'ACCESS_TOKEN_SECRET',
+  'REFRESH_TOKEN_SECRET',
+  'GOOGLE_CLIENT_ID',
+  'GOOGLE_CLIENT_SECRET',
+  'GOOGLE_REFRESH_TOKEN',
+  'GOOGLE_EMAIL_ID',
+];
 
+// Check for missing variables and display ONLY the missing ones
+const missingEnvVars = requiredEnvVars.filter((key) => !env[key]);
+
+if (missingEnvVars.length > 0) {
+  console.error(`\n❌ Error: Missing required environment variable(s): \n   👉 ${missingEnvVars.join(', ')}\n`);
+  process.exit(1);
 }

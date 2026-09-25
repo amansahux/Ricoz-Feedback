@@ -4,17 +4,15 @@ import { ApiError } from "../utils/ApiError.js";
 
 /**
  * Authentication middleware with dual-token support.
- * 1. Checks access token in cookies / auth header.
- * 2. If access token expired, attempts seamless rotation using refresh token.
+ * Checks recoz_access cookie, falling back to recoz_refresh rotation if expired.
  */
 export const authMiddleware = async (req, res, next) => {
   try {
     const accessToken =
-      req.cookies?.recoz_access_token ||
-      req.cookies?.recoz_token ||
+      req.cookies?.recoz_access ||
       req.headers.authorization?.replace('Bearer ', '');
 
-    const refreshToken = req.cookies?.recoz_refresh_token;
+    const refreshToken = req.cookies?.recoz_refresh;
 
     if (!accessToken && !refreshToken) {
       return next(new ApiError(401, 'Unauthorized: Access token or refresh token is required'));
@@ -40,8 +38,7 @@ export const authMiddleware = async (req, res, next) => {
         const newAccessToken = generateAccessToken(decodedRefresh.userId, decodedRefresh.organizationId);
 
         // Issue new access token cookie
-        res.cookie('recoz_access_token', newAccessToken, getAccessTokenCookieOptions());
-        res.cookie('recoz_token', newAccessToken, getAccessTokenCookieOptions());
+        res.cookie('recoz_access', newAccessToken, getAccessTokenCookieOptions());
 
         req.user = {
           userId: decodedRefresh.userId,
@@ -65,8 +62,7 @@ export const authMiddleware = async (req, res, next) => {
 export const optionalAuthMiddleware = (req, res, next) => {
   try {
     const token =
-      req.cookies?.recoz_access_token ||
-      req.cookies?.recoz_token ||
+      req.cookies?.recoz_access ||
       req.headers.authorization?.replace('Bearer ', '');
 
     if (token) {

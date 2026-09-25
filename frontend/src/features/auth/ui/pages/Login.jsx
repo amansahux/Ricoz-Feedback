@@ -264,7 +264,14 @@ export default function Login() {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            onInput={() => {
+              if (error) resetError();
+            }}
+            className="space-y-5"
+            noValidate
+          >
             {/* Email Field */}
             <div>
               <label
@@ -336,8 +343,12 @@ export default function Login() {
             {/* Primary CTA Button */}
             <button
               type="submit"
-              disabled={isLoggingIn}
-              className="w-full h-[46px] rounded-xl bg-[#F62440] hover:bg-[#D81B34] active:bg-[#BA1227] text-white font-inter text-sm font-medium tracking-wide shadow-md shadow-[#F62440]/20 hover:shadow-lg hover:shadow-[#F62440]/30 transition-all duration-150 ease-out flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed mt-6"
+              disabled={isLoggingIn || isUnverifiedError || countdown > 0}
+              className={`w-full h-[46px] rounded-xl font-inter text-sm font-medium tracking-wide transition-all duration-150 ease-out flex items-center justify-center gap-2 mt-6 ${
+                isUnverifiedError || countdown > 0
+                  ? 'bg-neutral-200 text-neutral-500 border border-neutral-300 cursor-not-allowed shadow-none'
+                  : 'bg-[#F62440] hover:bg-[#D81B34] active:bg-[#BA1227] text-white shadow-md shadow-[#F62440]/20 hover:shadow-lg hover:shadow-[#F62440]/30 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed'
+              }`}
             >
               {isLoggingIn ? (
                 <>
@@ -351,6 +362,10 @@ export default function Login() {
                   </svg>
                   <span>Signing in...</span>
                 </>
+              ) : countdown > 0 ? (
+                <span>Verification sent · Please check email</span>
+              ) : isUnverifiedError ? (
+                <span>Email verification required</span>
               ) : (
                 <>
                   <span>Sign in</span>

@@ -29,9 +29,8 @@ export const authController = {
     const result = await authService.verifyEmail(token);
 
     // Set authentication cookies upon successful verification
-    res.cookie('recoz_access_token', result.tokens.accessToken, getAccessTokenCookieOptions());
-    res.cookie('recoz_token', result.tokens.accessToken, getAccessTokenCookieOptions());
-    res.cookie('recoz_refresh_token', result.tokens.refreshToken, getRefreshTokenCookieOptions());
+    res.cookie('recoz_access', result.tokens.accessToken, getAccessTokenCookieOptions());
+    res.cookie('recoz_refresh', result.tokens.refreshToken, getRefreshTokenCookieOptions());
 
     // If request comes from a browser GET redirect, redirect to login page
     if (req.method === 'GET') {
@@ -68,10 +67,9 @@ export const authController = {
     const { email, password } = req.body;
     const result = await authService.login(email, password);
 
-    // Set dual-token cookies
-    res.cookie('recoz_access_token', result.tokens.accessToken, getAccessTokenCookieOptions());
-    res.cookie('recoz_token', result.tokens.accessToken, getAccessTokenCookieOptions());
-    res.cookie('recoz_refresh_token', result.tokens.refreshToken, getRefreshTokenCookieOptions());
+    // Set dual-token cookies: recoz_access and recoz_refresh
+    res.cookie('recoz_access', result.tokens.accessToken, getAccessTokenCookieOptions());
+    res.cookie('recoz_refresh', result.tokens.refreshToken, getRefreshTokenCookieOptions());
 
     res.status(200).json({
       success: true,
@@ -126,12 +124,11 @@ export const authController = {
    * Refresh access token
    */
   refreshToken: asyncHandler(async (req, res) => {
-    const refreshToken = req.cookies?.recoz_refresh_token || req.body?.refreshToken;
+    const refreshToken = req.cookies?.recoz_refresh || req.body?.refreshToken;
     const result = await authService.refreshAccessToken(refreshToken);
 
-    res.cookie('recoz_access_token', result.tokens.accessToken, getAccessTokenCookieOptions());
-    res.cookie('recoz_token', result.tokens.accessToken, getAccessTokenCookieOptions());
-    res.cookie('recoz_refresh_token', result.tokens.refreshToken, getRefreshTokenCookieOptions());
+    res.cookie('recoz_access', result.tokens.accessToken, getAccessTokenCookieOptions());
+    res.cookie('recoz_refresh', result.tokens.refreshToken, getRefreshTokenCookieOptions());
 
     res.status(200).json({
       success: true,
@@ -152,10 +149,9 @@ export const authController = {
 
     const result = await authService.handleGoogleAuth(req.user);
 
-    // Set dual-token cookies
-    res.cookie('recoz_access_token', result.tokens.accessToken, getAccessTokenCookieOptions());
-    res.cookie('recoz_token', result.tokens.accessToken, getAccessTokenCookieOptions());
-    res.cookie('recoz_refresh_token', result.tokens.refreshToken, getRefreshTokenCookieOptions());
+    // Set dual-token cookies: recoz_access and recoz_refresh
+    res.cookie('recoz_access', result.tokens.accessToken, getAccessTokenCookieOptions());
+    res.cookie('recoz_refresh', result.tokens.refreshToken, getRefreshTokenCookieOptions());
 
     return res.redirect(`${env.CLIENT_URL}/dashboard`);
   }),
@@ -203,15 +199,14 @@ export const authController = {
   }),
 
   /**
-   * Log out and clear cookies
+   * Log out and clear recoz_access and recoz_refresh cookies
    */
   logout: asyncHandler(async (req, res) => {
     const accessCookieOptions = getAccessTokenCookieOptions();
     const refreshCookieOptions = getRefreshTokenCookieOptions();
 
-    res.clearCookie('recoz_access_token', accessCookieOptions);
-    res.clearCookie('recoz_token', accessCookieOptions);
-    res.clearCookie('recoz_refresh_token', refreshCookieOptions);
+    res.clearCookie('recoz_access', accessCookieOptions);
+    res.clearCookie('recoz_refresh', refreshCookieOptions);
 
     res.status(200).json({
       success: true,

@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import { Link, useLocation } from "react-router";
 import {
   LayoutGrid,
@@ -12,6 +13,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import useAuth from "../features/auth/hook/useAuth.jsx";
+import LogoutModal from "../shared/components/LogoutModal.jsx";
 
 const mainNavLinks = [
   { label: "Overview", href: "/dashboard", icon: LayoutGrid },
@@ -24,6 +26,7 @@ const mainNavLinks = [
 export default function Sidebar({ isOpen, onClose }) {
   const location = useLocation();
   const { user, organization, logout, isLoggingOut } = useAuth();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const isSettingsActive = location.pathname.startsWith("/settings");
 
@@ -174,7 +177,7 @@ export default function Sidebar({ isOpen, onClose }) {
 
             {/* Logout Button */}
             <button
-              onClick={logout}
+              onClick={() => setShowLogoutModal(true)}
               disabled={isLoggingOut}
               title="Sign out"
               className="p-1.5 rounded-lg text-[#7d7461] hover:text-[#bb0028] hover:bg-white transition-colors cursor-pointer disabled:opacity-50 shrink-0"
@@ -184,6 +187,17 @@ export default function Sidebar({ isOpen, onClose }) {
           </div>
         </div>
       </aside>
+
+      {/* Logout Confirmation Modal */}
+      <LogoutModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={async () => {
+          await logout();
+          setShowLogoutModal(false);
+        }}
+        isLoggingOut={isLoggingOut}
+      />
     </>
   );
 }

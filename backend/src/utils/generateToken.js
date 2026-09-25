@@ -4,7 +4,7 @@ import { env } from '../config/env.js';
 export const generateAccessToken = (userId, organizationId) => {
   return jwt.sign(
     { userId, organizationId, type: 'access' },
-    env.JWT_SECRET,
+    env.ACCESS_TOKEN_SECRET,
     { expiresIn: '15m' }
   );
 };
@@ -12,7 +12,7 @@ export const generateAccessToken = (userId, organizationId) => {
 export const generateRefreshToken = (userId, organizationId) => {
   return jwt.sign(
     { userId, organizationId, type: 'refresh' },
-    env.JWT_SECRET,
+    env.REFRESH_TOKEN_SECRET,
     { expiresIn: '7d' }
   );
 };
@@ -23,19 +23,10 @@ export const generateAuthTokens = (userId, organizationId) => {
   return { accessToken, refreshToken };
 };
 
-// Legacy fallback
-export const generateToken = (userId, organizationId) => {
-  return generateAccessToken(userId, organizationId);
-};
-
 export const verifyAccessToken = (token) => {
-  return jwt.verify(token, env.JWT_SECRET);
+  return jwt.verify(token, env.ACCESS_TOKEN_SECRET);
 };
 
 export const verifyRefreshToken = (token) => {
-  return jwt.verify(token, env.JWT_SECRET);
-};
-
-export const verifyToken = (token) => {
-  return jwt.verify(token, env.JWT_SECRET);
+  return jwt.verify(token, env.REFRESH_TOKEN_SECRET);
 };
