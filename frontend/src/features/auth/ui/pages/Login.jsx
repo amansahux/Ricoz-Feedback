@@ -1,25 +1,29 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, Navigate, useSearchParams } from 'react-router';
 import { Eye, EyeOff, Lock, AlertCircle, ArrowRight, CheckCircle2, Mail, RotateCw } from 'lucide-react';
 import { loginSchema } from '../../validation/auth.schema';
 import useAuth from '../../hook/useAuth';
-import { resendVerificationEmail } from '../../api/auth.api';
 
 export default function Login() {
-  const { login, isLoggingIn, isAuthenticated, isHydrating, error, resetError } = useAuth();
+  const {
+    login,
+    isLoggingIn,
+    isAuthenticated,
+    isHydrating,
+    error,
+    countdown,
+    isResending,
+    resendStatus,
+    resendVerification,
+  } = useAuth();
+
   const [showPassword, setShowPassword] = useState(false);
   const [searchParams] = useSearchParams();
 
-  // Verification states
   const isVerifiedSuccess = searchParams.get('verified') === 'true';
   const isGoogleFailed = searchParams.get('error') === 'google_auth_failed';
-
-  // Unverified user resend state & countdown
-  const [countdown, setCountdown] = useState(0);
-  const [isResending, setIsResending] = useState(false);
-  const [resendStatus, setResendStatus] = useState(null); // { type: 'success' | 'error', text: string }
 
   const {
     register,
@@ -35,19 +39,6 @@ export default function Login() {
     mode: 'onTouched',
   });
 
-  // Countdown timer for resend email
-  useEffect(() => {
-    let timer;
-    if (countdown > 0) {
-      timer = setInterval(() => {
-        setCountdown((prev) => prev - 1);
-      }, 1000);
-    }
-    return () => {
-      if (timer) clearInterval(timer);
-    };
-  }, [countdown]);
-
   if (!isHydrating && isAuthenticated) {
     return <Navigate to="/dashboard" replace />;
   }
@@ -56,34 +47,12 @@ export default function Login() {
     error && (error.toLowerCase().includes('not verified') || error.toLowerCase().includes('verify your email'));
 
   const onSubmit = async (data) => {
-    resetError?.();
-    setResendStatus(null);
     await login(data);
   };
 
   const handleResend = async () => {
     const email = getValues('email');
-    if (!email) {
-      setResendStatus({ type: 'error', text: 'Please enter your email above to resend verification link' });
-      return;
-    }
-    if (countdown > 0 || isResending) return;
-
-    setIsResending(true);
-    setResendStatus(null);
-    try {
-      const res = await resendVerificationEmail(email);
-      setResendStatus({
-        type: 'success',
-        text: res.message || 'Verification email resent! Please check your inbox.',
-      });
-      setCountdown(60);
-    } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Failed to resend verification email';
-      setResendStatus({ type: 'error', text: msg });
-    } finally {
-      setIsResending(false);
-    }
+    await resendVerification(email);
   };
 
   return (

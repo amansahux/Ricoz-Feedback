@@ -1,22 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, Navigate } from 'react-router';
 import { Eye, EyeOff, Lock, AlertCircle, ArrowRight, ShieldCheck, Mail, CheckCircle2, RotateCw } from 'lucide-react';
 import { registerSchema } from '../../validation/auth.schema';
 import useAuth from '../../hook/useAuth';
-import { resendVerificationEmail } from '../../api/auth.api';
 
 export default function Register() {
-  const { register: registerUser, isRegistering, isAuthenticated, isHydrating, error, resetError } = useAuth();
-  const [showPassword, setShowPassword] = useState(false);
+  const {
+    register: registerUser,
+    isRegistering,
+    isAuthenticated,
+    isHydrating,
+    error,
+    verificationSent,
+    registeredEmail,
+    countdown,
+    isResending,
+    resendStatus,
+    resendVerification,
+  } = useAuth();
 
-  // Email verification sent state & countdown
-  const [verificationSent, setVerificationSent] = useState(false);
-  const [registeredEmail, setRegisteredEmail] = useState('');
-  const [countdown, setCountdown] = useState(60);
-  const [isResending, setIsResending] = useState(false);
-  const [resendStatus, setResendStatus] = useState(null); // { type: 'success' | 'error', text: string }
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -33,51 +38,16 @@ export default function Register() {
     mode: 'onTouched',
   });
 
-  // Countdown timer for resend email
-  useEffect(() => {
-    let timer;
-    if (verificationSent && countdown > 0) {
-      timer = setInterval(() => {
-        setCountdown((prev) => prev - 1);
-      }, 1000);
-    }
-    return () => {
-      if (timer) clearInterval(timer);
-    };
-  }, [verificationSent, countdown]);
-
   if (!isHydrating && isAuthenticated) {
     return <Navigate to="/dashboard" replace />;
   }
 
   const onSubmit = async (data) => {
-    resetError?.();
-    setResendStatus(null);
-    const result = await registerUser(data);
-    if (result.success) {
-      setRegisteredEmail(data.email);
-      setVerificationSent(true);
-      setCountdown(60);
-    }
+    await registerUser(data);
   };
 
   const handleResend = async () => {
-    if (countdown > 0 || isResending || !registeredEmail) return;
-    setIsResending(true);
-    setResendStatus(null);
-    try {
-      const res = await resendVerificationEmail(registeredEmail);
-      setResendStatus({
-        type: 'success',
-        text: res.message || 'A new verification link has been sent to your email!',
-      });
-      setCountdown(60);
-    } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Failed to resend verification email';
-      setResendStatus({ type: 'error', text: msg });
-    } finally {
-      setIsResending(false);
-    }
+    await resendVerification(registeredEmail);
   };
 
   return (

@@ -62,8 +62,8 @@ export const authService = {
       await user.save();
     }
 
-    // Verification URL pointing to frontend verification route or direct API
-    const verificationUrl = `${env.CLIENT_URL}/verify-email?token=${verificationToken}`;
+    // Verification URL pointing directly to backend endpoint which activates user and redirects to login
+    const verificationUrl = `${env.SERVER_URL}/api/auth/verify-email?token=${verificationToken}`;
 
     // Send styled verification email asynchronously
     try {
@@ -151,7 +151,7 @@ export const authService = {
     user.verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
     await user.save();
 
-    const verificationUrl = `${env.CLIENT_URL}/verify-email?token=${verificationToken}`;
+    const verificationUrl = `${env.SERVER_URL}/api/auth/verify-email?token=${verificationToken}`;
 
     await sendVerificationEmail({
       to: user.email,

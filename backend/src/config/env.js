@@ -11,8 +11,8 @@ export const env = {
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
   GOOGLE_REFRESH_TOKEN: process.env.GOOGLE_REFRESH_TOKEN,
-  GOOGLE_EMAIL_ID: process.env.GOOGLE_EMAIL_ID
-
+  GOOGLE_EMAIL_ID: process.env.GOOGLE_EMAIL_ID,
+  SERVER_URL: process.env.SERVER_URL || `http://localhost:${process.env.PORT || 5000}`,
 };
 
 // Validate required env vars
