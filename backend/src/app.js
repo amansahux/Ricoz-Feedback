@@ -12,6 +12,7 @@ import analyticsRoutes from './routes/analytics.routes.js';
 import customerRoutes from './routes/customer.routes.js';
 import { errorMiddleware } from './middlewares/error.middleware.js';
 import { env } from './config/env.js';
+import './services/email.service.js'; 
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

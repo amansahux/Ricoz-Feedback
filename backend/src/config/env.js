@@ -16,7 +16,7 @@ export const env = {
 };
 
 // Validate required env vars
-if (!env.MONGO_URI || !env.JWT_SECRET || env.GOOGLE_CLIENT_ID || env.GOOGLE_CLIENT_SECRET || env.GOOGLE_REFRESH_TOKEN || env.GOOGLE_EMAIL_ID) {
-  throw new Error('Missing required environment variables: MONGO_URI, JWT_SECRET');
+if (!env.MONGO_URI || !env.JWT_SECRET || !env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET || !env.GOOGLE_REFRESH_TOKEN || !env.GOOGLE_EMAIL_ID) {
+  throw new Error('Missing required environment variables: MONGO_URI, JWT_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REFRESH_TOKEN, GOOGLE_EMAIL_ID');
 
 }
