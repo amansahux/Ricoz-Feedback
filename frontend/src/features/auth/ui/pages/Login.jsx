@@ -1,18 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Link, Navigate } from 'react-router';
-import { Eye, EyeOff, Lock, AlertCircle, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Link, Navigate, useSearchParams } from 'react-router';
+import { Eye, EyeOff, Lock, AlertCircle, ArrowRight, CheckCircle2, Mail, RotateCw } from 'lucide-react';
 import { loginSchema } from '../../validation/auth.schema';
 import useAuth from '../../hook/useAuth';
+import { resendVerificationEmail } from '../../api/auth.api';
 
 export default function Login() {
   const { login, isLoggingIn, isAuthenticated, isHydrating, error, resetError } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
+  const [searchParams] = useSearchParams();
+
+  // Verification states
+  const isVerifiedSuccess = searchParams.get('verified') === 'true';
+  const isGoogleFailed = searchParams.get('error') === 'google_auth_failed';
+
+  // Unverified user resend state & countdown
+  const [countdown, setCountdown] = useState(0);
+  const [isResending, setIsResending] = useState(false);
+  const [resendStatus, setResendStatus] = useState(null); // { type: 'success' | 'error', text: string }
 
   const {
     register,
     handleSubmit,
+    getValues,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(loginSchema),
@@ -23,13 +35,55 @@ export default function Login() {
     mode: 'onTouched',
   });
 
+  // Countdown timer for resend email
+  useEffect(() => {
+    let timer;
+    if (countdown > 0) {
+      timer = setInterval(() => {
+        setCountdown((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [countdown]);
+
   if (!isHydrating && isAuthenticated) {
     return <Navigate to="/dashboard" replace />;
   }
 
+  const isUnverifiedError =
+    error && (error.toLowerCase().includes('not verified') || error.toLowerCase().includes('verify your email'));
+
   const onSubmit = async (data) => {
     resetError?.();
+    setResendStatus(null);
     await login(data);
+  };
+
+  const handleResend = async () => {
+    const email = getValues('email');
+    if (!email) {
+      setResendStatus({ type: 'error', text: 'Please enter your email above to resend verification link' });
+      return;
+    }
+    if (countdown > 0 || isResending) return;
+
+    setIsResending(true);
+    setResendStatus(null);
+    try {
+      const res = await resendVerificationEmail(email);
+      setResendStatus({
+        type: 'success',
+        text: res.message || 'Verification email resent! Please check your inbox.',
+      });
+      setCountdown(60);
+    } catch (err) {
+      const msg = err.response?.data?.message || err.message || 'Failed to resend verification email';
+      setResendStatus({ type: 'error', text: msg });
+    } finally {
+      setIsResending(false);
+    }
   };
 
   return (
@@ -135,14 +189,87 @@ export default function Login() {
             </p>
           </div>
 
-          {/* Backend Error Banner */}
-          {error && (
+          {/* Email Verified Banner */}
+          {isVerifiedSuccess && (
+            <div className="mb-6 p-4 rounded-xl bg-emerald-50/90 border border-emerald-300/60 flex items-start gap-3 text-emerald-950 transition-all shadow-sm">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <h4 className="font-inter text-xs font-semibold text-emerald-900">Email verified successfully!</h4>
+                <p className="font-inter text-xs text-emerald-800 mt-0.5">
+                  Your workspace is now active. Please sign in with your credentials below.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Google Auth Failed Banner */}
+          {isGoogleFailed && (
             <div className="mb-6 p-4 rounded-xl bg-red-50/90 border border-[#F62440]/30 flex items-start gap-3 text-red-950 transition-all shadow-sm">
               <AlertCircle className="w-5 h-5 text-[#F62440] shrink-0 mt-0.5" />
               <div className="flex-1">
-                <h4 className="font-inter text-xs font-semibold text-[#bb0028]">Authentication failed</h4>
-                <p className="font-inter text-xs text-neutral-700 mt-0.5">{error}</p>
+                <h4 className="font-inter text-xs font-semibold text-[#bb0028]">Google Sign-in Failed</h4>
+                <p className="font-inter text-xs text-neutral-700 mt-0.5">
+                  Unable to sign in with Google. Please try again or use your password.
+                </p>
               </div>
+            </div>
+          )}
+
+          {/* Resend Status Banner */}
+          {resendStatus && (
+            <div
+              className={`mb-6 p-4 rounded-xl border flex items-start gap-3 text-xs font-inter transition-all shadow-sm ${
+                resendStatus.type === 'success'
+                  ? 'bg-emerald-50/90 border-emerald-300/60 text-emerald-950'
+                  : 'bg-red-50/90 border-red-300/60 text-red-950'
+              }`}
+            >
+              {resendStatus.type === 'success' ? (
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+              ) : (
+                <AlertCircle className="w-4 h-4 text-[#bb0028] shrink-0 mt-0.5" />
+              )}
+              <span>{resendStatus.text}</span>
+            </div>
+          )}
+
+          {/* Backend Error Banner */}
+          {error && !isGoogleFailed && (
+            <div className="mb-6 p-4 rounded-xl bg-red-50/90 border border-[#F62440]/30 flex flex-col gap-3 text-red-950 transition-all shadow-sm">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-[#F62440] shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <h4 className="font-inter text-xs font-semibold text-[#bb0028]">Authentication failed</h4>
+                  <p className="font-inter text-xs text-neutral-700 mt-0.5">{error}</p>
+                </div>
+              </div>
+
+              {/* If user is unverified, offer inline resend verification button */}
+              {isUnverifiedError && (
+                <div className="pt-2 border-t border-red-200/60 flex items-center justify-between">
+                  <span className="text-[11px] text-neutral-600 font-inter">Need a new verification link?</span>
+                  <button
+                    type="button"
+                    onClick={handleResend}
+                    disabled={countdown > 0 || isResending}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#121110] hover:bg-[#262321] text-white text-xs font-medium transition-all cursor-pointer disabled:bg-neutral-200 disabled:text-neutral-500 disabled:cursor-not-allowed"
+                  >
+                    {isResending ? (
+                      <>
+                        <RotateCw className="w-3.5 h-3.5 animate-spin" />
+                        <span>Sending...</span>
+                      </>
+                    ) : countdown > 0 ? (
+                      <span>Resend in {countdown}s</span>
+                    ) : (
+                      <>
+                        <Mail className="w-3.5 h-3.5" />
+                        <span>Resend Email</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
             </div>
           )}
 

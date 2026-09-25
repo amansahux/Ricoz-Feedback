@@ -33,9 +33,9 @@ export const authController = {
     res.cookie('recoz_token', result.tokens.accessToken, getAccessTokenCookieOptions());
     res.cookie('recoz_refresh_token', result.tokens.refreshToken, getRefreshTokenCookieOptions());
 
-    // If request comes from a browser GET redirect, redirect to dashboard
+    // If request comes from a browser GET redirect, redirect to login page
     if (req.method === 'GET') {
-      return res.redirect(`${env.CLIENT_URL}/dashboard?verified=true`);
+      return res.redirect(`${env.CLIENT_URL}/login?verified=true`);
     }
 
     res.status(200).json({

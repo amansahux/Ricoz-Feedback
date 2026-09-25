@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router";
 import { Login, Register, Logout, getMe } from "../state/auth.action";
 import { clearAuthError } from "../state/auth.slice";
-import Toast from "../../../shared/components/Toast";
 
 export function useAuth() {
   const dispatch = useDispatch();
@@ -27,17 +26,14 @@ export function useAuth() {
       try {
         const resultAction = await dispatch(Login(formData));
         if (Login.fulfilled.match(resultAction)) {
-          Toast.success("Signed in successfully!");
           navigate("/dashboard");
           return { success: true, data: resultAction.payload };
         } else {
           const message = resultAction.payload || "Sign in failed";
-          Toast.error(message);
           return { success: false, error: message };
         }
       } catch (err) {
         const message = err.message || "An unexpected error occurred";
-        Toast.error(message);
         return { success: false, error: message };
       }
     },
@@ -49,29 +45,23 @@ export function useAuth() {
       try {
         const resultAction = await dispatch(Register(formData));
         if (Register.fulfilled.match(resultAction)) {
-          Toast.success("Account created successfully!");
-          navigate("/dashboard");
+          // Do not navigate directly on register as email verification is required
           return { success: true, data: resultAction.payload };
         } else {
           const message = resultAction.payload || "Registration failed";
-          Toast.error(message);
           return { success: false, error: message };
         }
       } catch (err) {
         const message = err.message || "An unexpected error occurred";
-        Toast.error(message);
         return { success: false, error: message };
       }
     },
-    [dispatch, navigate],
+    [dispatch],
   );
 
   const handleLogout = useCallback(async () => {
     try {
-      const resultAction = await dispatch(Logout());
-      if (Logout.fulfilled.match(resultAction)) {
-        Toast.success("Logged out successfully");
-      }
+      await dispatch(Logout());
     } catch {
       // ignore
     } finally {
