@@ -1,162 +1,114 @@
 import { surveyService } from '../services/survey.service.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
+import { ApiError } from '../utils/ApiError.js';
 
 export const surveyController = {
-  async createSurvey(req, res, next) {
-    try {
-      const { title, description, questions, status } = req.body;
-      const organizationId = req.user.organizationId;
+  createSurvey: asyncHandler(async (req, res) => {
+    const { title, description, questions, status } = req.body;
+    const organizationId = req.user.organizationId;
 
-      if (!title) {
-        return res.status(400).json({
-          success: false,
-          message: 'Survey title required',
-        });
-      }
+    const survey = await surveyService.createSurvey(organizationId, {
+      title,
+      description,
+      questions,
+      status,
+    });
 
-      const survey = await surveyService.createSurvey(organizationId, {
-        title,
-        description,
-        questions,
-        status
-      });
+    res.status(201).json({
+      success: true,
+      message: 'Survey created successfully',
+      data: survey,
+    });
+  }),
 
-      res.status(201).json({
-        success: true,
-        message: 'Survey created Sucessfully',
-        data: survey,
-      });
-    } catch (error) {
-      next(error);
+  getSurveys: asyncHandler(async (req, res) => {
+    const organizationId = req.user.organizationId;
+    const result = await surveyService.getSurveys(organizationId);
+
+    res.status(200).json({
+      success: true,
+      data: result.surveys,
+      avgCsat: result.avgCsat,
+    });
+  }),
+
+  getSurveyById: asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const organizationId = req.user.organizationId;
+
+    const survey = await surveyService.getSurveyById(id, organizationId);
+
+    if (!survey) {
+      throw new ApiError(404, 'Survey not found');
     }
-  },
 
-  async getSurveys(req, res, next) {
-    try {
-      const organizationId = req.user.organizationId;
-      const result = await surveyService.getSurveys(organizationId);
+    res.status(200).json({
+      success: true,
+      data: survey,
+    });
+  }),
 
-      res.status(200).json({
-        success: true,
-        data: result.surveys,
-        avgCsat: result.avgCsat,
-      });
-    } catch (error) {
-      next(error);
+  updateSurvey: asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const organizationId = req.user.organizationId;
+
+    const survey = await surveyService.updateSurvey(id, organizationId, req.body);
+
+    if (!survey) {
+      throw new ApiError(404, 'Survey not found');
     }
-  },
 
-  async getSurveyById(req, res, next) {
-    try {
-      const { id } = req.params;
-      const organizationId = req.user.organizationId;
+    res.status(200).json({
+      success: true,
+      message: 'Survey updated successfully',
+      data: survey,
+    });
+  }),
 
-      const survey = await surveyService.getSurveyById(id, organizationId);
+  deleteSurvey: asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const organizationId = req.user.organizationId;
 
-      if (!survey) {
-        return res.status(404).json({
-          success: false,
-          message: 'Survey not found',
-        });
-      }
+    const result = await surveyService.deleteSurvey(id, organizationId);
 
-      res.status(200).json({
-        success: true,
-        data: survey,
-      });
-    } catch (error) {
-      next(error);
+    if (!result || result.deletedCount === 0) {
+      throw new ApiError(404, 'Survey not found');
     }
-  },
 
-  async updateSurvey(req, res, next) {
-    try {
-      const { id } = req.params;
-      const organizationId = req.user.organizationId;
+    res.status(200).json({
+      success: true,
+      message: 'Survey deleted successfully',
+    });
+  }),
 
-      const survey = await surveyService.updateSurvey(id, organizationId, req.body);
+  publishSurvey: asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const organizationId = req.user.organizationId;
 
-      if (!survey) {
-        return res.status(404).json({
-          success: false,
-          message: 'Survey not found',
-        });
-      }
+    const survey = await surveyService.publishSurvey(id, organizationId);
 
-      res.status(200).json({
-        success: true,
-        message: 'Survey updated',
-        data: survey,
-      });
-    } catch (error) {
-      next(error);
+    if (!survey) {
+      throw new ApiError(404, 'Survey not found');
     }
-  },
 
-  async deleteSurvey(req, res, next) {
-    try {
-      const { id } = req.params;
-      const organizationId = req.user.organizationId;
+    res.status(200).json({
+      success: true,
+      message: 'Survey published successfully',
+      data: survey,
+    });
+  }),
 
-      const result = await surveyService.deleteSurvey(id, organizationId);
+  getPublicSurvey: asyncHandler(async (req, res) => {
+    const { organizationSlug, surveySlug } = req.params;
+    const survey = await surveyService.getPublicSurvey(organizationSlug, surveySlug);
 
-      if (result.deletedCount === 0) {
-        return res.status(404).json({
-          success: false,
-          message: 'Survey not found',
-        });
-      }
-
-      res.status(200).json({
-        success: true,
-        message: 'Survey deleted',
-      });
-    } catch (error) {
-      next(error);
+    if (!survey) {
+      throw new ApiError(404, 'Survey not found or is currently inactive');
     }
-  },
 
-  async publishSurvey(req, res, next) {
-    try {
-      const { id } = req.params;
-      const organizationId = req.user.organizationId;
-
-      const survey = await surveyService.publishSurvey(id, organizationId);
-
-      if (!survey) {
-        return res.status(404).json({
-          success: false,
-          message: 'Survey not found',
-        });
-      }
-
-      res.status(200).json({
-        success: true,
-        message: 'Survey published',
-        data: survey,
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
-
-  async getPublicSurvey(req, res, next) {
-    try {
-      const { organizationSlug, surveySlug } = req.params;
-      const survey = await surveyService.getPublicSurvey(organizationSlug, surveySlug);
-
-      if (!survey) {
-        return res.status(404).json({
-          success: false,
-          message: 'Survey not found or inactive',
-        });
-      }
-
-      res.status(200).json({
-        success: true,
-        data: survey,
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
+    res.status(200).json({
+      success: true,
+      data: survey,
+    });
+  }),
 };

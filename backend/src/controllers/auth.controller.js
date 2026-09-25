@@ -1,132 +1,221 @@
-import { getCookieOptions } from "../config/cookie.js";
 import { authService } from "../services/auth.service.js";
+import { getAccessTokenCookieOptions, getRefreshTokenCookieOptions } from "../config/cookie.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { env } from "../config/env.js";
 
 export const authController = {
-  async register(req, res, next) {
-    try {
-      const { name, email, password, organizationName } = req.body;
+  /**
+   * User registration with email verification trigger
+   */
+  register: asyncHandler(async (req, res) => {
+    const { name, email, password, organizationName } = req.body;
+    const result = await authService.register(name, email, password, organizationName);
 
-      if (!name || !email || !password || !organizationName) {
-        return res.status(400).json({
-          success: false,
-          message: 'Missing required fields',
-        });
-      }
+    res.status(201).json({
+      success: true,
+      message: result.message,
+      data: {
+        email: result.email,
+        requiresVerification: result.requiresVerification,
+      },
+    });
+  }),
 
-      const result = await authService.register(name, email, password, organizationName);
+  /**
+   * Verify email via token
+   */
+  verifyEmail: asyncHandler(async (req, res) => {
+    const token = req.body?.token || req.query?.token;
+    const result = await authService.verifyEmail(token);
 
-      res.cookie('recoz_token', result.token, getCookieOptions());
+    // Set authentication cookies upon successful verification
+    res.cookie('recoz_access_token', result.tokens.accessToken, getAccessTokenCookieOptions());
+    res.cookie('recoz_token', result.tokens.accessToken, getAccessTokenCookieOptions());
+    res.cookie('recoz_refresh_token', result.tokens.refreshToken, getRefreshTokenCookieOptions());
 
-      res.status(201).json({
-        success: true,
-        message: 'Registration successful',
-        data: {
-          user: result.user,
-          organization: result.organization,
-        },
-      });
-    } catch (error) {
-      next(error);
+    // If request comes from a browser GET redirect, redirect to dashboard
+    if (req.method === 'GET') {
+      return res.redirect(`${env.CLIENT_URL}/dashboard?verified=true`);
     }
-  },
 
-  async login(req, res, next) {
-    try {
-      const { email, password } = req.body;
+    res.status(200).json({
+      success: true,
+      message: 'Email verified successfully! You are now logged in.',
+      data: {
+        user: result.user,
+        organization: result.organization,
+      },
+    });
+  }),
 
-      if (!email || !password) {
-        return res.status(400).json({
-          success: false,
-          message: 'Email and password required',
-        });
-      }
+  /**
+   * Resend verification link to user's email
+   */
+  resendVerification: asyncHandler(async (req, res) => {
+    const { email } = req.body;
+    const result = await authService.resendVerification(email);
 
-      const result = await authService.login(email, password);
+    res.status(200).json({
+      success: true,
+      message: result.message,
+    });
+  }),
 
-      res.cookie('recoz_token', result.token, getCookieOptions());
+  /**
+   * Login with email and password
+   */
+  login: asyncHandler(async (req, res) => {
+    const { email, password } = req.body;
+    const result = await authService.login(email, password);
 
-      res.status(200).json({
-        success: true,
-        message: 'Login successful',
-        data: {
-          user: result.user,
-        },
-      });
-    } catch (error) {
-      if (error.message.includes('Invalid')) {
-        return res.status(401).json({
-          success: false,
-          message: error.message,
-        });
-      }
-      next(error);
+    // Set dual-token cookies
+    res.cookie('recoz_access_token', result.tokens.accessToken, getAccessTokenCookieOptions());
+    res.cookie('recoz_token', result.tokens.accessToken, getAccessTokenCookieOptions());
+    res.cookie('recoz_refresh_token', result.tokens.refreshToken, getRefreshTokenCookieOptions());
+
+    res.status(200).json({
+      success: true,
+      message: 'Login successful',
+      data: {
+        user: result.user,
+        organization: result.organization,
+      },
+    });
+  }),
+
+  /**
+   * Forgot password - sends 6-digit OTP to user's email
+   */
+  forgotPassword: asyncHandler(async (req, res) => {
+    const { email } = req.body;
+    const result = await authService.forgotPassword(email);
+
+    res.status(200).json({
+      success: true,
+      message: result.message,
+    });
+  }),
+
+  /**
+   * Resend OTP code for password reset
+   */
+  resendOtp: asyncHandler(async (req, res) => {
+    const { email } = req.body;
+    const result = await authService.resendOtp(email);
+
+    res.status(200).json({
+      success: true,
+      message: result.message,
+    });
+  }),
+
+  /**
+   * Reset password after entering valid OTP
+   */
+  resetPassword: asyncHandler(async (req, res) => {
+    const { email, otp, newPassword } = req.body;
+    const result = await authService.resetPassword(email, otp, newPassword);
+
+    res.status(200).json({
+      success: true,
+      message: result.message,
+    });
+  }),
+
+  /**
+   * Refresh access token
+   */
+  refreshToken: asyncHandler(async (req, res) => {
+    const refreshToken = req.cookies?.recoz_refresh_token || req.body?.refreshToken;
+    const result = await authService.refreshAccessToken(refreshToken);
+
+    res.cookie('recoz_access_token', result.tokens.accessToken, getAccessTokenCookieOptions());
+    res.cookie('recoz_token', result.tokens.accessToken, getAccessTokenCookieOptions());
+    res.cookie('recoz_refresh_token', result.tokens.refreshToken, getRefreshTokenCookieOptions());
+
+    res.status(200).json({
+      success: true,
+      message: 'Tokens refreshed successfully',
+      data: {
+        user: result.user,
+      },
+    });
+  }),
+
+  /**
+   * Google OAuth Callback controller
+   */
+  googleCallback: asyncHandler(async (req, res) => {
+    if (!req.user) {
+      return res.redirect(`${env.CLIENT_URL}/login?error=google_auth_failed`);
     }
-  },
 
-  async getMe(req, res, next) {
-    try {
-      const result = await authService.getUserById(req.user.userId);
+    const result = await authService.handleGoogleAuth(req.user);
 
-      res.status(200).json({
-        success: true,
-        data: result,
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
+    // Set dual-token cookies
+    res.cookie('recoz_access_token', result.tokens.accessToken, getAccessTokenCookieOptions());
+    res.cookie('recoz_token', result.tokens.accessToken, getAccessTokenCookieOptions());
+    res.cookie('recoz_refresh_token', result.tokens.refreshToken, getRefreshTokenCookieOptions());
 
-  async logout(req, res) {
-    res.clearCookie('recoz_token');
+    return res.redirect(`${env.CLIENT_URL}/dashboard`);
+  }),
+
+  /**
+   * Get current authenticated user details
+   */
+  getMe: asyncHandler(async (req, res) => {
+    const result = await authService.getUserById(req.user.userId);
+
+    res.status(200).json({
+      success: true,
+      data: result,
+    });
+  }),
+
+  /**
+   * Update profile details
+   */
+  update: asyncHandler(async (req, res) => {
+    const { name, organizationName, primaryColor, logoUrl } = req.body;
+    const result = await authService.updateUser(req.user.userId, name, organizationName, primaryColor, logoUrl);
+
+    res.status(200).json({
+      success: true,
+      message: 'User updated successfully',
+      data: {
+        user: result.user,
+        organization: result.organization,
+      },
+    });
+  }),
+
+  /**
+   * Change password for logged-in user
+   */
+  changePassword: asyncHandler(async (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+    const result = await authService.changePasswordService(req.user.userId, currentPassword, newPassword);
+
+    res.status(200).json({
+      success: true,
+      message: result.message || 'Password changed successfully',
+    });
+  }),
+
+  /**
+   * Log out and clear cookies
+   */
+  logout: asyncHandler(async (req, res) => {
+    const accessCookieOptions = getAccessTokenCookieOptions();
+    const refreshCookieOptions = getRefreshTokenCookieOptions();
+
+    res.clearCookie('recoz_access_token', accessCookieOptions);
+    res.clearCookie('recoz_token', accessCookieOptions);
+    res.clearCookie('recoz_refresh_token', refreshCookieOptions);
+
     res.status(200).json({
       success: true,
       message: 'Logged out successfully',
     });
-  },
-
-  async update(req, res, next) {
-    try {
-      const { name, organizationName, primaryColor, logoUrl } = req.body;
-
-      const result = await authService.updateUser(req.user.userId, name, organizationName, primaryColor, logoUrl);
-
-      res.status(200).json({
-        success: true,
-        message: 'User updated successfully',
-        data: {
-          user: result.user,
-          organization: result.organization,
-        },
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
-  async changePassword(req, res, next) {
-    try {
-      const { currentPassword, newPassword } = req.body;
-
-      if (!currentPassword || !newPassword) {
-        return res.status(400).json({
-          success: false,
-          message: 'Current and new passwords are required',
-        });
-      }
-
-      await authService.changePasswordService(req.user.userId, currentPassword, newPassword);
-
-      res.status(200).json({
-        success: true,
-        message: 'Password changed successfully',
-      });
-    } catch (error) {
-      if (error.message.includes('Invalid')) {
-        return res.status(400).json({
-          success: false,
-          message: error.message,
-        });
-      }
-      next(error);
-    }
-  },
+  }),
 };
