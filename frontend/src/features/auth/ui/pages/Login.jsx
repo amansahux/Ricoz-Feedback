@@ -124,7 +124,7 @@ export default function Login() {
       </section>
 
       {/* RIGHT PANEL: Authentication Surface (Warm White Canvas #FFFAF3) */}
-      <section className="lg:w-[54%] w-full min-h-screen flex flex-col justify-between bg-[#FFFAF3] p-6 sm:p-12 lg:p-16 relative">
+      <section className="lg:w-[54%] w-full min-h-screen flex flex-col justify-between bg-[#FFFAF3] p-6 sm:p-12 lg:p-16 relative scrollbar-none">
         {/* Mobile Only Top Brand Header Bar */}
         <div className="lg:hidden flex items-center justify-between pb-6 pt-2 border-b border-[#EFE4D6]">
           <div className="flex items-center gap-3">

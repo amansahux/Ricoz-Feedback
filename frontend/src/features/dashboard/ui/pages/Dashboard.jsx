@@ -38,7 +38,7 @@ export default function Dashboard() {
   } = useDashboard();
 
   return (
-    <div className="w-full max-w-[1440px] mx-auto flex flex-col gap-6 font-inter pb-12">
+    <div className="w-full max-w-[1440px] mx-auto flex flex-col gap-6 font-inter pb-4">
       {/* Toast Notification Banner */}
       {toast?.visible && (
         <div

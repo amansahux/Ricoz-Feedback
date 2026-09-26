@@ -51,9 +51,9 @@ export default function Register() {
   };
 
   return (
-    <main className="w-full min-h-screen flex flex-col lg:flex-row bg-[#FFFAF3] text-[#1f1b18] antialiased selection:bg-[#F62440] selection:text-white">
+    <main className="w-full min-h-screen lg:h-screen lg:overflow-hidden flex flex-col lg:flex-row bg-[#FFFAF3] text-[#1f1b18] antialiased selection:bg-[#F62440] selection:text-white">
       {/* LEFT PANEL: Dark Editorial Luxury Canvas (~46% desktop width) */}
-      <section className="hidden lg:flex lg:w-[46%] w-full bg-[#121110] text-[#f9efe9] relative flex-col justify-between p-8 sm:p-12 lg:p-16 border-b lg:border-b-0 lg:border-r border-[#262321] dark-glow-grid dark-hairlines overflow-hidden">
+      <section className="hidden lg:flex lg:w-[46%] w-full h-full bg-[#121110] text-[#f9efe9] relative flex-col justify-between p-8 sm:p-10 lg:p-12 border-b lg:border-b-0 lg:border-r border-[#262321] dark-glow-grid dark-hairlines overflow-hidden">
         {/* Subtle atmospheric lighting overlay */}
         <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-[#F62440]/10 blur-3xl pointer-events-none" />
         <div className="absolute -bottom-24 -right-24 w-80 h-80 rounded-full bg-[#FFE5BF]/5 blur-3xl pointer-events-none" />
@@ -126,7 +126,7 @@ export default function Register() {
       </section>
 
       {/* RIGHT PANEL: Light Luxury Form Canvas (~54% desktop width) */}
-      <section className="lg:w-[54%] w-full bg-[#FFFAF3] flex items-center justify-center p-6 sm:p-12 lg:p-16 relative">
+      <section className="lg:w-[54%] w-full h-full overflow-y-auto flex items-center justify-center p-6 sm:p-10 lg:p-12 relative scrollbar-none">
         <div className="w-full max-w-[440px] mx-auto my-auto py-6">
 
           {/* STATE 1: VERIFICATION EMAIL SENT SCREEN */}

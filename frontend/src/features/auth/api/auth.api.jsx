@@ -29,3 +29,4 @@ export const resetPassword = async ({ email, otp, newPassword, confirmPassword }
   });
   return response.data;
 };
+
