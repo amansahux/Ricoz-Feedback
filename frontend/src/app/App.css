@@ -1,12 +1,22 @@
 @import "tailwindcss";
 
 @layer base {
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+  }
+
   body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background-color: #FFFAF3;
     color: #141210;
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
+  }
+
+  #root {
+    min-height: 100%;
   }
 }
 
