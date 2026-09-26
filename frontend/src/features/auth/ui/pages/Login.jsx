@@ -56,9 +56,9 @@ export default function Login() {
   };
 
   return (
-    <main className="w-full min-h-screen flex flex-col lg:flex-row bg-[#FFFAF3] text-[#1f1b18] antialiased selection:bg-[#F62440] selection:text-white">
+    <main className="w-full h-screen flex flex-col lg:flex-row bg-[#FFFAF3] text-[#1f1b18] antialiased selection:bg-[#F62440] selection:text-white overflow-hidden">
       {/* LEFT PANEL: Editorial Storytelling Surface (Desktop ~46%, Hidden on Mobile) */}
-      <section className="hidden lg:flex lg:w-[46%] w-full min-h-screen bg-[#121110] text-[#f9efe9] flex-col justify-between p-8 sm:p-12 lg:p-16 relative overflow-hidden charcoal-grid-bg border-b lg:border-b-0 lg:border-r border-[#262321] dark-glow-grid dark-hairlines">
+      <section className="hidden lg:flex lg:w-[46%] w-full h-screen bg-[#121110] text-[#f9efe9] flex-col justify-between p-8 sm:p-12 lg:p-16 relative overflow-hidden charcoal-grid-bg border-b lg:border-b-0 lg:border-r border-[#262321] dark-glow-grid dark-hairlines shrink-0">
         {/* Atmospheric Ambient Glow */}
         <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#F62440]/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-[#FFE5BF]/5 rounded-full blur-3xl pointer-events-none" />
@@ -124,7 +124,7 @@ export default function Login() {
       </section>
 
       {/* RIGHT PANEL: Authentication Surface (Warm White Canvas #FFFAF3) */}
-      <section className="lg:w-[54%] w-full min-h-screen flex flex-col justify-between bg-[#FFFAF3] p-6 sm:p-12 lg:p-16 relative scrollbar-none">
+      <section className="lg:w-[54%] w-full h-screen flex flex-col justify-between bg-[#FFFAF3] p-6 sm:p-12 lg:p-16 relative overflow-y-auto scrollbar-none">
         {/* Mobile Only Top Brand Header Bar */}
         <div className="lg:hidden flex items-center justify-between pb-6 pt-2 border-b border-[#EFE4D6]">
           <div className="flex items-center gap-3">
