@@ -82,6 +82,7 @@ const Setting = () => {
 
         {/* Section 2: Security & Change Password */}
         <SecuritySection
+          email={user?.email}
           passwordData={passwordData}
           passwordError={passwordError}
           showVisibility={showPasswordVisibility}

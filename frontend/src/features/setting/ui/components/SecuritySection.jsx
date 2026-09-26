@@ -3,6 +3,7 @@ import { Eye, EyeOff, AlertCircle, ArrowRight, Loader2 } from "lucide-react";
 import { Link } from "react-router";
 
 export const SecuritySection = ({
+  email,
   passwordData,
   passwordError,
   showVisibility,
@@ -156,7 +157,7 @@ export const SecuritySection = ({
             </p>
           </div>
           <Link
-            to="/forgot-password"
+            to={email ? `/forgot-password?email=${encodeURIComponent(email)}` : "/forgot-password"}
             className="text-xs sm:text-sm font-semibold text-[#bb0028] hover:underline inline-flex items-center gap-1.5 shrink-0 group"
           >
             <span>Reset your password</span>

@@ -310,6 +310,12 @@ export default function Login() {
                 >
                   PASSWORD
                 </label>
+                <Link
+                  to="/forgot-password"
+                  className="text-xs font-inter text-[#F62440] hover:text-[#D81B34] hover:underline font-medium transition-colors"
+                >
+                  Forgot password?
+                </Link>
               </div>
               <div className="relative">
                 <input

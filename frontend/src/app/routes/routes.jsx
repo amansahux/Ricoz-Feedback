@@ -18,7 +18,7 @@ import LandingPage from "../../features/Landing/ui/pages/LandingPage.jsx";
 import GiveFeedback from "../../features/customers/ui/pages/giveFeedback.jsx";
 import FeedbackDetails from "../../features/feedback/ui/pages/FeedbackDetails.jsx";
 import CustomerDetail from "../../features/customers/ui/pages/CustomerDetail.jsx";
-
+import ForgotPassword from "../../features/auth/ui/pages/ForgotPassword.jsx";
 
 export const router = createBrowserRouter([
   {
@@ -38,12 +38,16 @@ export const router = createBrowserRouter([
         element: <VerifyEmail />,
       },
       {
-        path:"",
-        element:<LandingPage/>
+        path: "",
+        element: <LandingPage />,
       },
       {
-        path:"f/:organizationSlug/:surveySlug",
-        element:<GiveFeedback/>
+        path: "f/:organizationSlug/:surveySlug",
+        element: <GiveFeedback />,
+      },
+      {
+        path: "forgot-password",
+        element: <ForgotPassword />,
       },
       {
         element: (
@@ -62,35 +66,35 @@ export const router = createBrowserRouter([
           },
           {
             path: "surveys",
-            element: <Survey/>,
+            element: <Survey />,
           },
           {
             path: "surveys/create",
-            element: <CreateSurvey/>,
+            element: <CreateSurvey />,
           },
           {
             path: "surveys/publish",
-            element: <PublishSurvey/>,
+            element: <PublishSurvey />,
           },
           {
             path: "feedback",
-            element:<Feedback/>,
+            element: <Feedback />,
           },
           {
             path: "feedback/:feedbackId",
-            element:<FeedbackDetails/>,
+            element: <FeedbackDetails />,
           },
           {
             path: "customers",
-            element: <Customer/>,
+            element: <Customer />,
           },
           {
             path: "customers/:customerId",
-            element: <CustomerDetail/>,
+            element: <CustomerDetail />,
           },
           {
             path: "analytics",
-            element: <Analytics/>,
+            element: <Analytics />,
           },
         ],
       },
