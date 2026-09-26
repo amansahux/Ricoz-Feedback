@@ -65,11 +65,13 @@ apiClient.interceptors.response.use(
         // If both tokens are unavailable or expired, redirect to login
         const currentPath = window.location.pathname;
         const isPublicAuthPage =
+          currentPath === '/' ||
           currentPath.startsWith('/login') ||
           currentPath.startsWith('/register') ||
           currentPath.startsWith('/verify-email') ||
           currentPath.startsWith('/forgot-password') ||
-          currentPath.startsWith('/reset-password');
+          currentPath.startsWith('/reset-password') ||
+          currentPath.startsWith('/f/');
 
         if (!isPublicAuthPage) {
           window.location.href = '/login';

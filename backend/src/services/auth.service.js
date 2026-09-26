@@ -240,6 +240,26 @@ export const authService = {
   },
 
   /**
+   * Invalidate (remove) OTP from database
+   * Called when OTP timer expires or before resending a new OTP
+   */
+  async invalidateOtp(email) {
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = await User.findOne({ email: normalizedEmail }).select('+otp +otpExpires');
+
+    if (!user) {
+      // Silently return for security (no account enumeration)
+      return { success: true, message: 'OTP invalidated.' };
+    }
+
+    user.otp = undefined;
+    user.otpExpires = undefined;
+    await user.save();
+
+    return { success: true, message: 'OTP invalidated.' };
+  },
+
+  /**
    * Resend OTP for password reset
    */
   async resendOtp(email) {

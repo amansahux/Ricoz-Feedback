@@ -1,10 +1,20 @@
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Link, Navigate } from 'react-router';
-import { Eye, EyeOff, Lock, AlertCircle, ArrowRight, ShieldCheck, Mail, CheckCircle2, RotateCw } from 'lucide-react';
-import { registerSchema } from '../../validation/auth.schema';
-import useAuth from '../../hook/useAuth';
+import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Link, Navigate } from "react-router";
+import {
+  Eye,
+  EyeOff,
+  Lock,
+  AlertCircle,
+  ArrowRight,
+  ShieldCheck,
+  Mail,
+  CheckCircle2,
+  RotateCw,
+} from "lucide-react";
+import { registerSchema } from "../../validation/auth.schema";
+import useAuth from "../../hook/useAuth";
 
 export default function Register() {
   const {
@@ -30,12 +40,12 @@ export default function Register() {
   } = useForm({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      name: '',
-      email: '',
-      organizationName: '',
-      password: '',
+      name: "",
+      email: "",
+      organizationName: "",
+      password: "",
     },
-    mode: 'onTouched',
+    mode: "onTouched",
   });
 
   if (!isHydrating && isAuthenticated) {
@@ -62,7 +72,9 @@ export default function Register() {
         <div className="relative z-10">
           <div className="flex items-center gap-3.5">
             <div className="w-10 h-10 rounded-lg bg-[#F62440] flex items-center justify-center shadow-lg shadow-[#F62440]/25 ring-1 ring-white/15">
-              <span className="font-poppins font-bold text-white text-xl tracking-tight">R</span>
+              <span className="font-poppins font-bold text-white text-xl tracking-tight">
+                R
+              </span>
             </div>
             <div className="flex flex-col">
               <span className="font-poppins text-sm tracking-[0.14em] font-bold text-[#ffffff] uppercase leading-tight">
@@ -84,28 +96,37 @@ export default function Register() {
 
           {/* Main Editorial Display Headline */}
           <h1 className="mt-6 font-poppins text-3xl sm:text-4xl lg:text-[38px] xl:text-[40px] font-semibold leading-[1.22] text-white tracking-tight">
-            Create your workspace,<br className="hidden sm:inline" />
-            publish a survey, and<br className="hidden sm:inline" />
-            start hearing your<br className="hidden sm:inline" />
+            Create your workspace,
+            <br className="hidden sm:inline" />
+            publish a survey, and
+            <br className="hidden sm:inline" />
+            start hearing your
+            <br className="hidden sm:inline" />
             customers today.
           </h1>
 
           {/* Value Propositions with Crimson Diamonds */}
           <div className="mt-10 space-y-4 max-w-lg">
             <div className="flex items-start gap-3.5">
-              <span className="text-[#F62440] text-sm mt-0.5 select-none font-bold">◆</span>
+              <span className="text-[#F62440] text-sm mt-0.5 select-none font-bold">
+                ◆
+              </span>
               <p className="font-inter text-sm text-[#e1d8d3] font-normal leading-snug">
                 Public URL, QR code, and embeddable widget out of the box
               </p>
             </div>
             <div className="flex items-start gap-3.5">
-              <span className="text-[#F62440] text-sm mt-0.5 select-none font-bold">◆</span>
+              <span className="text-[#F62440] text-sm mt-0.5 select-none font-bold">
+                ◆
+              </span>
               <p className="font-inter text-sm text-[#e1d8d3] font-normal leading-snug">
                 Automatic NPS, CSAT, and CES computation
               </p>
             </div>
             <div className="flex items-start gap-3.5">
-              <span className="text-[#F62440] text-sm mt-0.5 select-none font-bold">◆</span>
+              <span className="text-[#F62440] text-sm mt-0.5 select-none font-bold">
+                ◆
+              </span>
               <p className="font-inter text-sm text-[#e1d8d3] font-normal leading-snug">
                 Sentiment and topic analysis on every response
               </p>
@@ -117,7 +138,9 @@ export default function Register() {
         <div className="relative z-10 pt-10 lg:pt-16 border-t border-white/10 mt-10 flex items-center justify-between text-xs text-[#a3978d]">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 text-[#F62440]" />
-            <span className="font-inter tracking-normal text-[#d1c5b0]">No credit card required · Instant setup</span>
+            <span className="font-inter tracking-normal text-[#d1c5b0]">
+              No credit card required · Instant setup
+            </span>
           </div>
           <span className="font-inter text-[10px] sm:text-[11px] text-[#7d7461] tracking-wider uppercase font-semibold">
             SOC2 TYPE II READY
@@ -128,7 +151,6 @@ export default function Register() {
       {/* RIGHT PANEL: Light Luxury Form Canvas (~54% desktop width) */}
       <section className="lg:w-[54%] w-full h-full overflow-y-auto flex items-center justify-center p-6 sm:p-10 lg:p-12 relative scrollbar-none">
         <div className="w-full max-w-[440px] mx-auto my-auto py-6">
-
           {/* STATE 1: VERIFICATION EMAIL SENT SCREEN */}
           {verificationSent ? (
             <div className="w-full animate-in fade-in zoom-in-95 duration-200">
@@ -142,21 +164,24 @@ export default function Register() {
                 Verify your email
               </h2>
               <p className="mt-3 font-inter text-sm text-[#6e5c3e] leading-relaxed">
-                We've sent a verification link to{' '}
-                <span className="font-semibold text-[#1f1b18] break-all">{registeredEmail}</span>.
-                Please check your inbox and click the link to activate your workspace.
+                We've sent a verification link to{" "}
+                <span className="font-semibold text-[#1f1b18] break-all">
+                  {registeredEmail}
+                </span>
+                . Please check your inbox and click the link to activate your
+                workspace.
               </p>
 
               {/* Status alerts */}
               {resendStatus && (
                 <div
                   className={`mt-5 p-4 rounded-xl border flex items-start gap-3 text-xs font-inter transition-all shadow-sm ${
-                    resendStatus.type === 'success'
-                      ? 'bg-emerald-50/90 border-emerald-300/60 text-emerald-950'
-                      : 'bg-red-50/90 border-red-300/60 text-red-950'
+                    resendStatus.type === "success"
+                      ? "bg-emerald-50/90 border-emerald-300/60 text-emerald-950"
+                      : "bg-red-50/90 border-red-300/60 text-red-950"
                   }`}
                 >
-                  {resendStatus.type === 'success' ? (
+                  {resendStatus.type === "success" ? (
                     <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                   ) : (
                     <AlertCircle className="w-4 h-4 text-[#bb0028] shrink-0 mt-0.5" />
@@ -168,7 +193,8 @@ export default function Register() {
               {/* Action Box */}
               <div className="mt-8 p-5 bg-white border border-[#EFE4D6] rounded-xl space-y-4 shadow-sm">
                 <p className="text-xs text-[#7d7461] font-inter leading-normal">
-                  Didn't receive the email? Check your spam folder or request a new verification email below:
+                  Didn't receive the email? Check your spam folder or request a
+                  new verification email below:
                 </p>
 
                 {/* Resend button with countdown */}
@@ -178,8 +204,8 @@ export default function Register() {
                   disabled={countdown > 0 || isResending}
                   className={`w-full h-11 rounded-lg font-inter text-sm font-medium transition-all duration-150 flex items-center justify-center gap-2 ${
                     countdown > 0 || isResending
-                      ? 'bg-neutral-100 text-neutral-400 border border-neutral-200 cursor-not-allowed'
-                      : 'bg-[#121110] hover:bg-[#262321] text-white cursor-pointer shadow-sm hover:shadow active:scale-[0.99]'
+                      ? "bg-neutral-100 text-neutral-400 border border-neutral-200 cursor-not-allowed"
+                      : "bg-[#121110] hover:bg-[#262321] text-white cursor-pointer shadow-sm hover:shadow active:scale-[0.99]"
                   }`}
                 >
                   {isResending ? (
@@ -201,7 +227,7 @@ export default function Register() {
               {/* Back to Login Link */}
               <div className="mt-8 text-center pt-2">
                 <p className="font-inter text-sm text-neutral-600">
-                  Already verified your account?{' '}
+                  Already verified your account?{" "}
                   <Link
                     to="/login"
                     className="font-medium text-[#F62440] hover:text-[#D81B34] transition-colors underline-offset-4 hover:underline"
@@ -229,22 +255,42 @@ export default function Register() {
                 <div className="mb-6 p-4 rounded-xl bg-red-50/90 border border-[#F62440]/30 flex items-start gap-3 text-red-950 transition-all shadow-sm">
                   <AlertCircle className="w-5 h-5 text-[#F62440] shrink-0 mt-0.5" />
                   <div className="flex-1">
-                    <h4 className="font-inter text-xs font-semibold text-[#bb0028]">Registration failed</h4>
-                    <p className="font-inter text-xs text-neutral-700 mt-0.5">{error}</p>
+                    <h4 className="font-inter text-xs font-semibold text-[#bb0028]">
+                      Registration failed
+                    </h4>
+                    <p className="font-inter text-xs text-neutral-700 mt-0.5">
+                      {error}
+                    </p>
                   </div>
                 </div>
               )}
 
               {/* Google OAuth Button */}
               <a
-                href="http://localhost:5000/api/auth/google"
+                href={
+                  import.meta.env.PROD
+                    ? "https://ricoz-feedback-production.up.railway.app/api/auth/google"
+                    : `http://localhost:5000/api/auth/google`
+                }
                 className="w-full h-[44px] rounded-lg bg-white border border-[#e5e0db] hover:bg-neutral-50 active:bg-neutral-100 text-[#1f1b18] font-inter text-sm font-medium transition-all shadow-sm flex items-center justify-center gap-3 cursor-pointer mb-5"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                  <path
+                    fill="#4285F4"
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                  />
+                  <path
+                    fill="#EA4335"
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                  />
                 </svg>
                 <span>Sign up with Google</span>
               </a>
@@ -252,12 +298,18 @@ export default function Register() {
               {/* Divider */}
               <div className="relative flex py-2 items-center mb-4">
                 <div className="flex-grow border-t border-[#e5e0db]"></div>
-                <span className="flex-shrink mx-4 text-xs font-inter text-[#7d7461] uppercase tracking-wider">or continue with email</span>
+                <span className="flex-shrink mx-4 text-xs font-inter text-[#7d7461] uppercase tracking-wider">
+                  or continue with email
+                </span>
                 <div className="flex-grow border-t border-[#e5e0db]"></div>
               </div>
 
               {/* Registration Form */}
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+              <form
+                onSubmit={handleSubmit(onSubmit)}
+                className="space-y-4"
+                noValidate
+              >
                 {/* Field 1: Your Name */}
                 <div>
                   <label
@@ -274,9 +326,11 @@ export default function Register() {
                       placeholder="Aman Sahu"
                       disabled={isRegistering}
                       className={`w-full h-[42px] px-3.5 bg-white border rounded-lg text-sm text-[#1f1b18] placeholder-[#926e6d]/60 font-inter focus:outline-none focus:border-[#F62440] focus:ring-2 focus:ring-[#F62440]/15 transition-all duration-150 disabled:bg-neutral-100 disabled:cursor-not-allowed ${
-                        errors.name ? 'border-[#bb0028] bg-rose-50/20 ring-1 ring-[#bb0028]/30' : 'border-[#e5e0db]'
+                        errors.name
+                          ? "border-[#bb0028] bg-rose-50/20 ring-1 ring-[#bb0028]/30"
+                          : "border-[#e5e0db]"
                       }`}
-                      {...register('name')}
+                      {...register("name")}
                     />
                   </div>
                   {errors.name && (
@@ -303,9 +357,11 @@ export default function Register() {
                       placeholder="Acme Studio"
                       disabled={isRegistering}
                       className={`w-full h-[42px] px-3.5 bg-white border rounded-lg text-sm text-[#1f1b18] placeholder-[#926e6d]/60 font-inter focus:outline-none focus:border-[#F62440] focus:ring-2 focus:ring-[#F62440]/15 transition-all duration-150 disabled:bg-neutral-100 disabled:cursor-not-allowed ${
-                        errors.organizationName ? 'border-[#bb0028] bg-rose-50/20 ring-1 ring-[#bb0028]/30' : 'border-[#e5e0db]'
+                        errors.organizationName
+                          ? "border-[#bb0028] bg-rose-50/20 ring-1 ring-[#bb0028]/30"
+                          : "border-[#e5e0db]"
                       }`}
-                      {...register('organizationName')}
+                      {...register("organizationName")}
                     />
                   </div>
                   {errors.organizationName ? (
@@ -336,9 +392,11 @@ export default function Register() {
                       placeholder="you@company.com"
                       disabled={isRegistering}
                       className={`w-full h-[42px] px-3.5 bg-white border rounded-lg text-sm text-[#1f1b18] placeholder-[#926e6d]/60 font-inter focus:outline-none focus:border-[#F62440] focus:ring-2 focus:ring-[#F62440]/15 transition-all duration-150 disabled:bg-neutral-100 disabled:cursor-not-allowed ${
-                        errors.email ? 'border-[#bb0028] bg-rose-50/20 ring-1 ring-[#bb0028]/30' : 'border-[#e5e0db]'
+                        errors.email
+                          ? "border-[#bb0028] bg-rose-50/20 ring-1 ring-[#bb0028]/30"
+                          : "border-[#e5e0db]"
                       }`}
-                      {...register('email')}
+                      {...register("email")}
                     />
                   </div>
                   {errors.email && (
@@ -358,27 +416,37 @@ export default function Register() {
                     >
                       PASSWORD
                     </label>
-                    <span className="text-[11px] text-[#7d7461] font-inter">Minimum 6 characters</span>
+                    <span className="text-[11px] text-[#7d7461] font-inter">
+                      Minimum 6 characters
+                    </span>
                   </div>
                   <div className="relative">
                     <input
                       id="password"
-                      type={showPassword ? 'text' : 'password'}
+                      type={showPassword ? "text" : "password"}
                       autoComplete="new-password"
                       placeholder="At least 6 characters"
                       disabled={isRegistering}
                       className={`w-full h-[42px] pl-3.5 pr-10 bg-white border rounded-lg text-sm text-[#1f1b18] placeholder-[#926e6d]/60 font-inter focus:outline-none focus:border-[#F62440] focus:ring-2 focus:ring-[#F62440]/15 transition-all duration-150 disabled:bg-neutral-100 disabled:cursor-not-allowed ${
-                        errors.password ? 'border-[#bb0028] bg-rose-50/20 ring-1 ring-[#bb0028]/30' : 'border-[#e5e0db]'
+                        errors.password
+                          ? "border-[#bb0028] bg-rose-50/20 ring-1 ring-[#bb0028]/30"
+                          : "border-[#e5e0db]"
                       }`}
-                      {...register('password')}
+                      {...register("password")}
                     />
                     <button
                       type="button"
-                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
                       onClick={() => setShowPassword((prev) => !prev)}
                       className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7d7461] hover:text-[#1f1b18] transition-colors p-1"
                     >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {showPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
                     </button>
                   </div>
                   {errors.password && (
@@ -392,9 +460,15 @@ export default function Register() {
                 {/* Terms notice */}
                 <div className="pt-1">
                   <p className="text-[11px] text-[#7d7461] font-inter leading-relaxed">
-                    By creating a workspace, you agree to our{' '}
-                    <span className="underline text-[#5d3f3e] cursor-pointer hover:text-[#bb0028]">Terms of Service</span> and{' '}
-                    <span className="underline text-[#5d3f3e] cursor-pointer hover:text-[#bb0028]">Privacy Policy</span>.
+                    By creating a workspace, you agree to our{" "}
+                    <span className="underline text-[#5d3f3e] cursor-pointer hover:text-[#bb0028]">
+                      Terms of Service
+                    </span>{" "}
+                    and{" "}
+                    <span className="underline text-[#5d3f3e] cursor-pointer hover:text-[#bb0028]">
+                      Privacy Policy
+                    </span>
+                    .
                   </p>
                 </div>
 
@@ -407,8 +481,19 @@ export default function Register() {
                   >
                     {isRegistering ? (
                       <>
-                        <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <svg
+                          className="animate-spin h-4 w-4 text-white"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          />
                           <path
                             className="opacity-75"
                             fill="currentColor"
@@ -430,8 +515,11 @@ export default function Register() {
               {/* Secondary Action Link */}
               <div className="mt-8 text-center">
                 <p className="text-sm font-inter text-[#6e5c3e]">
-                  Already have an account?{' '}
-                  <Link to="/login" className="text-[#F62440] font-medium hover:underline ml-1 inline-flex items-center">
+                  Already have an account?{" "}
+                  <Link
+                    to="/login"
+                    className="text-[#F62440] font-medium hover:underline ml-1 inline-flex items-center"
+                  >
                     Sign in
                   </Link>
                 </p>

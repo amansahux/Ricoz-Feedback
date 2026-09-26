@@ -29,6 +29,7 @@ router.post('/resend-verification', validate(validateResendVerification), authCo
 // Forgot & Reset Password with OTP
 router.post('/forgot-password', validate(validateForgotPassword), authController.forgotPassword);
 router.post('/resend-otp', validate(validateForgotPassword), authController.resendOtp);
+router.post('/invalidate-otp', validate(validateForgotPassword), authController.invalidateOtp);
 router.post('/reset-password', validate(validateResetPassword), authController.resetPassword);
 
 // Token refresh

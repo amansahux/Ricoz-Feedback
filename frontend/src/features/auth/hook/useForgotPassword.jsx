@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router";
-import { forgotPassword, resendOtp, resetPassword } from "../api/auth.api";
+import { forgotPassword, resendOtp, resetPassword, invalidateOtp } from "../api/auth.api";
 
 export function useForgotPassword() {
   const [searchParams] = useSearchParams();
@@ -47,6 +47,15 @@ export function useForgotPassword() {
       if (timer) clearInterval(timer);
     };
   }, [countdown]);
+
+  // When countdown reaches 0 (OTP expired), invalidate OTP in DB
+  useEffect(() => {
+    if (countdown === 0 && currentStep === 2 && email) {
+      invalidateOtp(email).catch(() => {
+        // Silently fail - best effort cleanup
+      });
+    }
+  }, [countdown, currentStep, email]);
 
   const clearError = useCallback(() => {
     setError(null);
@@ -98,6 +107,9 @@ export function useForgotPassword() {
     setIsResendingOtp(true);
 
     try {
+      // Invalidate old OTP before requesting a new one
+      await invalidateOtp(email).catch(() => {});
+
       const response = await resendOtp(email);
       setResendStatus({
         type: "success",

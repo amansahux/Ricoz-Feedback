@@ -20,6 +20,11 @@ export const resendOtp = async (email) => {
   return response.data;
 };
 
+export const invalidateOtp = async (email) => {
+  const response = await apiClient.post("/auth/invalidate-otp", { email });
+  return response.data;
+};
+
 export const resetPassword = async ({ email, otp, newPassword, confirmPassword }) => {
   const response = await apiClient.post("/auth/reset-password", {
     email,

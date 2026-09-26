@@ -108,6 +108,19 @@ export const authController = {
   }),
 
   /**
+   * Invalidate OTP - remove from DB when timer expires or before resend
+   */
+  invalidateOtp: asyncHandler(async (req, res) => {
+    const { email } = req.body;
+    const result = await authService.invalidateOtp(email);
+
+    res.status(200).json({
+      success: true,
+      message: result.message,
+    });
+  }),
+
+  /**
    * Reset password after entering valid OTP
    */
   resetPassword: asyncHandler(async (req, res) => {
