@@ -1,41 +1,31 @@
-import nodemailer from "nodemailer";
 import { env } from "../config/env.js";
+import { Resend } from "resend";
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    type: "OAuth2",
-    user: env.GOOGLE_EMAIL_ID,
-    clientId: env.GOOGLE_CLIENT_ID,
-    clientSecret: env.GOOGLE_CLIENT_SECRET,
-    refreshToken: env.GOOGLE_REFRESH_TOKEN,
-  },
-});
-
-transporter.verify((error) => {
-  if (error) {
-    console.error("Error connecting to email server:", error);
-  } else {
-    console.log("Email server is ready to send messages");
-  }
-});
+const resend = new Resend(env.RESEND_API_KEY);
 
 export const sendMail = async ({ to, subject, text, html }) => {
   try {
-    const info = await transporter.sendMail({
-      from: `"Recoz Feedback" <${env.GOOGLE_EMAIL_ID}>`,
+    const { data, error } = await resend.emails.send({
+      from: "Recoz Feedback <onboarding@resend.dev>",
       to,
       subject,
       text,
       html,
     });
-    console.log(`Email sent successfully to ${to} (MessageId: ${info.messageId})`);
-    return info;
+
+    if (error) {
+      console.error("Resend API error:", error);
+      throw new Error(error.message || "Failed to send email");
+    }
+
+    console.log(`Email sent successfully to ${to} (ID: ${data?.id})`);
+    return data;
   } catch (error) {
     console.error("Error sending email:", error);
     throw error;
   }
 };
+
 
 /**
  * Beautiful HTML email template for Account Verification

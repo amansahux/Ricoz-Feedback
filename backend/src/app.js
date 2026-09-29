@@ -5,9 +5,7 @@ import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import passport from 'passport';
-
 import './config/passport.js';
-import './services/email.service.js';
 import authRoutes from './routes/auth.routes.js';
 import surveyRoutes from './routes/survey.routes.js';
 import responseRoutes from './routes/response.routes.js';
