@@ -15,6 +15,9 @@ export const env = {
   GOOGLE_EMAIL_ID: process.env.GOOGLE_EMAIL_ID,
   SERVER_URL: process.env.SERVER_URL || `http://localhost:${process.env.PORT || 5000}`,
   RESEND_API_KEY: process.env.RESEND_API_KEY,
+  BREVO_API_KEY: process.env.BREVO_API_KEY,
+  BREVO_FROM_EMAIL: process.env.BREVO_FROM_EMAIL,
+  BREVO_FROM_NAME: process.env.BREVO_FROM_NAME,
 };
 
 // Required environment variable keys
@@ -27,6 +30,9 @@ const requiredEnvVars = [
   'GOOGLE_REFRESH_TOKEN',
   'GOOGLE_EMAIL_ID',
   'RESEND_API_KEY',
+  'BREVO_API_KEY',
+  'BREVO_FROM_EMAIL',
+  'BREVO_FROM_NAME',
 ];
 
 // Check for missing variables and display ONLY the missing ones

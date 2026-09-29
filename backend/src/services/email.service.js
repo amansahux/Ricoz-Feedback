@@ -1,29 +1,32 @@
 import { env } from "../config/env.js";
-import { Resend } from "resend";
 
-const resend = new Resend(env.RESEND_API_KEY);
-
-export const sendMail = async ({ to, subject, text, html }) => {
-  try {
-    const { data, error } = await resend.emails.send({
-      from: "Recoz Feedback <onboarding@resend.dev>",
-      to,
+const sendMail = async ({ email, subject, html, text }) => {
+  const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "api-key": env.BREVO_API_KEY,
+    },
+    body: JSON.stringify({
+      sender: {
+        name: env.BREVO_FROM_NAME,
+        email: env.BREVO_FROM_EMAIL,
+      },
+      to: [{ email, name: "User" }],
       subject,
-      text,
-      html,
-    });
+      htmlContent: html,
+      textContent: text,
+    }),
+  });
 
-    if (error) {
-      console.error("Resend API error:", error);
-      throw new Error(error.message || "Failed to send email");
-    }
+  const data = await res.json();
 
-    console.log(`Email sent successfully to ${to} (ID: ${data?.id})`);
-    return data;
-  } catch (error) {
-    console.error("Error sending email:", error);
-    throw error;
+  if (!res.ok) {
+    console.error("Brevo error:", data);
+    throw new Error(data.message || "Failed to send email");
   }
+
+  return data; // { messageId: "..." }
 };
 
 
@@ -89,7 +92,7 @@ export const sendVerificationEmail = async ({ to, name, verificationUrl }) => {
   `;
 
   return sendMail({
-    to,
+    email: to,
     subject,
     text: `Welcome to Recoz Feedback! Please verify your account by visiting: ${verificationUrl}`,
     html,
@@ -157,7 +160,7 @@ export const sendOtpEmail = async ({ to, name, otp }) => {
   `;
 
   return sendMail({
-    to,
+    email :to,
     subject,
     text: `Your Recoz Feedback password reset OTP is: ${otp}. It expires in 10 minutes.`,
     html,
