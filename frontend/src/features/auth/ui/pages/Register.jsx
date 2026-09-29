@@ -269,7 +269,7 @@ export default function Register() {
               <a
                 href={
                   import.meta.env.PROD
-                    ? "https://ricoz-feedback-production.up.railway.app/api/auth/google"
+                    ? "https://recozfeedback.up.railway.app/api/auth/google"
                     : `http://localhost:5000/api/auth/google`
                 }
                 className="w-full h-[44px] rounded-lg bg-white border border-[#e5e0db] hover:bg-neutral-50 active:bg-neutral-100 text-[#1f1b18] font-inter text-sm font-medium transition-all shadow-sm flex items-center justify-center gap-3 cursor-pointer mb-5"
