@@ -25,6 +25,11 @@ export const invalidateOtp = async (email) => {
   return response.data;
 };
 
+export const verifyOtp = async ({ email, otp }) => {
+  const response = await apiClient.post("/auth/verify-otp", { email, otp });
+  return response.data;
+};
+
 export const resetPassword = async ({ email, otp, newPassword, confirmPassword }) => {
   const response = await apiClient.post("/auth/reset-password", {
     email,

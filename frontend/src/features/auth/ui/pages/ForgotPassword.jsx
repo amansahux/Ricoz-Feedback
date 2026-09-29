@@ -44,6 +44,7 @@ export default function ForgotPassword() {
     handleVerifyOtp,
     handleResetPassword,
     calculateStrength,
+    isVerifyingOtp
   } = useForgotPassword();
 
   const otpInputsRef = useRef([]);
@@ -99,7 +100,9 @@ export default function ForgotPassword() {
         <div className="relative z-10">
           <Link to="/login" className="flex items-center gap-3.5 mb-10 group">
             <div className="w-10 h-10 rounded-xl bg-[#F62440] flex items-center justify-center shadow-lg shadow-[#F62440]/25 ring-1 ring-white/20 group-hover:scale-105 transition-transform">
-              <span className="text-white font-epilogue font-bold text-lg leading-none tracking-tight">R</span>
+              <span className="text-white font-epilogue font-bold text-lg leading-none tracking-tight">
+                R
+              </span>
             </div>
             <div>
               <div className="font-poppins text-sm font-bold tracking-[0.14em] text-white flex items-center gap-2 uppercase leading-tight">
@@ -129,7 +132,8 @@ export default function ForgotPassword() {
             to live.
           </h1>
           <p className="text-sm sm:text-base font-inter text-[#DAC1A2]/80 max-w-md leading-relaxed">
-            Recover your Recoz workspace securely and get back to understanding your customers without operational friction.
+            Recover your Recoz workspace securely and get back to understanding
+            your customers without operational friction.
           </p>
 
           {/* Security Features */}
@@ -157,7 +161,8 @@ export default function ForgotPassword() {
                   Zero-leak enumeration protection
                 </div>
                 <div className="text-[#DAC1A2]/60 text-xs mt-0.5">
-                  Uniform server response timings protect account privacy completely.
+                  Uniform server response timings protect account privacy
+                  completely.
                 </div>
               </div>
             </div>
@@ -171,7 +176,8 @@ export default function ForgotPassword() {
                   Instant session re-authentication upon reset
                 </div>
                 <div className="text-[#DAC1A2]/60 text-xs mt-0.5">
-                  Single-click immediate token invalidation across legacy sessions.
+                  Single-click immediate token invalidation across legacy
+                  sessions.
                 </div>
               </div>
             </div>
@@ -180,7 +186,9 @@ export default function ForgotPassword() {
 
         {/* Left Bottom Security Footer */}
         <div className="relative z-10 pt-6 mt-8 border-t border-white/[0.08] flex items-center justify-between text-xs text-[#DAC1A2]/60">
-          <span className="font-medium text-white/80">Recoz · Feedback that turns into action</span>
+          <span className="font-medium text-white/80">
+            Recoz · Feedback that turns into action
+          </span>
           <div className="flex items-center gap-1.5">
             <Lock size={13} className="text-emerald-400" />
             <span>256-bit TLS Encrypted</span>
@@ -218,8 +226,8 @@ export default function ForgotPassword() {
                   currentStep === 1
                     ? "bg-[#F62440] text-white"
                     : currentStep > 1
-                    ? "bg-emerald-600 text-white"
-                    : "bg-[#EAE1DB] text-[#5d3f3e]"
+                      ? "bg-emerald-600 text-white"
+                      : "bg-[#EAE1DB] text-[#5d3f3e]"
                 }`}
               >
                 {currentStep > 1 ? "✓" : "1"}
@@ -229,8 +237,8 @@ export default function ForgotPassword() {
                   currentStep === 1
                     ? "font-semibold text-[#1f1b18]"
                     : currentStep > 1
-                    ? "font-medium text-[#1f1b18]"
-                    : "font-medium text-[#7d7461]"
+                      ? "font-medium text-[#1f1b18]"
+                      : "font-medium text-[#7d7461]"
                 }`}
               >
                 Email
@@ -244,14 +252,16 @@ export default function ForgotPassword() {
             />
 
             {/* Step 2 Node */}
-            <div className={`flex items-center gap-2 ${currentStep < 2 ? "opacity-50" : ""}`}>
+            <div
+              className={`flex items-center gap-2 ${currentStep < 2 ? "opacity-50" : ""}`}
+            >
               <div
                 className={`w-6 h-6 rounded-full text-xs font-semibold flex items-center justify-center transition-all ${
                   currentStep === 2
                     ? "bg-[#F62440] text-white"
                     : currentStep > 2
-                    ? "bg-emerald-600 text-white"
-                    : "bg-[#EAE1DB] text-[#5d3f3e]"
+                      ? "bg-emerald-600 text-white"
+                      : "bg-[#EAE1DB] text-[#5d3f3e]"
                 }`}
               >
                 {currentStep > 2 ? "✓" : "2"}
@@ -261,8 +271,8 @@ export default function ForgotPassword() {
                   currentStep === 2
                     ? "font-semibold text-[#1f1b18]"
                     : currentStep > 2
-                    ? "font-medium text-[#1f1b18]"
-                    : "font-medium text-[#7d7461]"
+                      ? "font-medium text-[#1f1b18]"
+                      : "font-medium text-[#7d7461]"
                 }`}
               >
                 Verify
@@ -276,14 +286,16 @@ export default function ForgotPassword() {
             />
 
             {/* Step 3 Node */}
-            <div className={`flex items-center gap-2 ${currentStep < 3 ? "opacity-50" : ""}`}>
+            <div
+              className={`flex items-center gap-2 ${currentStep < 3 ? "opacity-50" : ""}`}
+            >
               <div
                 className={`w-6 h-6 rounded-full text-xs font-semibold flex items-center justify-center transition-all ${
                   currentStep === 3
                     ? "bg-[#F62440] text-white"
                     : currentStep > 3
-                    ? "bg-emerald-600 text-white"
-                    : "bg-[#EAE1DB] text-[#5d3f3e]"
+                      ? "bg-emerald-600 text-white"
+                      : "bg-[#EAE1DB] text-[#5d3f3e]"
                 }`}
               >
                 {currentStep > 3 ? "✓" : "3"}
@@ -293,8 +305,8 @@ export default function ForgotPassword() {
                   currentStep === 3
                     ? "font-semibold text-[#1f1b18]"
                     : currentStep > 3
-                    ? "font-medium text-[#1f1b18]"
-                    : "font-medium text-[#7d7461]"
+                      ? "font-medium text-[#1f1b18]"
+                      : "font-medium text-[#7d7461]"
                 }`}
               >
                 Reset
@@ -310,7 +322,9 @@ export default function ForgotPassword() {
             <div className="mb-6 p-4 rounded-xl bg-red-50/90 border border-[#F62440]/30 text-red-950 flex items-start gap-3 transition-all shadow-sm">
               <AlertCircle className="w-5 h-5 text-[#F62440] shrink-0 mt-0.5" />
               <div className="flex-1 text-xs">
-                <span className="font-semibold text-[#bb0028] block">Error occurred</span>
+                <span className="font-semibold text-[#bb0028] block">
+                  Error occurred
+                </span>
                 <span className="text-neutral-700 mt-0.5 block">{error}</span>
               </div>
             </div>
@@ -347,7 +361,8 @@ export default function ForgotPassword() {
                   Forgot your password?
                 </h2>
                 <p className="font-inter text-sm text-[#7d7461] mt-2 leading-relaxed">
-                  Enter your account email and we'll send you a 6-digit verification code.
+                  Enter your account email and we'll send you a 6-digit
+                  verification code.
                 </p>
               </div>
 
@@ -388,7 +403,11 @@ export default function ForgotPassword() {
                 <div className="p-3.5 rounded-xl bg-[#FBF2EC] border border-[#EFE4D6]/70 flex items-start gap-2.5">
                   <ShieldCheck className="w-4 h-4 text-[#F62440] shrink-0 mt-0.5" />
                   <p className="text-xs text-[#5d3f3e] leading-relaxed">
-                    <span className="font-semibold text-[#1f1b18]">Zero-enumeration guarantee:</span> If an account matches this email, a code is dispatched immediately.
+                    <span className="font-semibold text-[#1f1b18]">
+                      Zero-enumeration guarantee:
+                    </span>{" "}
+                    If an account matches this email, a code is dispatched
+                    immediately.
                   </p>
                 </div>
 
@@ -486,7 +505,9 @@ export default function ForgotPassword() {
                       </span>
                     </span>
                   ) : (
-                    <span className="text-[#bb0028] font-medium">Code expired</span>
+                    <span className="text-[#bb0028] font-medium">
+                      Code expired
+                    </span>
                   )}
                 </div>
                 <button
@@ -503,11 +524,20 @@ export default function ForgotPassword() {
               <button
                 type="button"
                 onClick={handleVerifyOtp}
-                disabled={otp.join("").length < 6}
+                disabled={otp.join("").length < 6 || isVerifyingOtp}
                 className="w-full h-[46px] rounded-xl bg-[#F62440] hover:bg-[#D81B34] active:bg-[#BA1227] text-white font-inter text-sm font-medium shadow-md shadow-[#F62440]/20 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                <span>Verify code</span>
-                <ArrowRight className="w-4 h-4" />
+                {isVerifyingOtp ? (
+                  <>
+                    <RotateCw className="w-4 h-4 animate-spin" />
+                    <span>Verifying code...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Verify code</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
               </button>
 
               {/* Back link */}
@@ -575,7 +605,11 @@ export default function ForgotPassword() {
                       onClick={() => setShowPassword((prev) => !prev)}
                       className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-neutral-400 hover:text-neutral-700 transition-colors cursor-pointer"
                     >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {showPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
                     </button>
                   </div>
 
@@ -588,8 +622,8 @@ export default function ForgotPassword() {
                             ? strength.score === 1
                               ? "bg-red-500"
                               : strength.score === 2
-                              ? "bg-amber-500"
-                              : "bg-emerald-500"
+                                ? "bg-amber-500"
+                                : "bg-emerald-500"
                             : "bg-[#EAE1DB]"
                         }`}
                       />
@@ -604,12 +638,16 @@ export default function ForgotPassword() {
                       />
                       <div
                         className={`h-full transition-all ${
-                          strength.score >= 3 ? "bg-emerald-500" : "bg-[#EAE1DB]"
+                          strength.score >= 3
+                            ? "bg-emerald-500"
+                            : "bg-[#EAE1DB]"
                         }`}
                       />
                       <div
                         className={`h-full transition-all ${
-                          strength.score >= 4 ? "bg-emerald-500" : "bg-[#EAE1DB]"
+                          strength.score >= 4
+                            ? "bg-emerald-500"
+                            : "bg-[#EAE1DB]"
                         }`}
                       />
                     </div>
@@ -620,10 +658,10 @@ export default function ForgotPassword() {
                           strength.score === 1
                             ? "text-red-600"
                             : strength.score === 2
-                            ? "text-amber-600"
-                            : strength.score >= 3
-                            ? "text-emerald-600"
-                            : "text-[#7d7461]"
+                              ? "text-amber-600"
+                              : strength.score >= 3
+                                ? "text-emerald-600"
+                                : "text-[#7d7461]"
                         }`}
                       >
                         {strength.label}
@@ -658,7 +696,11 @@ export default function ForgotPassword() {
                       onClick={() => setShowConfirmPassword((prev) => !prev)}
                       className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-neutral-400 hover:text-neutral-700 transition-colors cursor-pointer"
                     >
-                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {showConfirmPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
                     </button>
                   </div>
                 </div>
@@ -717,7 +759,8 @@ export default function ForgotPassword() {
                   Password reset successfully.
                 </h2>
                 <p className="font-inter text-sm text-[#7d7461] mt-2 max-w-sm mx-auto leading-relaxed">
-                  Your password has been securely updated. You can now sign in to your Recoz workspace.
+                  Your password has been securely updated. You can now sign in
+                  to your Recoz workspace.
                 </p>
               </div>
 
@@ -726,8 +769,12 @@ export default function ForgotPassword() {
                   <ShieldCheck className="w-4 h-4" />
                 </div>
                 <div className="text-xs font-inter">
-                  <div className="font-semibold text-[#1f1b18]">Sessions Re-authenticated</div>
-                  <div className="text-[#7d7461]">Active credentials updated</div>
+                  <div className="font-semibold text-[#1f1b18]">
+                    Sessions Re-authenticated
+                  </div>
+                  <div className="text-[#7d7461]">
+                    Active credentials updated
+                  </div>
                 </div>
               </div>
 
@@ -751,7 +798,10 @@ export default function ForgotPassword() {
             <Link to="/login" className="hover:underline hover:text-[#1f1b18]">
               Sign In
             </Link>
-            <Link to="/register" className="hover:underline hover:text-[#1f1b18]">
+            <Link
+              to="/register"
+              className="hover:underline hover:text-[#1f1b18]"
+            >
               Register
             </Link>
           </div>

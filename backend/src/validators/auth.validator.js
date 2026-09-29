@@ -71,6 +71,21 @@ export const validateForgotPassword = (req) => {
   return errors;
 };
 
+export const validateVerifyOtp = (req) => {
+  const { email, otp } = req.body;
+  const errors = [];
+
+  if (!email || !EMAIL_REGEX.test(email)) {
+    errors.push({ field: 'email', message: 'A valid email address is required' });
+  }
+
+  if (!otp || typeof otp !== 'string' || otp.trim().length !== 6) {
+    errors.push({ field: 'otp', message: 'A 6-digit OTP code is required' });
+  }
+
+  return errors;
+};
+
 export const validateResetPassword = (req) => {
   const { email, otp, newPassword, confirmPassword } = req.body;
   const errors = [];

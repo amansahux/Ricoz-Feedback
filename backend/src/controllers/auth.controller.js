@@ -121,6 +121,19 @@ export const authController = {
   }),
 
   /**
+   * Verify OTP code in Step 2 before proceeding to new password step
+   */
+  verifyOtp: asyncHandler(async (req, res) => {
+    const { email, otp } = req.body;
+    const result = await authService.verifyOtp(email, otp);
+
+    res.status(200).json({
+      success: true,
+      message: result.message,
+    });
+  }),
+
+  /**
    * Reset password after entering valid OTP
    */
   resetPassword: asyncHandler(async (req, res) => {

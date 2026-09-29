@@ -267,6 +267,31 @@ export const authService = {
   },
 
   /**
+   * Verify OTP before allowing user to enter new password
+   */
+  async verifyOtp(email, otp) {
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = await User.findOne({ email: normalizedEmail }).select('+otp +otpExpires');
+
+    if (!user) {
+      throw new ApiError(404, 'No account found with this email address');
+    }
+
+    if (!user.otp || user.otp !== otp.trim()) {
+      throw new ApiError(400, 'Invalid verification code. Please check and try again.');
+    }
+
+    if (!user.otpExpires || user.otpExpires < new Date()) {
+      throw new ApiError(400, 'Verification code has expired. Please request a new one.');
+    }
+
+    return {
+      success: true,
+      message: 'Verification code verified successfully.',
+    };
+  },
+
+  /**
    * Reset password using OTP
    */
   async resetPassword(email, otp, newPassword) {

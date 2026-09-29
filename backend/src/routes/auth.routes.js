@@ -9,6 +9,7 @@ import {
   validateVerifyEmail,
   validateResendVerification,
   validateForgotPassword,
+  validateVerifyOtp,
   validateResetPassword,
   validateChangePassword,
   validateUpdateProfile,
@@ -30,6 +31,7 @@ router.post('/resend-verification', validate(validateResendVerification), authCo
 router.post('/forgot-password', validate(validateForgotPassword), authController.forgotPassword);
 router.post('/resend-otp', validate(validateForgotPassword), authController.resendOtp);
 router.post('/invalidate-otp', validate(validateForgotPassword), authController.invalidateOtp);
+router.post('/verify-otp', validate(validateVerifyOtp), authController.verifyOtp);
 router.post('/reset-password', validate(validateResetPassword), authController.resetPassword);
 
 // Token refresh

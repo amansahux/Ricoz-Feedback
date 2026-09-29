@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router";
-import { forgotPassword, resendOtp, resetPassword, invalidateOtp } from "../api/auth.api";
+import { forgotPassword, resendOtp, resetPassword, invalidateOtp, verifyOtp } from "../api/auth.api";
 
 export function useForgotPassword() {
   const [searchParams] = useSearchParams();
@@ -128,17 +128,30 @@ export function useForgotPassword() {
     }
   }, [email, countdown, isResendingOtp]);
 
-  // Step 2: Validate OTP entered
-  const handleVerifyOtp = useCallback(() => {
+  // Step 2: Validate OTP entered with server
+  const handleVerifyOtp = useCallback(async () => {
     const fullOtp = otp.join("");
     if (fullOtp.length < 6) {
       setError("Please enter the complete 6-digit verification code");
       return false;
     }
+
     setError(null);
-    setCurrentStep(3);
-    return true;
-  }, [otp]);
+    setIsVerifyingOtp(true);
+
+    try {
+      await verifyOtp({ email, otp: fullOtp });
+      setCurrentStep(3);
+      return true;
+    } catch (err) {
+      const msg =
+        err.response?.data?.message || err.message || "Invalid verification code. Please check and try again.";
+      setError(msg);
+      return false;
+    } finally {
+      setIsVerifyingOtp(false);
+    }
+  }, [otp, email]);
 
   // Step 3: Reset password with OTP
   const handleResetPassword = useCallback(async () => {
