@@ -6,7 +6,11 @@ export const customerService = {
    * Get all customers for an organization with optional search and aggregated stats
    */
   async getCustomers(organizationId, query = {}) {
-    const { search, limit = 50, skip = 0, sortBy = "createdAt", sortOrder = -1 } = query;
+    const { search, page = 1, limit = 10, skip, sortBy = "createdAt", sortOrder = -1 } = query;
+
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = Math.max(1, Math.min(100, parseInt(limit, 10) || 10));
+    const skipNum = skip !== undefined ? Math.max(0, parseInt(skip, 10) || 0) : (pageNum - 1) * limitNum;
 
     const filter = { organizationId };
 
@@ -20,15 +24,24 @@ export const customerService = {
     }
 
     const sortOptions = {};
-    sortOptions[sortBy] = Number(sortOrder) || -1;
+    if (sortBy === "name_asc") {
+      sortOptions.name = 1;
+    } else if (sortBy === "name_desc") {
+      sortOptions.name = -1;
+    } else if (sortBy === "most_feedback" || sortBy === "high_rating" || sortBy === "low_rating") {
+      sortOptions.createdAt = -1;
+    } else {
+      sortOptions[sortBy] = Number(sortOrder) || -1;
+    }
 
-    const customers = await Customer.find(filter)
-      .sort(sortOptions)
-      .skip(Number(skip))
-      .limit(Number(limit))
-      .lean();
-
-    const totalCount = await Customer.countDocuments(filter);
+    const [customers, totalCount] = await Promise.all([
+      Customer.find(filter)
+        .sort(sortOptions)
+        .skip(skipNum)
+        .limit(limitNum)
+        .lean(),
+      Customer.countDocuments(filter),
+    ]);
 
     // Fetch response stats for each customer
     const customerIds = customers.map((c) => c._id);
@@ -83,11 +96,29 @@ export const customerService = {
       };
     });
 
+    if (sortBy === "most_feedback") {
+      customersWithStats.sort((a, b) => (b.stats?.totalResponses || 0) - (a.stats?.totalResponses || 0));
+    } else if (sortBy === "high_rating") {
+      customersWithStats.sort((a, b) => (b.stats?.avgCsat || b.stats?.avgNps || 0) - (a.stats?.avgCsat || a.stats?.avgNps || 0));
+    } else if (sortBy === "low_rating") {
+      customersWithStats.sort((a, b) => (a.stats?.avgCsat || a.stats?.avgNps || 0) - (b.stats?.avgCsat || b.stats?.avgNps || 0));
+    }
+
+    const totalPages = Math.ceil(totalCount / limitNum) || 1;
+
     return {
       customers: customersWithStats,
       totalCount,
-      limit: Number(limit),
-      skip: Number(skip),
+      limit: limitNum,
+      skip: skipNum,
+      pagination: {
+        total: totalCount,
+        page: pageNum,
+        limit: limitNum,
+        totalPages,
+        hasNextPage: pageNum < totalPages,
+        hasPrevPage: pageNum > 1,
+      },
     };
   },
 

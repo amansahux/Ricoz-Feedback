@@ -1,11 +1,12 @@
 import { useState, useMemo, useCallback } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import {
   createResponse as createResponseApi,
   getPublicSurvey as getPublicSurveyApi,
   getCustomers as getCustomersApi,
   getCustomerDetail as getCustomerDetailApi,
 } from "../apis/customer.api.jsx";
+import { useDebounce } from "../../../shared/hooks/useDebounce.js";
 import {
   FEEDBACK_QUERY_KEYS,
   useGetResponses,
@@ -151,11 +152,20 @@ export const useGetCustomers = (params = {}, options = {}) => {
       const response = await getCustomersApi(params);
       return {
         customers: response?.data || [],
-        totalCount: response?.totalCount || 0,
-        limit: response?.limit || 50,
+        totalCount: response?.totalCount || response?.pagination?.total || 0,
+        pagination: response?.pagination || {
+          total: response?.totalCount || 0,
+          page: params.page || 1,
+          limit: params.limit || 10,
+          totalPages: Math.ceil((response?.totalCount || 0) / (params.limit || 10)) || 1,
+          hasNextPage: false,
+          hasPrevPage: false,
+        },
+        limit: response?.limit || 10,
         skip: response?.skip || 0,
       };
     },
+    placeholderData: keepPreviousData,
     staleTime: 1000 * 60 * 2,
     refetchOnWindowFocus: false,
     ...options,
@@ -192,6 +202,9 @@ export const useCustomerDirectory = (initialParams = {}) => {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
+  // 1-second debounce for search optimization
+  const debouncedSearch = useDebounce(searchQuery, 1000);
+
   // Toast
   const [toast, setToast] = useState({ visible: false, message: "", type: "success" });
   const showToast = useCallback((message, type = "success") => {
@@ -208,45 +221,34 @@ export const useCustomerDirectory = (initialParams = {}) => {
   // API query
   const queryParams = useMemo(() => {
     return {
-      search: searchQuery.trim() || undefined,
+      search: debouncedSearch.trim() || undefined,
+      sortBy,
+      page: currentPage,
+      limit: pageSize,
     };
-  }, [searchQuery]);
+  }, [debouncedSearch, sortBy, currentPage, pageSize]);
 
   const { data, isLoading, isFetching, isError, error, refetch } = useGetCustomers(queryParams);
 
-  const rawCustomers = useMemo(() => {
+  const customers = useMemo(() => {
     return data?.customers || [];
   }, [data]);
 
-  // Client-side sorting
-  const sortedCustomers = useMemo(() => {
-    const list = [...rawCustomers];
-
-    if (sortBy === "recent") {
-      list.sort((a, b) => {
-        const timeA = a.stats?.latestResponseAt || a.createdAt;
-        const timeB = b.stats?.latestResponseAt || b.createdAt;
-        return new Date(timeB) - new Date(timeA);
-      });
-    } else if (sortBy === "most_feedback") {
-      list.sort((a, b) => (b.stats?.totalResponses || 0) - (a.stats?.totalResponses || 0));
-    } else if (sortBy === "high_rating") {
-      list.sort((a, b) => (b.stats?.avgCsat || b.stats?.avgNps || 0) - (a.stats?.avgCsat || a.stats?.avgNps || 0));
-    } else if (sortBy === "low_rating") {
-      list.sort((a, b) => (a.stats?.avgCsat || a.stats?.avgNps || 0) - (b.stats?.avgCsat || b.stats?.avgNps || 0));
-    } else if (sortBy === "name_asc") {
-      list.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-    } else if (sortBy === "name_desc") {
-      list.sort((a, b) => (b.name || "").localeCompare(a.name || ""));
-    }
-
-    return list;
-  }, [rawCustomers, sortBy]);
+  const pagination = useMemo(() => {
+    return data?.pagination || {
+      total: data?.totalCount || customers.length,
+      page: currentPage,
+      limit: pageSize,
+      totalPages: Math.ceil((data?.totalCount || customers.length) / pageSize) || 1,
+      hasNextPage: false,
+      hasPrevPage: false,
+    };
+  }, [data, customers.length, currentPage, pageSize]);
 
   // Metrics summary
   const metrics = useMemo(() => {
-    const total = data?.totalCount || rawCustomers.length;
-    const ratedCustomers = rawCustomers.filter((c) => c.stats?.avgCsat != null || c.stats?.avgNps != null);
+    const total = pagination.total || customers.length;
+    const ratedCustomers = customers.filter((c) => c.stats?.avgCsat != null || c.stats?.avgNps != null);
     
     let avgExp = "—";
     if (ratedCustomers.length > 0) {
@@ -261,15 +263,10 @@ export const useCustomerDirectory = (initialParams = {}) => {
       totalCustomers: total,
       avgExperience: avgExp,
     };
-  }, [data, rawCustomers]);
+  }, [pagination.total, customers]);
 
-  // Pagination slice
-  const totalPages = Math.ceil(sortedCustomers.length / pageSize) || 1;
-  const paginatedCustomers = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return sortedCustomers.slice(start, start + pageSize);
-  }, [sortedCustomers, currentPage, pageSize]);
-
+  const totalPages = pagination.totalPages || 1;
+  const totalCount = pagination.total || customers.length;
   const hasSearch = Boolean(searchQuery.trim());
 
   const resetFilters = useCallback(() => {
@@ -279,11 +276,25 @@ export const useCustomerDirectory = (initialParams = {}) => {
     showToast("Customer search reset.");
   }, [showToast]);
 
+  const handleSearchChange = (val) => {
+    setSearchQuery(val);
+    setCurrentPage(1);
+  };
+
+  const handleSortChange = (val) => {
+    setSortBy(val);
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (val) => {
+    setCurrentPage(val);
+  };
+
   return {
-    customers: paginatedCustomers,
-    allCustomers: sortedCustomers,
-    totalCount: data?.totalCount || rawCustomers.length,
-    filteredCount: sortedCustomers.length,
+    customers,
+    pagination,
+    totalCount,
+    filteredCount: totalCount,
     metrics,
 
     // Statuses
@@ -292,23 +303,20 @@ export const useCustomerDirectory = (initialParams = {}) => {
     isError,
     error,
     refetch,
-    isEmpty: !isLoading && !isError && rawCustomers.length === 0 && !hasSearch,
-    isNoResults: !isLoading && !isError && rawCustomers.length === 0 && hasSearch,
+    isEmpty: !isLoading && !isError && totalCount === 0 && !hasSearch,
+    isNoResults: !isLoading && !isError && totalCount === 0 && hasSearch,
 
     // Filter controls
     searchQuery,
-    setSearchQuery: (val) => {
-      setSearchQuery(val);
-      setCurrentPage(1);
-    },
+    setSearchQuery: handleSearchChange,
     sortBy,
-    setSortBy,
+    setSortBy: handleSortChange,
     hasSearch,
     resetFilters,
 
     // Pagination
     currentPage,
-    setCurrentPage,
+    setCurrentPage: handlePageChange,
     totalPages,
     pageSize,
 

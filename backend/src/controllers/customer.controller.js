@@ -7,10 +7,11 @@ import { ApiError } from "../utils/ApiError.js";
  */
 export const getCustomers = asyncHandler(async (req, res) => {
   const organizationId = req.user.organizationId;
-  const { search, limit, skip, sortBy, sortOrder } = req.query;
+  const { search, page, limit, skip, sortBy, sortOrder } = req.query;
 
   const result = await customerService.getCustomers(organizationId, {
     search,
+    page,
     limit,
     skip,
     sortBy,
@@ -23,6 +24,7 @@ export const getCustomers = asyncHandler(async (req, res) => {
     totalCount: result.totalCount,
     limit: result.limit,
     skip: result.skip,
+    pagination: result.pagination,
   });
 });
 
