@@ -10,9 +10,9 @@ export const createSurvey = async (data) => {
   }
 };
 
-export const getAllSurveys = async () => {
+export const getAllSurveys = async (params = {}) => {
   try {
-    const response = await apiClient.get("/surveys");
+    const response = await apiClient.get("/surveys", { params });
     return response.data;
   } catch (error) {
     console.error("Error getting surveys:", error);

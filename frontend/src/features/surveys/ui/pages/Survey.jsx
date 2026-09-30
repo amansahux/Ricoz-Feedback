@@ -12,11 +12,16 @@ import ToastNotification from "../components/shared/ToastNotification.jsx";
 export default function Survey() {
   const {
     surveys,
-    rawSurveys,
+    pagination,
+    totalCount,
+    totalPages,
+    currentPage,
+    setCurrentPage,
     filterCounts,
     totalResponses,
     avgCsat,
     isLoading,
+    isFetching,
     isError,
     error,
     refetch,
@@ -66,6 +71,14 @@ export default function Survey() {
         setSortBy={setSortBy}
       />
 
+      {/* Fetching overlay indicator */}
+      {isFetching && !isLoading && (
+        <div className="flex items-center gap-2 px-4 py-2 bg-[#FBF2EC] rounded-xl border border-[#EFE4D6] text-xs font-inter text-[#7d7461]">
+          <span className="w-2 h-2 rounded-full bg-[#bb0028] animate-pulse"></span>
+          Refreshing surveys…
+        </div>
+      )}
+
       {/* MAIN STATE RENDERING */}
       {isLoading ? (
         <SurveySkeleton />
@@ -80,6 +93,11 @@ export default function Survey() {
       ) : (
         <SurveyTable
           surveys={surveys}
+          pagination={pagination}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalCount={totalCount}
+          onPageChange={setCurrentPage}
           onShare={handleOpenShare}
           onDelete={(survey) => setDeleteModalSurvey(survey)}
         />

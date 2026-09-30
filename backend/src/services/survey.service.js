@@ -28,8 +28,47 @@ export const surveyService = {
     return survey;
   },
 
-  async getSurveys(organizationId) {
-    const surveys = await Survey.find({ organizationId }).sort({ createdAt: -1 }).lean();
+  async getSurveys(organizationId, query = {}) {
+    const {
+      search,
+      status,
+      page = 1,
+      limit = 10,
+      skip,
+      sortBy = "createdAt",
+      sortOrder = -1,
+    } = query;
+
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = Math.max(1, Math.min(100, parseInt(limit, 10) || 10));
+    const skipNum = skip !== undefined ? Math.max(0, parseInt(skip, 10) || 0) : (pageNum - 1) * limitNum;
+
+    const filter = { organizationId };
+
+    if (status && status !== "all") {
+      filter.status = status;
+    }
+
+    if (search && search.trim()) {
+      const searchRegex = new RegExp(search.trim(), "i");
+      filter.$or = [
+        { title: searchRegex },
+        { description: searchRegex },
+        { slug: searchRegex },
+      ];
+    }
+
+    const sortOptions = {};
+    if (sortBy === "responses") {
+      sortOptions.createdAt = -1;
+    } else {
+      sortOptions[sortBy] = Number(sortOrder) || -1;
+    }
+
+    const [surveys, totalCount] = await Promise.all([
+      Survey.find(filter).sort(sortOptions).skip(skipNum).limit(limitNum).lean(),
+      Survey.countDocuments(filter),
+    ]);
 
     // Aggregate response counts and avg CSAT per survey in one query
     const surveyIds = surveys.map((s) => s._id);
@@ -62,6 +101,10 @@ export const surveyService = {
       };
     });
 
+    if (sortBy === "responses") {
+      enrichedSurveys.sort((a, b) => (b.responseCount || 0) - (a.responseCount || 0));
+    }
+
     // Compute org-wide avg CSAT across all responses that have a csatScore
     const orgCsatAgg = await Response.aggregate([
       { $match: { organizationId: organizationId, csatScore: { $ne: null } } },
@@ -69,7 +112,20 @@ export const surveyService = {
     ]);
     const orgAvgCsat = orgCsatAgg.length > 0 ? orgCsatAgg[0].avgCsat : null;
 
-    return { surveys: enrichedSurveys, avgCsat: orgAvgCsat };
+    const totalPages = Math.ceil(totalCount / limitNum) || 1;
+
+    return {
+      surveys: enrichedSurveys,
+      avgCsat: orgAvgCsat,
+      pagination: {
+        total: totalCount,
+        page: pageNum,
+        limit: limitNum,
+        totalPages,
+        hasNextPage: pageNum < totalPages,
+        hasPrevPage: pageNum > 1,
+      },
+    };
   },
 
   async getSurveyById(surveyId, organizationId) {

@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useNavigate, useSearchParams } from "react-router";
 import { useSelector } from "react-redux";
 import {
@@ -10,8 +10,7 @@ import {
   publishSurvey,
   updateSurvey,
 } from "../apis/surveys.api.jsx";
-
-
+import { useDebounce } from "../../../shared/hooks/useDebounce.js";
 
 export const DEFAULT_BUILDER_QUESTIONS = [
   {
@@ -41,22 +40,32 @@ export const DEFAULT_BUILDER_QUESTIONS = [
   },
 ];
 
+// Query Keys Factory for Surveys
+export const SURVEY_QUERY_KEYS = {
+  all: ["surveys"],
+  lists: () => [...SURVEY_QUERY_KEYS.all, "list"],
+  list: (params) => [...SURVEY_QUERY_KEYS.lists(), params],
+  details: () => [...SURVEY_QUERY_KEYS.all, "detail"],
+  detail: (id) => [...SURVEY_QUERY_KEYS.details(), id],
+};
+
 // -------------------------------------------------------------
 // Base Queries & Mutations Hook
 // -------------------------------------------------------------
-export const useSurveysApi = (surveyId = null) => {
+export const useSurveysApi = (surveyId = null, params = {}) => {
   const queryClient = useQueryClient();
 
-  // 1. Get All Surveys (only runs when needed)
+  // 1. Get All Surveys with parameters, caching and keepPreviousData
   const getAllSurveysQuery = useQuery({
-    queryKey: ["surveys"],
-    queryFn: getAllSurveys,
-    staleTime: 1000 * 60 * 5,
+    queryKey: SURVEY_QUERY_KEYS.list(params),
+    queryFn: () => getAllSurveys(params),
+    placeholderData: keepPreviousData,
+    staleTime: 1000 * 60 * 3,
   });
 
   // 2. Get Survey by ID
   const getSurveyByIdQuery = useQuery({
-    queryKey: ["surveys", surveyId],
+    queryKey: SURVEY_QUERY_KEYS.detail(surveyId),
     queryFn: () => getSurveyById(surveyId),
     enabled: Boolean(surveyId && !surveyId.startsWith("srv_sample_")),
     staleTime: 1000 * 60 * 10,
@@ -67,7 +76,7 @@ export const useSurveysApi = (surveyId = null) => {
     mutationFn: (data) => createSurvey(data),
     retry: false,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["surveys"], exact: true });
+      queryClient.invalidateQueries({ queryKey: SURVEY_QUERY_KEYS.all });
     },
   });
 
@@ -76,9 +85,9 @@ export const useSurveysApi = (surveyId = null) => {
     mutationFn: ({ surveyId: id, data }) => updateSurvey(id, data),
     retry: false,
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["surveys"], exact: true });
+      queryClient.invalidateQueries({ queryKey: SURVEY_QUERY_KEYS.all });
       queryClient.invalidateQueries({
-        queryKey: ["surveys", variables.surveyId],
+        queryKey: SURVEY_QUERY_KEYS.detail(variables.surveyId),
         exact: true,
       });
     },
@@ -89,7 +98,7 @@ export const useSurveysApi = (surveyId = null) => {
     mutationFn: (id) => deleteSurvey(id),
     retry: false,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["surveys"], exact: true });
+      queryClient.invalidateQueries({ queryKey: SURVEY_QUERY_KEYS.all });
     },
   });
 
@@ -98,8 +107,8 @@ export const useSurveysApi = (surveyId = null) => {
     mutationFn: (id) => publishSurvey(id),
     retry: false,
     onSuccess: (_, id) => {
-      queryClient.invalidateQueries({ queryKey: ["surveys"], exact: true });
-      queryClient.invalidateQueries({ queryKey: ["surveys", id], exact: true });
+      queryClient.invalidateQueries({ queryKey: SURVEY_QUERY_KEYS.all });
+      queryClient.invalidateQueries({ queryKey: SURVEY_QUERY_KEYS.detail(id), exact: true });
     },
   });
 
@@ -117,21 +126,17 @@ export const useSurveysApi = (surveyId = null) => {
 // 1. Hook for Survey List Page (/surveys)
 // -------------------------------------------------------------
 export const useSurveyList = () => {
-  const { getAllSurveysQuery, deleteSurveyMutation } = useSurveysApi();
-  const {
-    data: apiResponse,
-    isLoading,
-    isError,
-    error,
-    refetch,
-  } = getAllSurveysQuery;
-
   const [activeFilter, setActiveFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("recent");
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+
+  // 1-second debounce for optimized searching
+  const debouncedSearch = useDebounce(searchQuery, 1000);
+
   const [shareModalSurvey, setShareModalSurvey] = useState(null);
   const [deleteModalSurvey, setDeleteModalSurvey] = useState(null);
-
   const [toast, setToast] = useState({ visible: false, message: "", type: "success" });
 
   const showToast = useCallback((message, type = "success") => {
@@ -145,7 +150,34 @@ export const useSurveyList = () => {
     setToast({ visible: false, message: "", type: "success" });
   }, []);
 
-  const rawSurveys = useMemo(() => {
+  // Build query params
+  const queryParams = useMemo(() => {
+    const params = {
+      page: currentPage,
+      limit: pageSize,
+      sortBy: sortBy === "recent" ? "createdAt" : sortBy,
+      sortOrder: -1,
+    };
+    if (activeFilter !== "all") {
+      params.status = activeFilter;
+    }
+    if (debouncedSearch.trim()) {
+      params.search = debouncedSearch.trim();
+    }
+    return params;
+  }, [activeFilter, debouncedSearch, sortBy, currentPage, pageSize]);
+
+  const { getAllSurveysQuery, deleteSurveyMutation } = useSurveysApi(null, queryParams);
+  const {
+    data: apiResponse,
+    isLoading,
+    isFetching,
+    isError,
+    error,
+    refetch,
+  } = getAllSurveysQuery;
+
+  const surveys = useMemo(() => {
     if (apiResponse?.data && Array.isArray(apiResponse.data)) {
       return apiResponse.data;
     }
@@ -155,6 +187,20 @@ export const useSurveyList = () => {
     return [];
   }, [apiResponse]);
 
+  const pagination = useMemo(() => {
+    if (apiResponse?.pagination) {
+      return apiResponse.pagination;
+    }
+    return {
+      total: surveys.length,
+      page: currentPage,
+      limit: pageSize,
+      totalPages: Math.ceil(surveys.length / pageSize) || 1,
+      hasNextPage: false,
+      hasPrevPage: false,
+    };
+  }, [apiResponse, surveys.length, currentPage, pageSize]);
+
   // Org-wide avg CSAT from backend aggregation
   const avgCsat = useMemo(() => {
     if (apiResponse?.avgCsat != null) {
@@ -163,47 +209,19 @@ export const useSurveyList = () => {
     return null;
   }, [apiResponse]);
 
-  // Total responses across all surveys
+  // Quick filter counts based on current list or total
   const totalResponses = useMemo(() => {
-    return rawSurveys.reduce((acc, s) => acc + (s.responseCount || 0), 0);
-  }, [rawSurveys]);
+    return surveys.reduce((acc, s) => acc + (s.responseCount || 0), 0);
+  }, [surveys]);
 
   const filterCounts = useMemo(() => {
     return {
-      all: rawSurveys.length,
-      published: rawSurveys.filter((s) => s.status === "published").length,
-      draft: rawSurveys.filter((s) => s.status === "draft").length,
-      archived: rawSurveys.filter((s) => s.status === "archived").length,
+      all: pagination.total || surveys.length,
+      published: surveys.filter((s) => s.status === "published").length,
+      draft: surveys.filter((s) => s.status === "draft").length,
+      archived: surveys.filter((s) => s.status === "archived").length,
     };
-  }, [rawSurveys]);
-
-  const displayedSurveys = useMemo(() => {
-    let list = [...rawSurveys];
-
-    if (activeFilter !== "all") {
-      list = list.filter((s) => s.status === activeFilter);
-    }
-
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      list = list.filter(
-        (s) =>
-          s.title?.toLowerCase().includes(q) ||
-          s.slug?.toLowerCase().includes(q) ||
-          s.description?.toLowerCase().includes(q)
-      );
-    }
-
-    if (sortBy === "recent") {
-      list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    } else if (sortBy === "responses") {
-      list.sort((a, b) => (b.responseCount || 0) - (a.responseCount || 0));
-    } else if (sortBy === "name") {
-      list.sort((a, b) => a.title.localeCompare(b.title));
-    }
-
-    return list;
-  }, [rawSurveys, activeFilter, searchQuery, sortBy]);
+  }, [pagination.total, surveys]);
 
   const handleOpenShare = useCallback(
     (survey) => {
@@ -231,22 +249,43 @@ export const useSurveyList = () => {
     }
   };
 
+  const handleFilterChange = (status) => {
+    setActiveFilter(status);
+    setCurrentPage(1);
+  };
+
+  const handleSearchChange = (val) => {
+    setSearchQuery(val);
+    setCurrentPage(1);
+  };
+
+  const handleSortChange = (val) => {
+    setSortBy(val);
+    setCurrentPage(1);
+  };
+
   return {
-    surveys: displayedSurveys,
-    rawSurveys,
+    surveys,
+    pagination,
+    totalCount: pagination.total,
+    totalPages: pagination.totalPages,
+    currentPage,
+    setCurrentPage,
+    pageSize,
     filterCounts,
     totalResponses,
     avgCsat,
     isLoading,
+    isFetching,
     isError,
     error,
     refetch,
     activeFilter,
-    setActiveFilter,
+    setActiveFilter: handleFilterChange,
     searchQuery,
-    setSearchQuery,
+    setSearchQuery: handleSearchChange,
     sortBy,
-    setSortBy,
+    setSortBy: handleSortChange,
     shareModalSurvey,
     setShareModalSurvey,
     handleOpenShare,

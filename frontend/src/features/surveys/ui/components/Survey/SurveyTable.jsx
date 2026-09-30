@@ -1,7 +1,20 @@
 import React from "react";
 import SurveyTableRow from "./SurveyTableRow.jsx";
 
-export default function SurveyTable({ surveys = [], onShare, onDelete }) {
+export default function SurveyTable({
+  surveys = [],
+  pagination = {},
+  currentPage = 1,
+  totalPages = 1,
+  totalCount = 0,
+  onPageChange,
+  onShare,
+  onDelete,
+}) {
+  const count = totalCount || pagination.total || surveys.length;
+  const pages = totalPages || pagination.totalPages || 1;
+  const page = currentPage || pagination.page || 1;
+
   return (
     <div className="bg-white border border-[#EFE4D6] rounded-2xl shadow-sm overflow-hidden">
       <div className="overflow-x-auto">
@@ -30,24 +43,28 @@ export default function SurveyTable({ surveys = [], onShare, onDelete }) {
       </div>
 
       {/* Table Pagination Footer */}
-      <div className="px-6 py-3.5 bg-[#FBF2EC]/40 border-t border-[#EFE4D6] flex items-center justify-between text-xs text-[#7d7461] font-inter">
+      <div className="px-6 py-3.5 bg-[#FBF2EC]/40 border-t border-[#EFE4D6] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#7d7461] font-inter">
         <span>
           Showing <strong className="text-[#1f1b18]">{surveys.length}</strong> of{" "}
-          <strong className="text-[#1f1b18]">{surveys.length}</strong> surveys
+          <strong className="text-[#1f1b18]">{count}</strong> surveys
         </span>
         <div className="flex items-center gap-1.5">
           <button
-            disabled
-            className="px-2.5 py-1 rounded border border-[#EFE4D6] opacity-50 cursor-not-allowed bg-white text-[#1f1b18]"
+            type="button"
+            onClick={() => onPageChange && onPageChange(page - 1)}
+            disabled={page <= 1}
+            className="px-2.5 py-1 rounded-lg border border-[#EFE4D6] bg-white text-[#1f1b18] hover:bg-[#FBF2EC] disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer shadow-2xs"
           >
             Previous
           </button>
-          <button className="px-3 py-1 rounded bg-[#bb0028] text-white font-medium text-xs">
-            1
-          </button>
+          <span className="px-3 py-1 rounded-lg bg-[#bb0028] text-white font-medium text-xs shadow-2xs">
+            {page} / {pages}
+          </span>
           <button
-            disabled
-            className="px-2.5 py-1 rounded border border-[#EFE4D6] opacity-50 cursor-not-allowed bg-white text-[#1f1b18]"
+            type="button"
+            onClick={() => onPageChange && onPageChange(page + 1)}
+            disabled={page >= pages}
+            className="px-2.5 py-1 rounded-lg border border-[#EFE4D6] bg-white text-[#1f1b18] hover:bg-[#FBF2EC] disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer shadow-2xs"
           >
             Next
           </button>

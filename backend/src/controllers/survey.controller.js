@@ -23,11 +23,21 @@ export const surveyController = {
 
   getSurveys: asyncHandler(async (req, res) => {
     const organizationId = req.user.organizationId;
-    const result = await surveyService.getSurveys(organizationId);
+    const { search, status, page, limit, skip, sortBy, sortOrder } = req.query;
+    const result = await surveyService.getSurveys(organizationId, {
+      search,
+      status,
+      page,
+      limit,
+      skip,
+      sortBy,
+      sortOrder,
+    });
 
     res.status(200).json({
       success: true,
       data: result.surveys,
+      pagination: result.pagination,
       avgCsat: result.avgCsat,
     });
   }),
