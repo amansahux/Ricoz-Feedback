@@ -62,10 +62,60 @@ export const useUpdateResponseById = (options = {}) => {
       if (!id) throw new Error("Response ID is required.");
       return await updateResponseByIdApi(id, { status, followUpNote });
     },
+    onMutate: async ({ id, status, followUpNote }) => {
+      // Cancel outgoing queries for responses to prevent race conditions
+      await queryClient.cancelQueries({ queryKey: FEEDBACK_QUERY_KEYS.all });
+
+      // Snapshot previous cache values for rollback on error
+      const previousResponses = queryClient.getQueriesData({ queryKey: FEEDBACK_QUERY_KEYS.all });
+
+      // Optimistically update all response lists in query cache immediately
+      queryClient.setQueriesData({ queryKey: FEEDBACK_QUERY_KEYS.all }, (oldData) => {
+        if (!oldData) return oldData;
+        if (Array.isArray(oldData)) {
+          return oldData.map((item) => {
+            if (String(item._id) === String(id)) {
+              return {
+                ...item,
+                status: status !== undefined ? status : item.status,
+                followUpNote: followUpNote !== undefined ? followUpNote : item.followUpNote,
+              };
+            }
+            return item;
+          });
+        }
+        return oldData;
+      });
+
+      // Optimistically update single detail query in cache
+      if (id) {
+        queryClient.setQueryData(FEEDBACK_QUERY_KEYS.detail(id), (old) => {
+          if (!old) return old;
+          return {
+            ...old,
+            status: status !== undefined ? status : old.status,
+            followUpNote: followUpNote !== undefined ? followUpNote : old.followUpNote,
+          };
+        });
+      }
+
+      return { previousResponses };
+    },
+    onError: (error, variables, context) => {
+      // Rollback to snapshot on failure
+      if (context?.previousResponses) {
+        context.previousResponses.forEach(([key, data]) => {
+          queryClient.setQueryData(key, data);
+        });
+      }
+      if (options.onError) {
+        options.onError(error, variables, context);
+      }
+    },
     onSuccess: (data, variables, context) => {
       const updatedItem = data?.data || data;
 
-      // 1. Immediately update detail query cache
+      // 1. Confirm and reconcile detail query cache with server response
       if (variables?.id) {
         queryClient.setQueryData(FEEDBACK_QUERY_KEYS.detail(variables.id), (old) => {
           if (!old) return old;
@@ -84,23 +134,26 @@ export const useUpdateResponseById = (options = {}) => {
         });
       }
 
-      // 2. Immediately update all feedback list queries in the cache for instant UI response
+      // 2. Confirm and reconcile all feedback lists in cache with server response
       queryClient.setQueriesData({ queryKey: FEEDBACK_QUERY_KEYS.all }, (oldData) => {
-        if (!Array.isArray(oldData)) return oldData;
-        return oldData.map((item) => {
-          if (item._id === variables.id) {
-            return {
-              ...item,
-              ...(typeof updatedItem === "object" ? updatedItem : {}),
-              status: variables.status ?? updatedItem?.status ?? item.status,
-              followUpNote:
-                variables.followUpNote !== undefined
-                  ? variables.followUpNote
-                  : updatedItem?.followUpNote ?? item.followUpNote,
-            };
-          }
-          return item;
-        });
+        if (!oldData) return oldData;
+        if (Array.isArray(oldData)) {
+          return oldData.map((item) => {
+            if (String(item._id) === String(variables.id)) {
+              return {
+                ...item,
+                ...(typeof updatedItem === "object" ? updatedItem : {}),
+                status: variables.status ?? updatedItem?.status ?? item.status,
+                followUpNote:
+                  variables.followUpNote !== undefined
+                    ? variables.followUpNote
+                    : updatedItem?.followUpNote ?? item.followUpNote,
+              };
+            }
+            return item;
+          });
+        }
+        return oldData;
       });
 
       // 3. Invalidate related queries across the application to maintain consistency
@@ -112,11 +165,6 @@ export const useUpdateResponseById = (options = {}) => {
 
       if (options.onSuccess) {
         options.onSuccess(data, variables, context);
-      }
-    },
-    onError: (error, variables, context) => {
-      if (options.onError) {
-        options.onError(error, variables, context);
       }
     },
     ...options,

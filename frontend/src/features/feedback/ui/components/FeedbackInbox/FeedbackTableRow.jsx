@@ -189,7 +189,11 @@ export default function FeedbackTableRow({ response, onMarkResolved }) {
           {status !== "resolved" && (
             <button
               type="button"
-              onClick={(e) => onMarkResolved(response._id, e)}
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                onMarkResolved(response._id, e);
+              }}
               className="p-1.5 rounded-lg hover:bg-emerald-50 text-[#7d7461] hover:text-emerald-700 transition cursor-pointer"
               title="Mark resolved"
             >
