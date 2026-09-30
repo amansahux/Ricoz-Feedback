@@ -63,14 +63,52 @@ export const useUpdateResponseById = (options = {}) => {
       return await updateResponseByIdApi(id, { status, followUpNote });
     },
     onSuccess: (data, variables, context) => {
+      const updatedItem = data?.data || data;
+
+      // 1. Immediately update detail query cache
       if (variables?.id) {
+        queryClient.setQueryData(FEEDBACK_QUERY_KEYS.detail(variables.id), (old) => {
+          if (!old) return old;
+          return {
+            ...old,
+            ...(typeof updatedItem === "object" ? updatedItem : {}),
+            status: variables.status ?? updatedItem?.status ?? old.status,
+            followUpNote:
+              variables.followUpNote !== undefined
+                ? variables.followUpNote
+                : updatedItem?.followUpNote ?? old.followUpNote,
+          };
+        });
         queryClient.invalidateQueries({
           queryKey: FEEDBACK_QUERY_KEYS.detail(variables.id),
         });
       }
-      queryClient.invalidateQueries({ queryKey: FEEDBACK_QUERY_KEYS.lists() });
+
+      // 2. Immediately update all feedback list queries in the cache for instant UI response
+      queryClient.setQueriesData({ queryKey: FEEDBACK_QUERY_KEYS.all }, (oldData) => {
+        if (!Array.isArray(oldData)) return oldData;
+        return oldData.map((item) => {
+          if (item._id === variables.id) {
+            return {
+              ...item,
+              ...(typeof updatedItem === "object" ? updatedItem : {}),
+              status: variables.status ?? updatedItem?.status ?? item.status,
+              followUpNote:
+                variables.followUpNote !== undefined
+                  ? variables.followUpNote
+                  : updatedItem?.followUpNote ?? item.followUpNote,
+            };
+          }
+          return item;
+        });
+      });
+
+      // 3. Invalidate related queries across the application to maintain consistency
+      queryClient.invalidateQueries({ queryKey: FEEDBACK_QUERY_KEYS.all });
       queryClient.invalidateQueries({ queryKey: ["analytics"] });
       queryClient.invalidateQueries({ queryKey: ["surveys"] });
+      queryClient.invalidateQueries({ queryKey: ["customers"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
 
       if (options.onSuccess) {
         options.onSuccess(data, variables, context);
