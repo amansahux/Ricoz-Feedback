@@ -13,8 +13,8 @@ export const validateUpdateResponseStatus = (req) => {
   const { status } = req.body;
   const errors = [];
 
-  if (status && !['new', 'reviewed', 'resolved', 'ignored'].includes(status)) {
-    errors.push({ field: 'status', message: 'Status must be new, reviewed, resolved, or ignored' });
+  if (status && !['open', 'in_progress', 'resolved'].includes(status)) {
+    errors.push({ field: 'status', message: 'Status must be open, in_progress, or resolved' });
   }
 
   return errors;
