@@ -54,20 +54,113 @@ export const responseService = {
    * Get all responses for an organization populated with customer, survey and enriched answers
    */
   async getResponses(organizationId, filters = {}) {
+    const {
+      surveyId,
+      sentiment,
+      status,
+      source,
+      rating,
+      npsScore,
+      search,
+      page = 1,
+      limit = 10,
+      skip,
+      sortBy = "createdAt",
+      sortOrder = -1,
+    } = filters;
+
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = Math.max(1, Math.min(100, parseInt(limit, 10) || 10));
+    const skipNum = skip !== undefined ? Math.max(0, parseInt(skip, 10) || 0) : (pageNum - 1) * limitNum;
+
     const query = { organizationId };
 
-    if (filters.surveyId) query.surveyId = filters.surveyId;
-    if (filters.sentiment) query.sentiment = filters.sentiment;
-    if (filters.status) query.status = filters.status;
-    if (filters.npsScore !== undefined) query.npsScore = filters.npsScore;
+    if (surveyId && surveyId !== "all") query.surveyId = surveyId;
+    if (sentiment && sentiment !== "all") query.sentiment = sentiment;
+    if (status && status !== "all") query.status = status;
+    if (source && source !== "all") query.source = source;
+    if (rating && rating !== "all") {
+      const targetScore = parseInt(rating, 10);
+      query.$or = [{ csatScore: targetScore }, { npsScore: targetScore }];
+    }
+    if (npsScore !== undefined) query.npsScore = npsScore;
 
-    const responses = await Response.find(query)
-      .populate('customerId', 'name email phone')
-      .populate('surveyId', 'title slug status questions')
-      .sort({ createdAt: -1 })
-      .lean();
+    // Optional customer ID searching or verbatim search
+    if (search && search.trim()) {
+      const searchRegex = new RegExp(search.trim(), "i");
+      // Find matching customers first to include in query
+      const matchingCustomers = await Customer.find({
+        organizationId,
+        $or: [{ name: searchRegex }, { email: searchRegex }, { phone: searchRegex }],
+      }).select('_id').lean();
 
-    return responses.map(response => this.formatResponseData(response));
+      const matchingSurveys = await Survey.find({
+        organizationId,
+        $or: [{ title: searchRegex }, { slug: searchRegex }],
+      }).select('_id').lean();
+
+      const customerIds = matchingCustomers.map((c) => c._id);
+      const surveyIds = matchingSurveys.map((s) => s._id);
+
+      const searchConditions = [
+        { 'answers.value': searchRegex },
+        { followUpNote: searchRegex },
+        { topics: searchRegex },
+      ];
+
+      if (customerIds.length > 0) {
+        searchConditions.push({ customerId: { $in: customerIds } });
+      }
+      if (surveyIds.length > 0) {
+        searchConditions.push({ surveyId: { $in: surveyIds } });
+      }
+
+      if (query.$or) {
+        query.$and = [{ $or: query.$or }, { $or: searchConditions }];
+        delete query.$or;
+      } else {
+        query.$or = searchConditions;
+      }
+    }
+
+    const sortOptions = {};
+    if (sortBy === "rating-high") {
+      sortOptions.csatScore = -1;
+      sortOptions.npsScore = -1;
+    } else if (sortBy === "rating-low") {
+      sortOptions.csatScore = 1;
+      sortOptions.npsScore = 1;
+    } else if (sortBy === "oldest") {
+      sortOptions.createdAt = 1;
+    } else {
+      sortOptions[sortBy] = Number(sortOrder) || -1;
+    }
+
+    const [responses, totalCount] = await Promise.all([
+      Response.find(query)
+        .populate('customerId', 'name email phone')
+        .populate('surveyId', 'title slug status questions')
+        .sort(sortOptions)
+        .skip(skipNum)
+        .limit(limitNum)
+        .lean(),
+      Response.countDocuments(query),
+    ]);
+
+    const formattedResponses = responses.map((response) => this.formatResponseData(response));
+    const totalPages = Math.ceil(totalCount / limitNum) || 1;
+
+    return {
+      responses: formattedResponses,
+      pagination: {
+        total: totalCount,
+        page: pageNum,
+        limit: limitNum,
+        totalPages,
+        hasNextPage: pageNum < totalPages,
+        hasPrevPage: pageNum > 1,
+      },
+    };
   },
 
   /**

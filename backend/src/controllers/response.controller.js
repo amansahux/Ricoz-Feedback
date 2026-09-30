@@ -43,17 +43,26 @@ export const responseController = {
 
   getResponses: asyncHandler(async (req, res) => {
     const organizationId = req.user.organizationId;
-    const { surveyId, sentiment, status } = req.query;
+    const { surveyId, sentiment, status, source, rating, search, page, limit, skip, sortBy, sortOrder } = req.query;
 
-    const responses = await responseService.getResponses(organizationId, {
+    const result = await responseService.getResponses(organizationId, {
       surveyId,
       sentiment,
       status,
+      source,
+      rating,
+      search,
+      page,
+      limit,
+      skip,
+      sortBy,
+      sortOrder,
     });
 
     res.status(200).json({
       success: true,
-      data: responses,
+      data: result.responses,
+      pagination: result.pagination,
     });
   }),
 

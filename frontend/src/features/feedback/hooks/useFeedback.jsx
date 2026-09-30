@@ -1,10 +1,11 @@
 import { useState, useMemo, useCallback } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import {
   getResponses as getResponsesApi,
   getResponseById as getResponseByIdApi,
   updateResponseById as updateResponseByIdApi,
 } from "../apis/feedback.api.jsx";
+import { useDebounce } from "../../../shared/hooks/useDebounce.js";
 
 // Standard query keys hierarchy for feedback/responses
 export const FEEDBACK_QUERY_KEYS = {
@@ -16,15 +17,26 @@ export const FEEDBACK_QUERY_KEYS = {
 };
 
 /**
- * Hook: Fetch all feedback responses for the organization with optional query filters
+ * Hook: Fetch all feedback responses for the organization with optional query filters and pagination
  */
 export const useGetResponses = (filters = {}, options = {}) => {
   return useQuery({
     queryKey: FEEDBACK_QUERY_KEYS.list(filters),
     queryFn: async () => {
       const response = await getResponsesApi(filters);
-      return response?.data || response || [];
+      return {
+        responses: response?.data || (Array.isArray(response) ? response : []),
+        pagination: response?.pagination || {
+          total: Array.isArray(response?.data) ? response.data.length : 0,
+          page: filters.page || 1,
+          limit: filters.limit || 10,
+          totalPages: 1,
+          hasNextPage: false,
+          hasPrevPage: false,
+        },
+      };
     },
+    placeholderData: keepPreviousData,
     staleTime: 1000 * 60 * 2, // 2 minutes
     refetchOnWindowFocus: false,
     ...options,
@@ -69,24 +81,6 @@ export const useUpdateResponseById = (options = {}) => {
       // Snapshot previous cache values for rollback on error
       const previousResponses = queryClient.getQueriesData({ queryKey: FEEDBACK_QUERY_KEYS.all });
 
-      // Optimistically update all response lists in query cache immediately
-      queryClient.setQueriesData({ queryKey: FEEDBACK_QUERY_KEYS.all }, (oldData) => {
-        if (!oldData) return oldData;
-        if (Array.isArray(oldData)) {
-          return oldData.map((item) => {
-            if (String(item._id) === String(id)) {
-              return {
-                ...item,
-                status: status !== undefined ? status : item.status,
-                followUpNote: followUpNote !== undefined ? followUpNote : item.followUpNote,
-              };
-            }
-            return item;
-          });
-        }
-        return oldData;
-      });
-
       // Optimistically update single detail query in cache
       if (id) {
         queryClient.setQueryData(FEEDBACK_QUERY_KEYS.detail(id), (old) => {
@@ -129,34 +123,9 @@ export const useUpdateResponseById = (options = {}) => {
                 : updatedItem?.followUpNote ?? old.followUpNote,
           };
         });
-        queryClient.invalidateQueries({
-          queryKey: FEEDBACK_QUERY_KEYS.detail(variables.id),
-        });
       }
 
-      // 2. Confirm and reconcile all feedback lists in cache with server response
-      queryClient.setQueriesData({ queryKey: FEEDBACK_QUERY_KEYS.all }, (oldData) => {
-        if (!oldData) return oldData;
-        if (Array.isArray(oldData)) {
-          return oldData.map((item) => {
-            if (String(item._id) === String(variables.id)) {
-              return {
-                ...item,
-                ...(typeof updatedItem === "object" ? updatedItem : {}),
-                status: variables.status ?? updatedItem?.status ?? item.status,
-                followUpNote:
-                  variables.followUpNote !== undefined
-                    ? variables.followUpNote
-                    : updatedItem?.followUpNote ?? item.followUpNote,
-              };
-            }
-            return item;
-          });
-        }
-        return oldData;
-      });
-
-      // 3. Invalidate related queries across the application to maintain consistency
+      // 2. Invalidate queries to maintain consistency across the entire app
       queryClient.invalidateQueries({ queryKey: FEEDBACK_QUERY_KEYS.all });
       queryClient.invalidateQueries({ queryKey: ["analytics"] });
       queryClient.invalidateQueries({ queryKey: ["surveys"] });
@@ -189,6 +158,9 @@ export const useFeedback = (initialFilters = {}) => {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
+  // 1-second debounce on searching
+  const debouncedSearch = useDebounce(searchQuery, 1000);
+
   // Toast feedback state
   const [toast, setToast] = useState({ visible: false, message: "", type: "success" });
 
@@ -205,24 +177,33 @@ export const useFeedback = (initialFilters = {}) => {
 
   // Compute API query filters
   const apiFilters = useMemo(() => {
-    const f = {};
+    const f = {
+      page: currentPage,
+      limit: pageSize,
+      sortBy,
+    };
     if (selectedSurveyId && selectedSurveyId !== "all") f.surveyId = selectedSurveyId;
     if (selectedSentiment && selectedSentiment !== "all") f.sentiment = selectedSentiment;
     if (selectedStatus && selectedStatus !== "all") f.status = selectedStatus;
+    if (selectedSource && selectedSource !== "all") f.source = selectedSource;
+    if (selectedRating && selectedRating !== "all") f.rating = selectedRating;
+    if (debouncedSearch.trim()) f.search = debouncedSearch.trim();
     return f;
-  }, [selectedSurveyId, selectedSentiment, selectedStatus]);
+  }, [selectedSurveyId, selectedSentiment, selectedStatus, selectedSource, selectedRating, debouncedSearch, sortBy, currentPage, pageSize]);
 
   // Query: Get All Responses from real backend database
   const responsesQuery = useGetResponses(apiFilters);
-  const { data: apiResponses, isLoading, isFetching, isError, error, refetch } = responsesQuery;
+  const { data: queryData, isLoading, isFetching, isError, error, refetch } = responsesQuery;
 
-  // Only real data from backend
-  const rawResponses = useMemo(() => {
-    if (Array.isArray(apiResponses)) {
-      return apiResponses;
-    }
-    return [];
-  }, [apiResponses]);
+  const responses = useMemo(() => queryData?.responses || [], [queryData]);
+  const pagination = useMemo(() => queryData?.pagination || {
+    total: responses.length,
+    page: currentPage,
+    limit: pageSize,
+    totalPages: Math.ceil(responses.length / pageSize) || 1,
+    hasNextPage: false,
+    hasPrevPage: false,
+  }, [queryData, responses.length, currentPage, pageSize]);
 
   // Mutation: Quick Status Edit
   const updateResponseMutation = useUpdateResponseById({
@@ -234,74 +215,13 @@ export const useFeedback = (initialFilters = {}) => {
     },
   });
 
-  // Client-side filtering & sorting
-  const filteredResponses = useMemo(() => {
-    let list = [...rawResponses];
-
-    // Status filter
-    if (selectedStatus !== "all") {
-      list = list.filter((r) => r.status === selectedStatus);
-    }
-
-    // Sentiment filter
-    if (selectedSentiment !== "all") {
-      list = list.filter((r) => r.sentiment === selectedSentiment);
-    }
-
-    // Source filter
-    if (selectedSource !== "all") {
-      list = list.filter((r) => r.source === selectedSource);
-    }
-
-    // Rating filter (CSAT or NPS)
-    if (selectedRating !== "all") {
-      const targetScore = parseInt(selectedRating, 10);
-      list = list.filter((r) => r.csatScore === targetScore || r.npsScore === targetScore);
-    }
-
-    // Search Query
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      list = list.filter((r) => {
-        const customerName = r.customerId?.name?.toLowerCase() || "";
-        const customerEmail = r.customerId?.email?.toLowerCase() || "";
-        const surveyTitle = r.surveyId?.title?.toLowerCase() || "";
-        const topicsStr = (r.topics || []).join(" ").toLowerCase();
-        const textAnswers = (r.answers || [])
-          .map((a) => (typeof a.value === "string" ? a.value.toLowerCase() : ""))
-          .join(" ");
-
-        return (
-          customerName.includes(q) ||
-          customerEmail.includes(q) ||
-          surveyTitle.includes(q) ||
-          topicsStr.includes(q) ||
-          textAnswers.includes(q)
-        );
-      });
-    }
-
-    // Sorting
-    if (sortBy === "newest") {
-      list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    } else if (sortBy === "oldest") {
-      list.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-    } else if (sortBy === "rating-high") {
-      list.sort((a, b) => (b.csatScore || b.npsScore || 0) - (a.csatScore || a.npsScore || 0));
-    } else if (sortBy === "rating-low") {
-      list.sort((a, b) => (a.csatScore || a.npsScore || 0) - (b.csatScore || b.npsScore || 0));
-    }
-
-    return list;
-  }, [rawResponses, selectedStatus, selectedSentiment, selectedSource, selectedRating, searchQuery, sortBy]);
-
-  // Aggregate stats / telemetry metrics based on real database records
+  // Aggregate stats / telemetry metrics
   const metrics = useMemo(() => {
-    const total = rawResponses.length;
-    const needAttention = rawResponses.filter((r) => r.sentiment === "negative" && r.status !== "resolved").length;
-    const openCount = rawResponses.filter((r) => r.status === "open").length;
-    const resolvedCount = rawResponses.filter((r) => r.status === "resolved").length;
-    const inProgressCount = rawResponses.filter((r) => r.status === "in_progress").length;
+    const total = pagination.total || responses.length;
+    const needAttention = responses.filter((r) => r.sentiment === "negative" && r.status !== "resolved").length;
+    const openCount = responses.filter((r) => r.status === "open").length;
+    const resolvedCount = responses.filter((r) => r.status === "resolved").length;
+    const inProgressCount = responses.filter((r) => r.status === "in_progress").length;
 
     return {
       total,
@@ -310,14 +230,10 @@ export const useFeedback = (initialFilters = {}) => {
       resolvedCount,
       inProgressCount,
     };
-  }, [rawResponses]);
+  }, [pagination.total, responses]);
 
-  // Pagination slice
-  const totalPages = Math.ceil(filteredResponses.length / pageSize) || 1;
-  const paginatedResponses = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return filteredResponses.slice(start, start + pageSize);
-  }, [filteredResponses, currentPage, pageSize]);
+  const totalPages = pagination.totalPages || 1;
+  const totalCount = pagination.total || responses.length;
 
   // Active filter count check
   const hasActiveFilters = Boolean(
@@ -340,7 +256,7 @@ export const useFeedback = (initialFilters = {}) => {
   }, [showToast]);
 
   const handleExportReport = () => {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(filteredResponses, null, 2));
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(responses, null, 2));
     const downloadAnchor = document.createElement("a");
     downloadAnchor.setAttribute("href", dataStr);
     downloadAnchor.setAttribute("download", `customer-feedback-report-${Date.now()}.json`);
@@ -362,12 +278,21 @@ export const useFeedback = (initialFilters = {}) => {
     }
   };
 
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  const handleSearchChange = (val) => {
+    setSearchQuery(val);
+    setCurrentPage(1);
+  };
+
   return {
     // Data lists
-    responses: paginatedResponses,
-    allFilteredResponses: filteredResponses,
-    totalCount: filteredResponses.length,
-    rawResponsesCount: rawResponses.length,
+    responses,
+    pagination,
+    totalCount,
+    rawResponsesCount: totalCount,
     metrics,
 
     // Status flags
@@ -377,8 +302,8 @@ export const useFeedback = (initialFilters = {}) => {
     error,
     refetch,
     hasActiveFilters,
-    isNoResults: !isLoading && !isError && rawResponses.length > 0 && filteredResponses.length === 0,
-    isEmpty: !isLoading && !isError && rawResponses.length === 0,
+    isNoResults: !isLoading && !isError && totalCount === 0 && hasActiveFilters,
+    isEmpty: !isLoading && !isError && totalCount === 0 && !hasActiveFilters,
 
     // Filter controls
     selectedStatus,
@@ -390,14 +315,14 @@ export const useFeedback = (initialFilters = {}) => {
     selectedRating,
     setSelectedRating: (val) => { setSelectedRating(val); setCurrentPage(1); },
     searchQuery,
-    setSearchQuery: (val) => { setSearchQuery(val); setCurrentPage(1); },
+    setSearchQuery: handleSearchChange,
     sortBy,
-    setSortBy,
+    setSortBy: (val) => { setSortBy(val); setCurrentPage(1); },
     resetFilters,
 
     // Pagination
     currentPage,
-    setCurrentPage,
+    setCurrentPage: handlePageChange,
     totalPages,
     pageSize,
 
