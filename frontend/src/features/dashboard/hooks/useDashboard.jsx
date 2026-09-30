@@ -1,13 +1,13 @@
 import { useState, useMemo, useCallback } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getAnalyticsOverview, getAnalyticsTrends } from "../../analytics/apis/analytics.api.jsx";
-import { getResponses } from "../../feedback/apis/feedback.api.jsx";
+import { useQueryClient } from "@tanstack/react-query";
+import { useGetAnalyticsOverview, ANALYTICS_QUERY_KEYS } from "../../analytics/hooks/useAnalytics.jsx";
+import { useGetResponses, FEEDBACK_QUERY_KEYS } from "../../feedback/hooks/useFeedback.jsx";
 import useAuth from "../../auth/hook/useAuth.jsx";
 
 export const DASHBOARD_QUERY_KEYS = {
   all: ["dashboard"],
-  overview: (range) => ["dashboard", "overview", range],
-  recentFeedback: ["dashboard", "recentFeedback"],
+  overview: (range) => ANALYTICS_QUERY_KEYS.overview(range),
+  recentFeedback: FEEDBACK_QUERY_KEYS.lists(),
 };
 
 /**
@@ -42,28 +42,12 @@ export const useDashboard = (initialConfig = {}) => {
     setToast({ visible: false, message: "", type: "success" });
   }, []);
 
-  // 1. Fetch Analytics Overview based on selected range
+  // 1. Fetch Analytics Overview based on selected range (shares cache with Analytics module)
   const apiRange = range === "12m" ? "90d" : range; // Map 12m to maximum API range
-  const overviewQuery = useQuery({
-    queryKey: DASHBOARD_QUERY_KEYS.overview(apiRange),
-    queryFn: async () => {
-      const res = await getAnalyticsOverview(apiRange);
-      return res?.data || res || null;
-    },
-    staleTime: 1000 * 60 * 3, // 3 minutes cache
-    refetchOnWindowFocus: false,
-  });
+  const overviewQuery = useGetAnalyticsOverview(apiRange);
 
-  // 2. Fetch Recent Responses / Verbatims
-  const feedbackQuery = useQuery({
-    queryKey: DASHBOARD_QUERY_KEYS.recentFeedback,
-    queryFn: async () => {
-      const res = await getResponses({ limit: 10 });
-      return res?.data || res || [];
-    },
-    staleTime: 1000 * 60 * 2,
-    refetchOnWindowFocus: false,
-  });
+  // 2. Fetch Recent Responses / Verbatims (shares cache with Feedback module)
+  const feedbackQuery = useGetResponses();
 
   const overviewData = overviewQuery.data || null;
   const rawResponses = useMemo(() => {
