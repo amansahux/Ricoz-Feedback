@@ -34,59 +34,188 @@ const sendMail = async ({ email, subject, html, text }) => {
  * Beautiful HTML email template for Account Verification
  */
 export const sendVerificationEmail = async ({ to, name, verificationUrl }) => {
-  const subject = "Verify your Recoz Feedback account";
+  const subject = "Verify your Recoz account";
+  const year = new Date().getFullYear();
+  const displayName = name && name.trim() ? name.trim() : "there";
+
   const html = `
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="x-apple-disable-message-reformatting" />
   <title>${subject}</title>
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #F8F5EE; margin: 0; padding: 0; color: #1E1A17; }
-    .wrapper { width: 100%; max-width: 580px; margin: 30px auto; background: #FFFFFF; border-radius: 16px; border: 1px solid #EFE4D6; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.04); }
-    .header { background: #121110; padding: 32px 36px; text-align: center; }
-    .logo-badge { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; background: #F62440; border-radius: 10px; color: #FFFFFF; font-weight: 800; font-size: 22px; margin-bottom: 12px; }
-    .brand-title { color: #FFFFFF; font-size: 16px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; margin: 0; }
-    .brand-subtitle { color: #D1C5B0; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 4px; }
-    .content { padding: 40px 36px; }
-    .greeting { font-size: 20px; font-weight: 700; color: #121110; margin: 0 0 16px; }
-    .text { font-size: 15px; line-height: 1.6; color: #524B45; margin: 0 0 24px; }
-    .btn-container { text-align: center; margin: 32px 0; }
-    .btn { display: inline-block; background-color: #F62440; color: #FFFFFF !important; font-size: 15px; font-weight: 600; text-decoration: none; padding: 14px 34px; border-radius: 10px; box-shadow: 0 4px 14px rgba(246, 36, 64, 0.3); transition: background-color 0.2s; }
-    .link-fallback { font-size: 12px; line-height: 1.5; color: #8F877D; background: #FAF7F2; border-radius: 8px; padding: 12px; word-break: break-all; margin-top: 24px; }
-    .footer { padding: 24px 36px; background-color: #FAF7F2; border-top: 1px solid #EFE4D6; text-align: center; font-size: 12px; color: #8F877D; }
-    .footer p { margin: 4px 0; }
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
+  <style type="text/css">
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    img { -ms-interpolation-mode: bicubic; border: 0; outline: none; text-decoration: none; }
+    body { margin: 0; padding: 0; width: 100% !important; background-color: #0c0d11; font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+    .email-container { width: 100%; max-width: 580px; margin: 0 auto; }
+    .btn-action:hover { background-color: #ff3352 !important; box-shadow: 0 10px 24px rgba(246, 36, 64, 0.45) !important; }
+    @media screen and (max-width: 600px) {
+      .inner-padding { padding: 32px 24px !important; }
+      .header-padding { padding: 36px 20px 28px 20px !important; }
+      .mobile-text-center { text-align: center !important; }
+    }
   </style>
 </head>
-<body>
-  <div class="wrapper">
-    <div class="header">
-      <div class="logo-badge">R</div>
-      <h1 class="brand-title">RECOZ FEEDBACK</h1>
-      <div class="brand-subtitle">Customer Intelligence Platform</div>
-    </div>
-    <div class="content">
-      <h2 class="greeting">Welcome to Recoz, ${name || 'there'}! 👋</h2>
-      <p class="text">
-        Thank you for creating your workspace. To activate your account and start collecting intelligent customer feedback, please confirm your email address.
-      </p>
-      <div class="btn-container">
-        <a href="${verificationUrl}" class="btn" target="_blank">Verify Email Address</a>
-      </div>
-      <p class="text" style="font-size: 13px; color: #736B63;">
-        This verification link will expire in <strong>24 hours</strong>. If you did not create this account, you can safely ignore this email.
-      </p>
-      <div class="link-fallback">
-        If the button above doesn't work, copy and paste this URL into your browser:<br>
-        <a href="${verificationUrl}" style="color: #F62440; text-decoration: underline;">${verificationUrl}</a>
-      </div>
-    </div>
-    <div class="footer">
-      <p>© ${new Date().getFullYear()} Recoz Feedback. All rights reserved.</p>
-      <p>Protected by 256-bit TLS encryption.</p>
-    </div>
+<body style="margin: 0; padding: 0; background-color: #0c0d11; -webkit-font-smoothing: antialiased;">
+  <!-- PREHEADER TRICK -->
+  <div style="display: none; font-size: 1px; color: #0c0d11; line-height: 1px; max-height: 0px; max-width: 0px; opacity: 0; overflow: hidden;">
+    Activate your Recoz workspace and unlock customer intelligence in seconds.
   </div>
+
+  <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #0c0d11; table-layout: fixed;">
+    <tr>
+      <td align="center" style="padding: 40px 16px 50px 16px;">
+        <!-- MAIN CARD -->
+        <table border="0" cellpadding="0" cellspacing="0" width="100%" class="email-container" style="max-width: 580px; background: #14161d; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.08); overflow: hidden; box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.7), 0 0 1px 1px rgba(255, 255, 255, 0.05);">
+          
+          <!-- TOP GLOW ACCENT BAR -->
+          <tr>
+            <td height="4" style="background: linear-gradient(90deg, #F62440 0%, #FF6584 50%, #F62440 100%); font-size: 1px; line-height: 1px;">&nbsp;</td>
+          </tr>
+
+          <!-- HEADER -->
+          <tr>
+            <td align="center" class="header-padding" style="padding: 42px 40px 32px 40px; background: radial-gradient(circle at 50% 0%, rgba(246, 36, 64, 0.15) 0%, rgba(20, 22, 29, 0) 75%);">
+              <!-- LOGO BADGE -->
+              <table border="0" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center">
+                    <table border="0" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td align="center" width="52" height="52" style="width: 52px; height: 52px; background: linear-gradient(135deg, #F62440 0%, #D81B34 100%); border-radius: 14px; box-shadow: 0 8px 24px rgba(246, 36, 64, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.35); text-align: center;">
+                          <span style="font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif; font-size: 26px; font-weight: 800; color: #FFFFFF; line-height: 52px; display: inline-block;">R</span>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding-top: 14px;">
+                    <div style="font-size: 18px; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; color: #FFFFFF; margin: 0;">
+                      RECOZ
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding-top: 4px;">
+                    <div style="font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #8F96A3;">
+                      CUSTOMER INTELLIGENCE SUITE
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- SEPARATOR -->
+          <tr>
+            <td style="padding: 0 40px;">
+              <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td style="border-bottom: 1px solid rgba(255, 255, 255, 0.06); font-size: 1px; line-height: 1px;">&nbsp;</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- BODY CONTENT -->
+          <tr>
+            <td class="inner-padding" style="padding: 38px 40px 32px 40px;">
+              <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td>
+                    <h2 style="margin: 0 0 14px 0; font-size: 22px; font-weight: 700; color: #FFFFFF; letter-spacing: -0.01em;">
+                      Welcome aboard, ${displayName}! ✨
+                    </h2>
+                    <p style="margin: 0 0 24px 0; font-size: 15px; line-height: 1.65; color: #A4ACB9;">
+                      Thank you for choosing Recoz. You're just one step away from transforming how your business collects feedback, analyzes sentiment, and delights customers.
+                    </p>
+                    <p style="margin: 0 0 32px 0; font-size: 15px; line-height: 1.65; color: #A4ACB9;">
+                      Please click the button below to confirm your email and activate your workspace.
+                    </p>
+                  </td>
+                </tr>
+
+                <!-- CTA BUTTON -->
+                <tr>
+                  <td align="center" style="padding: 8px 0 36px 0;">
+                    <table border="0" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td align="center" style="border-radius: 12px; background: linear-gradient(135deg, #F62440 0%, #E01B36 100%); box-shadow: 0 8px 20px rgba(246, 36, 64, 0.35);">
+                          <a href="${verificationUrl}" target="_blank" class="btn-action" style="display: inline-block; padding: 16px 38px; font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif; font-size: 15px; font-weight: 700; color: #FFFFFF; text-decoration: none; border-radius: 12px; letter-spacing: 0.02em;">
+                            Verify Email Address &rarr;
+                          </a>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+                <!-- TIMEOUT & SECURITY BADGE -->
+                <tr>
+                  <td>
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 12px; padding: 16px 18px;">
+                      <tr>
+                        <td width="24" valign="top" style="padding-right: 12px; font-size: 16px; line-height: 1.4;">⏱️</td>
+                        <td style="font-size: 13px; line-height: 1.55; color: #8F96A3;">
+                          This link will remain active for <strong style="color: #FFFFFF;">24 hours</strong>. If you did not create an account with Recoz, no further action is required.
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+                <!-- FALLBACK URL BOX -->
+                <tr>
+                  <td style="padding-top: 24px;">
+                    <p style="margin: 0 0 8px 0; font-size: 12px; font-weight: 600; color: #717886; text-transform: uppercase; letter-spacing: 0.05em;">
+                      Trouble with the button? Copy and paste this link:
+                    </p>
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background: #0D0E13; border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 8px;">
+                      <tr>
+                        <td style="padding: 12px 14px; word-break: break-all; font-family: 'Courier New', Courier, monospace; font-size: 12px; line-height: 1.5; color: #F62440;">
+                          <a href="${verificationUrl}" target="_blank" style="color: #F62440; text-decoration: underline;">${verificationUrl}</a>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- FOOTER -->
+          <tr>
+            <td style="padding: 28px 40px; background-color: #0e1017; border-top: 1px solid rgba(255, 255, 255, 0.05); text-align: center;">
+              <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td align="center" style="font-size: 12px; line-height: 1.6; color: #616977;">
+                    <p style="margin: 0 0 6px 0;">&copy; ${year} Recoz Feedback Inc. All rights reserved.</p>
+                    <p style="margin: 0; font-size: 11px; color: #4B5260;">Enterprise-Grade Security &bull; 256-Bit TLS Encryption</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>
   `;
@@ -104,63 +233,182 @@ export const sendVerificationEmail = async ({ to, name, verificationUrl }) => {
  */
 export const sendOtpEmail = async ({ to, name, otp }) => {
   const subject = "Your Recoz Password Reset Code";
+  const year = new Date().getFullYear();
+  const displayName = name && name.trim() ? name.trim() : "there";
+
   const html = `
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="x-apple-disable-message-reformatting" />
   <title>${subject}</title>
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #F8F5EE; margin: 0; padding: 0; color: #1E1A17; }
-    .wrapper { width: 100%; max-width: 580px; margin: 30px auto; background: #FFFFFF; border-radius: 16px; border: 1px solid #EFE4D6; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.04); }
-    .header { background: #121110; padding: 32px 36px; text-align: center; }
-    .logo-badge { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; background: #F62440; border-radius: 10px; color: #FFFFFF; font-weight: 800; font-size: 22px; margin-bottom: 12px; }
-    .brand-title { color: #FFFFFF; font-size: 16px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; margin: 0; }
-    .brand-subtitle { color: #D1C5B0; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 4px; }
-    .content { padding: 40px 36px; }
-    .greeting { font-size: 20px; font-weight: 700; color: #121110; margin: 0 0 16px; }
-    .text { font-size: 15px; line-height: 1.6; color: #524B45; margin: 0 0 24px; }
-    .otp-card { background: #121110; border-radius: 12px; padding: 24px; text-align: center; margin: 28px 0; }
-    .otp-code { font-family: 'Courier New', Courier, monospace; font-size: 38px; font-weight: 800; letter-spacing: 0.3em; color: #FFFFFF; text-shadow: 0 2px 10px rgba(246, 36, 64, 0.4); margin: 0; }
-    .otp-label { color: #D1C5B0; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 8px; }
-    .warning { font-size: 13px; color: #8F877D; background: #FAF7F2; border-left: 3px solid #F62440; padding: 12px 16px; border-radius: 4px; margin: 24px 0 0; }
-    .footer { padding: 24px 36px; background-color: #FAF7F2; border-top: 1px solid #EFE4D6; text-align: center; font-size: 12px; color: #8F877D; }
-    .footer p { margin: 4px 0; }
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
+  <style type="text/css">
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@700;800&display=swap');
+    body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    img { -ms-interpolation-mode: bicubic; border: 0; outline: none; text-decoration: none; }
+    body { margin: 0; padding: 0; width: 100% !important; background-color: #0c0d11; font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+    .email-container { width: 100%; max-width: 580px; margin: 0 auto; }
+    @media screen and (max-width: 600px) {
+      .inner-padding { padding: 32px 24px !important; }
+      .header-padding { padding: 36px 20px 28px 20px !important; }
+      .otp-code-text { font-size: 34px !important; letter-spacing: 0.25em !important; }
+    }
   </style>
 </head>
-<body>
-  <div class="wrapper">
-    <div class="header">
-      <div class="logo-badge">R</div>
-      <h1 class="brand-title">RECOZ FEEDBACK</h1>
-      <div class="brand-subtitle">Security & Authentication</div>
-    </div>
-    <div class="content">
-      <h2 class="greeting">Reset your password</h2>
-      <p class="text">
-        Hello ${name || 'there'}, we received a request to reset the password for your Recoz Feedback account. Use the one-time code below to proceed:
-      </p>
-      <div class="otp-card">
-        <div class="otp-code">${otp}</div>
-        <div class="otp-label">6-Digit Verification Code</div>
-      </div>
-      <div class="warning">
-        ⏳ This code will expire in <strong>10 minutes</strong>.<br>
-        🔒 If you did not request a password reset, please ignore this email or reach out if you have concerns.
-      </div>
-    </div>
-    <div class="footer">
-      <p>© ${new Date().getFullYear()} Recoz Feedback. All rights reserved.</p>
-      <p>Secure one-time authentication code.</p>
-    </div>
+<body style="margin: 0; padding: 0; background-color: #0c0d11; -webkit-font-smoothing: antialiased;">
+  <!-- PREHEADER TRICK -->
+  <div style="display: none; font-size: 1px; color: #0c0d11; line-height: 1px; max-height: 0px; max-width: 0px; opacity: 0; overflow: hidden;">
+    Use verification code ${otp} to reset your Recoz account password.
   </div>
+
+  <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #0c0d11; table-layout: fixed;">
+    <tr>
+      <td align="center" style="padding: 40px 16px 50px 16px;">
+        <!-- MAIN CARD -->
+        <table border="0" cellpadding="0" cellspacing="0" width="100%" class="email-container" style="max-width: 580px; background: #14161d; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.08); overflow: hidden; box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.7), 0 0 1px 1px rgba(255, 255, 255, 0.05);">
+          
+          <!-- TOP GLOW ACCENT BAR -->
+          <tr>
+            <td height="4" style="background: linear-gradient(90deg, #F62440 0%, #FF6584 50%, #F62440 100%); font-size: 1px; line-height: 1px;">&nbsp;</td>
+          </tr>
+
+          <!-- HEADER -->
+          <tr>
+            <td align="center" class="header-padding" style="padding: 42px 40px 32px 40px; background: radial-gradient(circle at 50% 0%, rgba(246, 36, 64, 0.15) 0%, rgba(20, 22, 29, 0) 75%);">
+              <!-- LOGO BADGE -->
+              <table border="0" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center">
+                    <table border="0" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td align="center" width="52" height="52" style="width: 52px; height: 52px; background: linear-gradient(135deg, #F62440 0%, #D81B34 100%); border-radius: 14px; box-shadow: 0 8px 24px rgba(246, 36, 64, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.35); text-align: center;">
+                          <span style="font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif; font-size: 26px; font-weight: 800; color: #FFFFFF; line-height: 52px; display: inline-block;">R</span>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding-top: 14px;">
+                    <div style="font-size: 18px; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; color: #FFFFFF; margin: 0;">
+                      RECOZ
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding-top: 4px;">
+                    <div style="font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #8F96A3;">
+                      SECURITY &amp; AUTHENTICATION
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- SEPARATOR -->
+          <tr>
+            <td style="padding: 0 40px;">
+              <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td style="border-bottom: 1px solid rgba(255, 255, 255, 0.06); font-size: 1px; line-height: 1px;">&nbsp;</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- BODY CONTENT -->
+          <tr>
+            <td class="inner-padding" style="padding: 38px 40px 34px 40px;">
+              <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td>
+                    <h2 style="margin: 0 0 14px 0; font-size: 22px; font-weight: 700; color: #FFFFFF; letter-spacing: -0.01em;">
+                      Reset your password 🔐
+                    </h2>
+                    <p style="margin: 0 0 28px 0; font-size: 15px; line-height: 1.65; color: #A4ACB9;">
+                      Hello <strong style="color: #FFFFFF;">${displayName}</strong>, we received a request to reset the password for your Recoz account. Enter the one-time verification code below:
+                    </p>
+                  </td>
+                </tr>
+
+                <!-- LUXURY OTP DISPLAY CARD -->
+                <tr>
+                  <td align="center" style="padding: 4px 0 28px 0;">
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background: #0D0E13; border: 1px solid rgba(246, 36, 64, 0.3); border-radius: 16px; box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.6), 0 0 24px rgba(246, 36, 64, 0.1);">
+                      <tr>
+                        <td align="center" style="padding: 26px 20px;">
+                          <div class="otp-code-text" style="font-family: 'JetBrains Mono', 'Courier New', Courier, monospace; font-size: 42px; font-weight: 800; letter-spacing: 0.32em; color: #FFFFFF; text-shadow: 0 0 20px rgba(246, 36, 64, 0.6); padding-left: 0.32em; margin: 0;">
+                            ${otp}
+                          </div>
+                          <div style="font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #8F96A3; margin-top: 10px;">
+                            One-Time Verification Code
+                          </div>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+                <!-- SECURITY WARNING / EXPIRY BOX -->
+                <tr>
+                  <td>
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background: rgba(246, 36, 64, 0.05); border: 1px solid rgba(246, 36, 64, 0.2); border-radius: 12px; padding: 18px 20px;">
+                      <tr>
+                        <td width="24" valign="top" style="padding-right: 12px; font-size: 16px; line-height: 1.4;">⏳</td>
+                        <td style="font-size: 13px; line-height: 1.55; color: #C5CBD6;">
+                          This code will strictly expire in <strong style="color: #FFFFFF;">10 minutes</strong>.
+                        </td>
+                      </tr>
+                      <tr>
+                        <td width="24" valign="top" style="padding-right: 12px; padding-top: 8px; font-size: 16px; line-height: 1.4;">🛡️</td>
+                        <td style="padding-top: 8px; font-size: 13px; line-height: 1.55; color: #8F96A3;">
+                          If you did not request this password reset, your account is still secure. You can safely ignore this email.
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- FOOTER -->
+          <tr>
+            <td style="padding: 28px 40px; background-color: #0e1017; border-top: 1px solid rgba(255, 255, 255, 0.05); text-align: center;">
+              <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td align="center" style="font-size: 12px; line-height: 1.6; color: #616977;">
+                    <p style="margin: 0 0 6px 0;">&copy; ${year} Recoz Feedback Inc. All rights reserved.</p>
+                    <p style="margin: 0; font-size: 11px; color: #4B5260;">Enterprise-Grade Security &bull; 256-Bit TLS Encryption</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>
   `;
 
   return sendMail({
-    email :to,
+    email: to,
     subject,
     text: `Your Recoz Feedback password reset OTP is: ${otp}. It expires in 10 minutes.`,
     html,
