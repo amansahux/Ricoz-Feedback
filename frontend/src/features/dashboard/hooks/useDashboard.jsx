@@ -51,17 +51,31 @@ export const useDashboard = (initialConfig = {}) => {
 
   const overviewData = overviewQuery.data || null;
   const rawResponses = useMemo(() => {
-    return Array.isArray(feedbackQuery.data) ? feedbackQuery.data : [];
+    if (Array.isArray(feedbackQuery.data?.responses)) {
+      return feedbackQuery.data.responses;
+    }
+    if (Array.isArray(feedbackQuery.data)) {
+      return feedbackQuery.data;
+    }
+    if (Array.isArray(feedbackQuery.data?.data)) {
+      return feedbackQuery.data.data;
+    }
+    return [];
   }, [feedbackQuery.data]);
+
+  const totalFeedbackCount =
+    overviewData?.summary?.totalResponses?.value ??
+    feedbackQuery.data?.pagination?.total ??
+    rawResponses.length;
 
   // Transform KPI Summary Metrics with safe fallback values
   const summary = useMemo(() => {
     const rawSum = overviewData?.summary || {};
     return {
       totalResponses: {
-        value: rawSum.totalResponses?.value ?? rawResponses.length,
+        value: rawSum.totalResponses?.value ?? totalFeedbackCount,
         changePercent: rawSum.totalResponses?.changePercent ?? 100,
-        allTime: rawResponses.length,
+        allTime: totalFeedbackCount,
         completionRate: 100,
       },
       nps: {
@@ -73,11 +87,11 @@ export const useDashboard = (initialConfig = {}) => {
         detractorsCount: rawResponses.filter((r) => (r.npsScore !== null && (r.npsScore || 0) <= 6)).length,
       },
       csat: {
-        value: rawSum.csat?.value ?? (rawResponses.length > 0 ? 100 : null),
+        value: rawSum.csat?.value ?? (totalFeedbackCount > 0 ? 100 : null),
         averageRating: rawSum.csat?.averageRating ?? null,
         changePercent: rawSum.csat?.changePercent ?? 0,
         satisfiedCount: rawResponses.filter((r) => (r.csatScore || 0) >= 4).length,
-        totalWithScore: rawResponses.length,
+        totalWithScore: totalFeedbackCount,
       },
       ces: {
         value: rawSum.ces?.value ?? null,
@@ -87,7 +101,7 @@ export const useDashboard = (initialConfig = {}) => {
         effortCount: rawResponses.filter((r) => r.cesScore != null).length,
       },
     };
-  }, [overviewData, rawResponses]);
+  }, [overviewData, rawResponses, totalFeedbackCount]);
 
   // Transform Response Volume trend data
   const responseVolume = useMemo(() => {
@@ -119,37 +133,37 @@ export const useDashboard = (initialConfig = {}) => {
       const isToday = i === 0;
       points.push({
         date: d.toISOString().split("T")[0],
-        current: isToday && rawResponses.length > 0 ? rawResponses.length : 0,
+        current: isToday && totalFeedbackCount > 0 ? totalFeedbackCount : 0,
         previous: 0,
       });
     }
     return points;
-  }, [overviewData, rawResponses, chartView]);
+  }, [overviewData, totalFeedbackCount, chartView]);
 
   // Transform Sentiment distribution mix
   const sentimentMix = useMemo(() => {
     const rawSent = overviewData?.sentiment;
-    const posCount = rawResponses.filter((r) => r.sentiment === "positive").length;
-    const neuCount = rawResponses.filter((r) => r.sentiment === "neutral").length;
-    const negCount = rawResponses.filter((r) => r.sentiment === "negative").length;
-    const totalCount = posCount + neuCount + negCount || rawResponses.length || 1;
+    const posCount = rawSent?.positive?.count ?? rawResponses.filter((r) => r.sentiment === "positive").length;
+    const neuCount = rawSent?.neutral?.count ?? rawResponses.filter((r) => r.sentiment === "neutral").length;
+    const negCount = rawSent?.negative?.count ?? rawResponses.filter((r) => r.sentiment === "negative").length;
+    const totalCount = posCount + neuCount + negCount || totalFeedbackCount || 1;
 
     return {
-      total: rawResponses.length,
+      total: totalFeedbackCount,
       positive: {
-        count: rawSent?.positive?.count ?? posCount,
+        count: posCount,
         percentage: rawSent?.positive?.percentage ?? Math.round((posCount / totalCount) * 100),
       },
       neutral: {
-        count: rawSent?.neutral?.count ?? neuCount,
+        count: neuCount,
         percentage: rawSent?.neutral?.percentage ?? Math.round((neuCount / totalCount) * 100),
       },
       negative: {
-        count: rawSent?.negative?.count ?? negCount,
+        count: negCount,
         percentage: rawSent?.negative?.percentage ?? Math.round((negCount / totalCount) * 100),
       },
     };
-  }, [overviewData, rawResponses]);
+  }, [overviewData, rawResponses, totalFeedbackCount]);
 
   // Top discussion topics
   const topTopics = useMemo(() => {
