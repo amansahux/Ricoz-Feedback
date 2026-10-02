@@ -2,12 +2,57 @@ import crypto from 'crypto';
 import { Organization } from '../models/organization.model.js';
 import { generateUniqueSlug } from '../utils/generateSlug.js';
 import { User } from '../models/user.models.js';
+import { OrganizationMember } from '../models/organizationMember.model.js';
+import { ROLES, MEMBER_STATUS, ROLE_PERMISSIONS } from '../config/roles.js';
 import { generateAuthTokens, verifyRefreshToken } from '../utils/generateToken.js';
 import { sendVerificationEmail, sendOtpEmail } from './email.service.js';
 import { ApiError } from '../utils/ApiError.js';
 import { env } from '../config/env.js';
 
 export const authService = {
+  /**
+   * Helper to resolve active organization membership and role for a user
+   */
+  async resolveUserMembership(userId, organizationId) {
+    let membership = null;
+    if (organizationId) {
+      membership = await OrganizationMember.findOne({
+        userId,
+        organizationId,
+        status: MEMBER_STATUS.ACTIVE,
+      });
+    }
+
+    if (!membership) {
+      membership = await OrganizationMember.findOne({
+        userId,
+        status: MEMBER_STATUS.ACTIVE,
+      });
+    }
+
+    // Auto-heal / fallback for legacy users
+    if (!membership) {
+      const user = await User.findById(userId);
+      if (user && user.organizationId) {
+        const org = await Organization.findById(user.organizationId);
+        const isOwner = org?.ownerId?.toString() === userId.toString();
+        membership = await OrganizationMember.findOneAndUpdate(
+          { userId, organizationId: user.organizationId },
+          {
+            userId,
+            organizationId: user.organizationId,
+            role: isOwner ? ROLES.OWNER : ROLES.SUPPORT_AGENT,
+            status: MEMBER_STATUS.ACTIVE,
+            joinedAt: new Date(),
+          },
+          { upsert: true, new: true }
+        );
+      }
+    }
+
+    return membership;
+  },
+
   /**
    * Register a new user and organization.
    * Sends email verification with link.
@@ -34,13 +79,21 @@ export const authService = {
       user.password = password;
       user.verificationToken = verificationToken;
       user.verificationTokenExpires = verificationTokenExpires;
-      await user.save();
 
-      org = await Organization.findById(user.organizationId);
-      if (org && organizationName) {
-        org.name = organizationName.trim();
-        await org.save();
+      const userSavePromise = user.save();
+      let orgPromise = Promise.resolve(null);
+
+      if (organizationName && user.organizationId) {
+        orgPromise = Organization.findById(user.organizationId).then(async (foundOrg) => {
+          if (foundOrg) {
+            foundOrg.name = organizationName.trim();
+            return foundOrg.save();
+          }
+          return foundOrg;
+        });
       }
+
+      [org] = await Promise.all([orgPromise, userSavePromise]);
     } else {
       // Create new organization
       org = new Organization({
@@ -60,6 +113,23 @@ export const authService = {
         verificationTokenExpires,
       });
       await user.save();
+
+      // Assign ownerId to organization and create OrganizationMember concurrently
+      org.ownerId = user._id;
+      await Promise.all([
+        org.save(),
+        OrganizationMember.findOneAndUpdate(
+          { organizationId: org._id, userId: user._id },
+          {
+            organizationId: org._id,
+            userId: user._id,
+            role: ROLES.OWNER,
+            status: MEMBER_STATUS.ACTIVE,
+            joinedAt: new Date(),
+          },
+          { upsert: true, new: true }
+        ),
+      ]);
     }
 
     // Verification URL pointing directly to backend endpoint which activates user and redirects to login
@@ -74,7 +144,6 @@ export const authService = {
       });
     } catch (emailErr) {
       console.error('Failed to send verification email during registration:', emailErr);
-      // We don't fail registration if SMTP fails, but log the error
     }
 
     return {
@@ -105,9 +174,14 @@ export const authService = {
     user.verified = true;
     user.verificationToken = undefined;
     user.verificationTokenExpires = undefined;
-    await user.save();
 
-    const organization = await Organization.findById(user.organizationId);
+    const [membership, organization] = await Promise.all([
+      this.resolveUserMembership(user._id, user.organizationId),
+      Organization.findById(user.organizationId),
+      user.save(),
+    ]);
+
+    const role = membership ? membership.role : ROLES.SUPPORT_AGENT;
     const { accessToken, refreshToken } = generateAuthTokens(user._id, user.organizationId);
 
     return {
@@ -117,6 +191,8 @@ export const authService = {
         name: user.name,
         email: user.email,
         organizationId: user.organizationId,
+        role,
+        permissions: ROLE_PERMISSIONS[role] || [],
         verified: user.verified,
       },
       organization: organization
@@ -149,15 +225,17 @@ export const authService = {
     const verificationToken = crypto.randomBytes(32).toString('hex');
     user.verificationToken = verificationToken;
     user.verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
-    await user.save();
 
     const verificationUrl = `${env.SERVER_URL}/api/auth/verify-email?token=${verificationToken}`;
 
-    await sendVerificationEmail({
-      to: user.email,
-      name: user.name,
-      verificationUrl,
-    });
+    await Promise.all([
+      user.save(),
+      sendVerificationEmail({
+        to: user.email,
+        name: user.name,
+        verificationUrl,
+      }),
+    ]);
 
     return {
       success: true,
@@ -185,8 +263,14 @@ export const authService = {
       throw new ApiError(403, 'Your account is not verified yet. Please check your email for the verification link.');
     }
 
-    const organization = await Organization.findById(user.organizationId);
-    const { accessToken, refreshToken } = generateAuthTokens(user._id, user.organizationId);
+    const membership = await this.resolveUserMembership(user._id, user.organizationId);
+    if (!membership || membership.status !== MEMBER_STATUS.ACTIVE) {
+      throw new ApiError(403, 'Your account or membership in this organization is inactive.');
+    }
+
+    const role = membership.role;
+    const organization = await Organization.findById(membership.organizationId);
+    const { accessToken, refreshToken } = generateAuthTokens(user._id, membership.organizationId);
 
     return {
       tokens: { accessToken, refreshToken },
@@ -195,7 +279,9 @@ export const authService = {
         id: user._id,
         name: user.name,
         email: user.email,
-        organizationId: user.organizationId,
+        organizationId: membership.organizationId,
+        role,
+        permissions: ROLE_PERMISSIONS[role] || [],
         verified: user.verified,
       },
       organization: organization
@@ -225,13 +311,15 @@ export const authService = {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     user.otp = otp;
     user.otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
-    await user.save();
 
-    await sendOtpEmail({
-      to: user.email,
-      name: user.name,
-      otp,
-    });
+    await Promise.all([
+      user.save(),
+      sendOtpEmail({
+        to: user.email,
+        name: user.name,
+        otp,
+      }),
+    ]);
 
     return {
       success: true,
@@ -241,33 +329,27 @@ export const authService = {
 
   /**
    * Invalidate (remove) OTP from database
-   * Called when OTP timer expires or before resending a new OTP
    */
   async invalidateOtp(email) {
     const normalizedEmail = email.toLowerCase().trim();
     const user = await User.findOne({ email: normalizedEmail }).select('+otp +otpExpires');
 
     if (!user) {
-      // Silently return for security (no account enumeration)
-      return { success: true, message: 'OTP invalidated.' };
+      throw new ApiError(404, 'No account found with this email address');
     }
 
     user.otp = undefined;
     user.otpExpires = undefined;
     await user.save();
 
-    return { success: true, message: 'OTP invalidated.' };
+    return {
+      success: true,
+      message: 'OTP invalidated successfully',
+    };
   },
 
   /**
-   * Resend OTP for password reset
-   */
-  async resendOtp(email) {
-    return this.forgotPassword(email);
-  },
-
-  /**
-   * Verify OTP before allowing user to enter new password
+   * Verify OTP before allowing password reset
    */
   async verifyOtp(email, otp) {
     const normalizedEmail = email.toLowerCase().trim();
@@ -287,12 +369,12 @@ export const authService = {
 
     return {
       success: true,
-      message: 'Verification code verified successfully.',
+      message: 'OTP verified successfully',
     };
   },
 
   /**
-   * Reset password using OTP
+   * Reset Password with verified OTP
    */
   async resetPassword(email, otp, newPassword) {
     const normalizedEmail = email.toLowerCase().trim();
@@ -345,7 +427,9 @@ export const authService = {
       throw new ApiError(401, 'User no longer exists');
     }
 
-    const tokens = generateAuthTokens(user._id, user.organizationId);
+    const membership = await this.resolveUserMembership(user._id, user.organizationId);
+    const orgId = membership ? membership.organizationId : user.organizationId;
+    const tokens = generateAuthTokens(user._id, orgId);
 
     return {
       tokens,
@@ -353,7 +437,8 @@ export const authService = {
         id: user._id,
         name: user.name,
         email: user.email,
-        organizationId: user.organizationId,
+        organizationId: orgId,
+        role: membership?.role,
       },
     };
   },
@@ -394,12 +479,30 @@ export const authService = {
         verified: true,
       });
       await user.save();
+
+      // Assign ownerId and create OrganizationMember concurrently
+      org.ownerId = user._id;
+      await Promise.all([
+        org.save(),
+        OrganizationMember.create({
+          organizationId: org._id,
+          userId: user._id,
+          role: ROLES.OWNER,
+          status: MEMBER_STATUS.ACTIVE,
+          joinedAt: new Date(),
+        }),
+      ]);
     } else {
       if (!user.googleId) {
         user.googleId = googleId;
       }
       user.verified = true;
-      await user.save();
+
+      // Run user save and membership resolution concurrently
+      await Promise.all([
+        user.save(),
+        this.resolveUserMembership(user._id, user.organizationId),
+      ]);
     }
 
     const tokens = generateAuthTokens(user._id, user.organizationId);
@@ -418,7 +521,11 @@ export const authService = {
       throw new ApiError(404, 'User not found');
     }
 
-    const organization = await Organization.findById(user.organizationId);
+    const [membership, organization] = await Promise.all([
+      this.resolveUserMembership(user._id, user.organizationId),
+      Organization.findById(user.organizationId),
+    ]);
+    const role = membership ? membership.role : ROLES.SUPPORT_AGENT;
 
     return {
       user: {
@@ -426,6 +533,8 @@ export const authService = {
         name: user.name,
         email: user.email,
         organizationId: user.organizationId,
+        role,
+        permissions: ROLE_PERMISSIONS[role] || [],
         verified: user.verified,
       },
       organization: organization
@@ -459,8 +568,11 @@ export const authService = {
     if (primaryColor !== undefined) organization.primaryColor = primaryColor;
     if (logoUrl !== undefined) organization.logo = logoUrl;
 
-    await user.save();
-    await organization.save();
+    const [_, __, membership] = await Promise.all([
+      user.save(),
+      organization.save(),
+      this.resolveUserMembership(user._id, user.organizationId),
+    ]);
 
     return {
       user: {
@@ -468,6 +580,7 @@ export const authService = {
         name: user.name,
         email: user.email,
         organizationId: user.organizationId,
+        role: membership?.role,
         verified: user.verified,
       },
       organization: {

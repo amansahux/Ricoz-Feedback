@@ -20,6 +20,11 @@ const organizationSchema = new mongoose.Schema(
       type: String,
       default: '#dc2626', // red
     },
+    ownerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      index: true,
+    },
   },
   {
     timestamps: true,
