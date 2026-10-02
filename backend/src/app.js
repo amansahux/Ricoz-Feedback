@@ -7,6 +7,8 @@ import rateLimit from 'express-rate-limit';
 import passport from 'passport';
 import './config/passport.js';
 import authRoutes from './routes/auth.routes.js';
+import teamRoutes from './routes/team.routes.js';
+import invitationRoutes from './routes/invitation.routes.js';
 import surveyRoutes from './routes/survey.routes.js';
 import responseRoutes from './routes/response.routes.js';
 import analyticsRoutes from './routes/analytics.routes.js';
@@ -66,6 +68,8 @@ app.use(passport.initialize());
 
 // 3. API Routes
 app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/team', teamRoutes);
+app.use('/api/invitations', invitationRoutes);
 app.use('/api/surveys', surveyRoutes);
 app.use('/api/responses', responseRoutes);
 app.use('/api/analytics', analyticsRoutes);
