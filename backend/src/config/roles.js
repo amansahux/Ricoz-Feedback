@@ -1,0 +1,108 @@
+export const ROLES = Object.freeze({
+  OWNER: 'owner',
+  ADMIN: 'admin',
+  SUPPORT_AGENT: 'support_agent',
+});
+
+export const MEMBER_STATUS = Object.freeze({
+  ACTIVE: 'active',
+  INACTIVE: 'inactive',
+});
+
+export const INVITATION_STATUS = Object.freeze({
+  PENDING: 'pending',
+  ACCEPTED: 'accepted',
+  EXPIRED: 'expired',
+  CANCELLED: 'cancelled',
+});
+
+export const PERMISSIONS = Object.freeze({
+  // Surveys
+  SURVEY_CREATE: 'survey.create',
+  SURVEY_UPDATE: 'survey.update',
+  SURVEY_PUBLISH: 'survey.publish',
+  SURVEY_DELETE: 'survey.delete',
+  SURVEY_VIEW: 'survey.view',
+
+  // Analytics
+  ANALYTICS_VIEW: 'analytics.view',
+
+  // Feedback / Responses
+  FEEDBACK_VIEW: 'feedback.view',
+  FEEDBACK_UPDATE: 'feedback.update',
+  FEEDBACK_ASSIGN: 'feedback.assign',
+  FEEDBACK_REPLY: 'feedback.reply',
+  FEEDBACK_RESOLVE: 'feedback.resolve',
+
+  // Customer
+  CUSTOMER_VIEW: 'customer.view',
+  CUSTOMER_REPLY: 'customer.reply',
+
+  // Reports
+  REPORT_EXPORT: 'report.export',
+
+  // Team
+  TEAM_VIEW: 'team.view',
+  TEAM_INVITE: 'team.invite',
+  TEAM_UPDATE_ROLE: 'team.update_role',
+  TEAM_DEACTIVATE: 'team.deactivate',
+  TEAM_REMOVE: 'team.remove',
+
+  // Organization
+  ORGANIZATION_MANAGE: 'organization.manage',
+  ORGANIZATION_SETTINGS: 'organization.settings',
+
+  // Billing
+  BILLING_MANAGE: 'billing.manage',
+});
+
+export const ROLE_PERMISSIONS = Object.freeze({
+  [ROLES.OWNER]: [
+    PERMISSIONS.SURVEY_CREATE,
+    PERMISSIONS.SURVEY_UPDATE,
+    PERMISSIONS.SURVEY_PUBLISH,
+    PERMISSIONS.SURVEY_DELETE,
+    PERMISSIONS.SURVEY_VIEW,
+    PERMISSIONS.ANALYTICS_VIEW,
+    PERMISSIONS.FEEDBACK_VIEW,
+    PERMISSIONS.FEEDBACK_UPDATE,
+    PERMISSIONS.FEEDBACK_ASSIGN,
+    PERMISSIONS.FEEDBACK_REPLY,
+    PERMISSIONS.FEEDBACK_RESOLVE,
+    PERMISSIONS.CUSTOMER_VIEW,
+    PERMISSIONS.CUSTOMER_REPLY,
+    PERMISSIONS.REPORT_EXPORT,
+    PERMISSIONS.TEAM_VIEW,
+    PERMISSIONS.TEAM_INVITE,
+    PERMISSIONS.TEAM_UPDATE_ROLE,
+    PERMISSIONS.TEAM_DEACTIVATE,
+    PERMISSIONS.TEAM_REMOVE,
+    PERMISSIONS.ORGANIZATION_MANAGE,
+    PERMISSIONS.ORGANIZATION_SETTINGS,
+    PERMISSIONS.BILLING_MANAGE,
+  ],
+
+  [ROLES.ADMIN]: [
+    PERMISSIONS.SURVEY_CREATE,
+    PERMISSIONS.SURVEY_UPDATE,
+    PERMISSIONS.SURVEY_PUBLISH,
+    PERMISSIONS.SURVEY_VIEW,
+    PERMISSIONS.ANALYTICS_VIEW,
+    PERMISSIONS.FEEDBACK_VIEW,
+    PERMISSIONS.FEEDBACK_UPDATE,
+    PERMISSIONS.FEEDBACK_ASSIGN,
+    PERMISSIONS.FEEDBACK_REPLY,
+    PERMISSIONS.CUSTOMER_VIEW,
+    PERMISSIONS.CUSTOMER_REPLY,
+    PERMISSIONS.REPORT_EXPORT,
+  ],
+
+  [ROLES.SUPPORT_AGENT]: [
+    PERMISSIONS.FEEDBACK_VIEW,
+    PERMISSIONS.FEEDBACK_UPDATE,
+    PERMISSIONS.FEEDBACK_REPLY,
+    PERMISSIONS.FEEDBACK_RESOLVE,
+    PERMISSIONS.CUSTOMER_VIEW,
+    PERMISSIONS.CUSTOMER_REPLY,
+  ],
+});
