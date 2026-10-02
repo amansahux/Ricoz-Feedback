@@ -15,6 +15,19 @@ export const teamService = {
    * Only callable by OWNER of the organization.
    */
   async inviteMember(organizationId, invitedByUserId, { email, role }) {
+    // 1. Mandatory Parameter Validations
+    if (!organizationId) {
+      throw new ApiError(400, 'Organization ID is required');
+    }
+
+    if (!invitedByUserId) {
+      throw new ApiError(400, 'Inviter user ID (invitedByUserId) is required');
+    }
+
+    if (!email || typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      throw new ApiError(400, 'A valid email address is required');
+    }
+
     const normalizedEmail = email.toLowerCase().trim();
     const targetRole = role || ROLES.SUPPORT_AGENT;
 
@@ -22,29 +35,52 @@ export const teamService = {
       throw new ApiError(400, 'Invalid role for invitation. Allowed roles are: admin, support_agent');
     }
 
-    // Run independent initial queries concurrently
-    const [org, inviter, existingUser, existingPendingInvite] = await Promise.all([
+    // 2. Run independent initial queries concurrently with Promise.all
+    const [org, inviter, inviterMembership, existingUser, existingPendingInvite] = await Promise.all([
       Organization.findById(organizationId),
-      User.findById(invitedByUserId).select('name'),
+      User.findById(invitedByUserId).select('name email'),
+      OrganizationMember.findOne({
+        organizationId,
+        userId: invitedByUserId,
+        status: MEMBER_STATUS.ACTIVE,
+      }).select('role status').lean(),
       User.findOne({ email: normalizedEmail }).select('_id'),
       OrganizationInvitation.findOne({
         organizationId,
         email: normalizedEmail,
         status: INVITATION_STATUS.PENDING,
         expiresAt: { $gt: new Date() },
-      }),
+      }).select('_id').lean(),
     ]);
 
     if (!org) {
       throw new ApiError(404, 'Organization not found');
     }
 
-    // 1. Check if user already exists and is already a member of this organization
+    if (!inviter) {
+      throw new ApiError(404, 'Inviter user not found');
+    }
+
+    // 3. Strict Ownership Authorization: Ensure inviter is the actual active OWNER of THIS organization
+    const isOwner =
+      inviterMembership?.role === ROLES.OWNER ||
+      org.ownerId?.toString() === invitedByUserId.toString();
+
+    if (!isOwner) {
+      throw new ApiError(403, 'Forbidden: Only the owner of this organization can send invitations');
+    }
+
+    // 4. Prevent inviter from inviting themselves
+    if (inviter.email?.toLowerCase().trim() === normalizedEmail) {
+      throw new ApiError(400, 'You cannot send an invitation to your own email address');
+    }
+
+    // 5. Check if user already exists and is already a member of this organization
     if (existingUser) {
       const existingMember = await OrganizationMember.findOne({
         organizationId,
         userId: existingUser._id,
-      }).select('status');
+      }).select('status').lean();
 
       if (existingMember) {
         if (existingMember.status === MEMBER_STATUS.ACTIVE) {
@@ -55,41 +91,40 @@ export const teamService = {
       }
     }
 
-    // 2. Check if there is already an active/pending invitation for this email in this org
+    // 6. Check if there is already an active/pending invitation for this email in this org
     if (existingPendingInvite) {
       throw new ApiError(400, 'A pending invitation has already been sent to this email address');
     }
 
-    // 3. Generate raw cryptographically secure token & sha256 hash for DB storage
+    // 7. Generate raw cryptographically secure token & sha256 hash for DB storage
     const rawToken = crypto.randomBytes(32).toString('hex');
     const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
-    const invitation = await OrganizationInvitation.create({
-      organizationId,
-      email: normalizedEmail,
-      role: targetRole,
-      tokenHash,
-      invitedBy: invitedByUserId,
-      expiresAt,
-      status: INVITATION_STATUS.PENDING,
-    });
-
     // Invitation URL pointing to frontend or accept route
     const invitationUrl = `${env.CLIENT_URL}/invitations/${rawToken}`;
 
-    // Send invitation email
-    try {
-      await sendEmployeeInvitationEmail({
+    // Concurrently create the invitation in DB and send the invitation email in parallel
+    const [invitation] = await Promise.all([
+      OrganizationInvitation.create({
+        organizationId,
+        email: normalizedEmail,
+        role: targetRole,
+        tokenHash,
+        invitedBy: invitedByUserId,
+        expiresAt,
+        status: INVITATION_STATUS.PENDING,
+      }),
+      sendEmployeeInvitationEmail({
         to: normalizedEmail,
         organizationName: org.name,
         role: targetRole,
         invitationUrl,
         invitedByName: inviter?.name || 'Your Team Lead',
-      });
-    } catch (emailErr) {
-      console.error('Failed to send employee invitation email:', emailErr);
-    }
+      }).catch((emailErr) => {
+        console.error('Failed to send employee invitation email:', emailErr);
+      }),
+    ]);
 
     return {
       success: true,
@@ -334,7 +369,7 @@ export const teamService = {
    * 1. Existing user -> links to organization with assigned role
    * 2. New user -> creates User account -> links to organization with assigned role
    */
-  async acceptInvitation(rawToken, { name, password }) {
+  async acceptInvitation(rawToken, { name, email, password }) {
     if (!rawToken) {
       throw new ApiError(400, 'Invitation token is required');
     }
@@ -363,7 +398,12 @@ export const teamService = {
       throw new ApiError(400, 'This invitation has expired. Please request a new invite.');
     }
 
-    const normalizedEmail = invitation.email.toLowerCase().trim();
+    const inviteEmail = invitation.email.toLowerCase().trim();
+    if (email && email.toLowerCase().trim() !== inviteEmail) {
+      throw new ApiError(400, 'The provided email address does not match this invitation');
+    }
+
+    const normalizedEmail = inviteEmail;
     let user = await User.findOne({ email: normalizedEmail }).select('+password');
 
     if (!user) {

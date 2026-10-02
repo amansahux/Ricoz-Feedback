@@ -127,9 +127,9 @@ export const teamController = {
    */
   acceptInvitation: asyncHandler(async (req, res) => {
     const { token } = req.params;
-    const { name, password } = req.body;
+    const { name, email, password } = req.body;
 
-    const result = await teamService.acceptInvitation(token, { name, password });
+    const result = await teamService.acceptInvitation(token, { name, email, password });
 
     // Set dual-token auth cookies
     res.cookie('recoz_access', result.tokens.accessToken, getAccessTokenCookieOptions());
