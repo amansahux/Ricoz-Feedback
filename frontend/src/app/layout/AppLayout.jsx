@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Outlet } from "react-router";
 import { Menu } from "lucide-react";
 import Sidebar from "../../global/Sidebar.jsx";
@@ -8,12 +8,15 @@ export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { organization } = useAuth();
 
+  const handleOpenSidebar = useCallback(() => setSidebarOpen(true), []);
+  const handleCloseSidebar = useCallback(() => setSidebarOpen(false), []);
+
   return (
     <div className="min-h-screen flex">
       {/* Fixed Responsive Sidebar (240px wide) */}
       <Sidebar
         isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
+        onClose={handleCloseSidebar}
       />
 
       {/* Main Content Area */}
@@ -22,7 +25,7 @@ export default function AppLayout() {
         <header className="lg:hidden sticky top-0 z-30 h-14 bg-[#FFFAF3]/90 backdrop-blur-md border-b border-[#EFE4D6] px-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setSidebarOpen(true)}
+              onClick={handleOpenSidebar}
               aria-label="Open sidebar menu"
               className="p-1.5 -ml-1 rounded-xl text-[#7d7461] hover:text-[#1f1b18] hover:bg-[#FBF2EC] focus:outline-none transition-colors cursor-pointer"
             >
