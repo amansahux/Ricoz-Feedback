@@ -1,7 +1,7 @@
 import React from "react";
 import { Info } from "lucide-react";
 
-export default function DashboardSentimentDonut({
+function DashboardSentimentDonutComponent({
   sentimentMix,
   activeFilter = "all",
   onFilterChange,
@@ -182,3 +182,6 @@ export default function DashboardSentimentDonut({
     </div>
   );
 }
+
+export const DashboardSentimentDonut = React.memo(DashboardSentimentDonutComponent);
+export default DashboardSentimentDonut;

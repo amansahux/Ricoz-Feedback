@@ -2,7 +2,7 @@ import React from "react";
 import { ArrowRight, MoreVertical, TrendingDown, Lightbulb, UserCheck, CornerUpLeft } from "lucide-react";
 import { Link } from "react-router";
 
-export default function DashboardRecentFeedback({
+function DashboardRecentFeedbackComponent({
   feedback,
   totalCount = 1,
   onTriggerAction,
@@ -131,3 +131,6 @@ export default function DashboardRecentFeedback({
     </div>
   );
 }
+
+export const DashboardRecentFeedback = React.memo(DashboardRecentFeedbackComponent);
+export default DashboardRecentFeedback;

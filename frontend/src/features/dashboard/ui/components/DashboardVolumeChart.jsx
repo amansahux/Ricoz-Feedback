@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { Radio } from "lucide-react";
 
-export default function DashboardVolumeChart({
+function DashboardVolumeChartComponent({
   responseVolume = [],
   chartView = "daily",
   onViewChange,
@@ -239,3 +239,6 @@ export default function DashboardVolumeChart({
     </div>
   );
 }
+
+export const DashboardVolumeChart = React.memo(DashboardVolumeChartComponent);
+export default DashboardVolumeChart;

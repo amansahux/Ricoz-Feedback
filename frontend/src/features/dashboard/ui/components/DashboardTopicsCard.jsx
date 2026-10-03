@@ -2,7 +2,7 @@ import React from "react";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { Link } from "react-router";
 
-export default function DashboardTopicsCard({
+function DashboardTopicsCardComponent({
   topics = [],
   onTriggerAction,
 }) {
@@ -62,3 +62,6 @@ export default function DashboardTopicsCard({
     </div>
   );
 }
+
+export const DashboardTopicsCard = React.memo(DashboardTopicsCardComponent);
+export default DashboardTopicsCard;

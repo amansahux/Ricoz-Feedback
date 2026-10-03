@@ -2,7 +2,7 @@ import React from "react";
 import { MessageSquare, Gauge, Smile, Sliders, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { Link } from "react-router";
 
-export default function DashboardMetricsGrid({ summary, onTriggerAction }) {
+function DashboardMetricsGridComponent({ summary, onTriggerAction }) {
   const { totalResponses, nps, csat, ces } = summary || {};
 
   return (
@@ -141,3 +141,6 @@ export default function DashboardMetricsGrid({ summary, onTriggerAction }) {
     </div>
   );
 }
+
+export const DashboardMetricsGrid = React.memo(DashboardMetricsGridComponent);
+export default DashboardMetricsGrid;

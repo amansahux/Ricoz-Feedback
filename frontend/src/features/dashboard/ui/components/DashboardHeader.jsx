@@ -2,28 +2,28 @@ import React from "react";
 import { Download, Plus, Calendar, Activity } from "lucide-react";
 import { Link } from "react-router";
 
-export default function DashboardHeader({
+// Pure helpers (outside component – stable, never recreated)
+const getGreeting = () => {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 18) return "Good afternoon";
+  return "Good evening";
+};
+
+const formattedDateRange = (range) => {
+  const now = new Date();
+  const days = range === "12m" ? 365 : range === "90d" ? 90 : 30;
+  const past = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+  const formatOpts = { month: "short", day: "numeric" };
+  return `${past.toLocaleDateString("en-US", formatOpts)} – ${now.toLocaleDateString("en-US", { ...formatOpts, year: "numeric" })}`;
+};
+
+function DashboardHeaderComponent({
   userName = "Aman",
   range = "30d",
   onRangeChange,
   onExportReport,
 }) {
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return "Good morning";
-    if (hour < 18) return "Good afternoon";
-    return "Good evening";
-  };
-
-  const formattedDateRange = () => {
-    const now = new Date();
-    const days = range === "12m" ? 365 : range === "90d" ? 90 : 30;
-    const past = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
-
-    const formatOpts = { month: "short", day: "numeric" };
-    return `${past.toLocaleDateString("en-US", formatOpts)} – ${now.toLocaleDateString("en-US", { ...formatOpts, year: "numeric" })}`;
-  };
-
   return (
     <div className="flex flex-col gap-5 pb-2">
       {/* Top action row */}
@@ -86,7 +86,7 @@ export default function DashboardHeader({
           {/* Date Label Badge */}
           <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#EFE4D6] rounded-xl text-xs font-inter font-medium text-[#1f1b18] shadow-xs">
             <Calendar size={14} className="text-[#7d7461]" />
-            <span>{formattedDateRange()}</span>
+            <span>{formattedDateRange(range)}</span>
           </div>
 
           {/* Export Report CTA */}
@@ -111,3 +111,6 @@ export default function DashboardHeader({
     </div>
   );
 }
+
+export const DashboardHeader = React.memo(DashboardHeaderComponent);
+export default DashboardHeader;
