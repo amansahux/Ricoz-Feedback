@@ -1,24 +1,34 @@
-import { createBrowserRouter, Navigate } from "react-router";
+import { lazy, Suspense } from "react";
+import { createBrowserRouter } from "react-router";
 import RootLayout from "../layout/RootLayout.jsx";
 import AppLayout from "../layout/AppLayout.jsx";
-import Login from "../../features/auth/ui/pages/Login.jsx";
-import Register from "../../features/auth/ui/pages/Register.jsx";
-import VerifyEmail from "../../features/auth/ui/pages/VerifyEmail.jsx";
 import ProtectedRoute from "./ProtectedRoute.jsx";
-import Dashboard from "../../features/dashboard/ui/pages/Dashboard.jsx";
-import Setting from "../../features/setting/ui/pages/Setting.jsx";
-import NotFound from "../../global/NotFound.jsx";
-import Survey from "../../features/surveys/ui/pages/Survey.jsx";
-import Feedback from "../../features/feedback/ui/pages/Feedback.jsx";
-import Customer from "../../features/customers/ui/pages/Customer.jsx";
-import Analytics from "../../features/analytics/ui/pages/Analytics.jsx";
-import CreateSurvey from "../../features/surveys/ui/pages/CreateSurvey.jsx";
-import PublishSurvey from "../../features/surveys/ui/pages/PublishSurvey.jsx";
-import LandingPage from "../../features/Landing/ui/pages/LandingPage.jsx";
-import GiveFeedback from "../../features/customers/ui/pages/giveFeedback.jsx";
-import FeedbackDetails from "../../features/feedback/ui/pages/FeedbackDetails.jsx";
-import CustomerDetail from "../../features/customers/ui/pages/CustomerDetail.jsx";
-import ForgotPassword from "../../features/auth/ui/pages/ForgotPassword.jsx";
+import PageLoader from "../../shared/components/PageLoader.jsx";
+
+// Route-level Code Splitting (Lazy-loaded chunks)
+const Login = lazy(() => import("../../features/auth/ui/pages/Login.jsx"));
+const Register = lazy(() => import("../../features/auth/ui/pages/Register.jsx"));
+const VerifyEmail = lazy(() => import("../../features/auth/ui/pages/VerifyEmail.jsx"));
+const ForgotPassword = lazy(() => import("../../features/auth/ui/pages/ForgotPassword.jsx"));
+const LandingPage = lazy(() => import("../../features/Landing/ui/pages/LandingPage.jsx"));
+const GiveFeedback = lazy(() => import("../../features/customers/ui/pages/giveFeedback.jsx"));
+const Dashboard = lazy(() => import("../../features/dashboard/ui/pages/Dashboard.jsx"));
+const Setting = lazy(() => import("../../features/setting/ui/pages/Setting.jsx"));
+const Survey = lazy(() => import("../../features/surveys/ui/pages/Survey.jsx"));
+const CreateSurvey = lazy(() => import("../../features/surveys/ui/pages/CreateSurvey.jsx"));
+const PublishSurvey = lazy(() => import("../../features/surveys/ui/pages/PublishSurvey.jsx"));
+const Feedback = lazy(() => import("../../features/feedback/ui/pages/Feedback.jsx"));
+const FeedbackDetails = lazy(() => import("../../features/feedback/ui/pages/FeedbackDetails.jsx"));
+const Customer = lazy(() => import("../../features/customers/ui/pages/Customer.jsx"));
+const CustomerDetail = lazy(() => import("../../features/customers/ui/pages/CustomerDetail.jsx"));
+const Analytics = lazy(() => import("../../features/analytics/ui/pages/Analytics.jsx"));
+const NotFound = lazy(() => import("../../global/NotFound.jsx"));
+
+const withSuspense = (Component) => (
+  <Suspense fallback={<PageLoader />}>
+    <Component />
+  </Suspense>
+);
 
 export const router = createBrowserRouter([
   {
@@ -27,27 +37,27 @@ export const router = createBrowserRouter([
     children: [
       {
         path: "login",
-        element: <Login />,
+        element: withSuspense(Login),
       },
       {
         path: "register",
-        element: <Register />,
+        element: withSuspense(Register),
       },
       {
         path: "verify-email",
-        element: <VerifyEmail />,
+        element: withSuspense(VerifyEmail),
       },
       {
         path: "",
-        element: <LandingPage />,
+        element: withSuspense(LandingPage),
       },
       {
         path: "f/:organizationSlug/:surveySlug",
-        element: <GiveFeedback />,
+        element: withSuspense(GiveFeedback),
       },
       {
         path: "forgot-password",
-        element: <ForgotPassword />,
+        element: withSuspense(ForgotPassword),
       },
       {
         element: (
@@ -58,50 +68,51 @@ export const router = createBrowserRouter([
         children: [
           {
             path: "dashboard",
-            element: <Dashboard />,
+            element: withSuspense(Dashboard),
           },
           {
             path: "settings",
-            element: <Setting />,
+            element: withSuspense(Setting),
           },
           {
             path: "surveys",
-            element: <Survey />,
+            element: withSuspense(Survey),
           },
           {
             path: "surveys/create",
-            element: <CreateSurvey />,
+            element: withSuspense(CreateSurvey),
           },
           {
             path: "surveys/publish",
-            element: <PublishSurvey />,
+            element: withSuspense(PublishSurvey),
           },
           {
             path: "feedback",
-            element: <Feedback />,
+            element: withSuspense(Feedback),
           },
           {
             path: "feedback/:feedbackId",
-            element: <FeedbackDetails />,
+            element: withSuspense(FeedbackDetails),
           },
           {
             path: "customers",
-            element: <Customer />,
+            element: withSuspense(Customer),
           },
           {
             path: "customers/:customerId",
-            element: <CustomerDetail />,
+            element: withSuspense(CustomerDetail),
           },
           {
             path: "analytics",
-            element: <Analytics />,
+            element: withSuspense(Analytics),
           },
         ],
       },
       {
         path: "*",
-        element: <NotFound />,
+        element: withSuspense(NotFound),
       },
     ],
   },
 ]);
+
