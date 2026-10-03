@@ -276,19 +276,19 @@ export const useCustomerDirectory = (initialParams = {}) => {
     showToast("Customer search reset.");
   }, [showToast]);
 
-  const handleSearchChange = (val) => {
+  const handleSearchChange = useCallback((val) => {
     setSearchQuery(val);
     setCurrentPage(1);
-  };
+  }, []);
 
-  const handleSortChange = (val) => {
+  const handleSortChange = useCallback((val) => {
     setSortBy(val);
     setCurrentPage(1);
-  };
+  }, []);
 
-  const handlePageChange = (val) => {
+  const handlePageChange = useCallback((val) => {
     setCurrentPage(val);
-  };
+  }, []);
 
   return {
     customers,
@@ -384,7 +384,7 @@ export const useCustomerProfile = (customerId) => {
     return list;
   }, [rawResponses, surveyFilter, sortBy]);
 
-  const handleExportJson = () => {
+  const handleExportJson = useCallback(() => {
     if (!data) return;
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
     const downloadAnchor = document.createElement("a");
@@ -394,7 +394,7 @@ export const useCustomerProfile = (customerId) => {
     downloadAnchor.click();
     downloadAnchor.remove();
     showToast("Customer profile exported as JSON.");
-  };
+  }, [data, customerId, showToast]);
 
   const isNotFound = !isLoading && !isError && !customer;
 

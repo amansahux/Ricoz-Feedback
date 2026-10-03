@@ -235,7 +235,7 @@ export const useSurveyList = () => {
     [showToast]
   );
 
-  const handleDeleteConfirm = async (surveyId) => {
+  const handleDeleteConfirm = useCallback(async (surveyId) => {
     try {
       if (surveyId.startsWith("srv_sample_")) {
         showToast("Survey deleted from overview.");
@@ -247,22 +247,22 @@ export const useSurveyList = () => {
     } catch (err) {
       showToast(err.message || "Failed to delete survey", "error");
     }
-  };
+  }, [deleteSurveyMutation, showToast]);
 
-  const handleFilterChange = (status) => {
+  const handleFilterChange = useCallback((status) => {
     setActiveFilter(status);
     setCurrentPage(1);
-  };
+  }, []);
 
-  const handleSearchChange = (val) => {
+  const handleSearchChange = useCallback((val) => {
     setSearchQuery(val);
     setCurrentPage(1);
-  };
+  }, []);
 
-  const handleSortChange = (val) => {
+  const handleSortChange = useCallback((val) => {
     setSortBy(val);
     setCurrentPage(1);
-  };
+  }, []);
 
   return {
     surveys,
@@ -312,7 +312,7 @@ export const useCreateSurveyBuilder = () => {
 
   // Load survey by ID query
   const getSurveyByIdQuery = useQuery({
-    queryKey: ["surveys", surveyIdParam],
+    queryKey: SURVEY_QUERY_KEYS.detail(surveyIdParam),
     queryFn: () => getSurveyById(surveyIdParam),
     enabled: Boolean(surveyIdParam && !surveyIdParam.startsWith("srv_sample_")),
     staleTime: 1000 * 60 * 10,
@@ -322,7 +322,7 @@ export const useCreateSurveyBuilder = () => {
     mutationFn: (data) => createSurvey(data),
     retry: false,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["surveys"], exact: true });
+      queryClient.invalidateQueries({ queryKey: SURVEY_QUERY_KEYS.all });
     },
   });
 
@@ -330,9 +330,9 @@ export const useCreateSurveyBuilder = () => {
     mutationFn: ({ surveyId: id, data }) => updateSurvey(id, data),
     retry: false,
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["surveys"], exact: true });
+      queryClient.invalidateQueries({ queryKey: SURVEY_QUERY_KEYS.all });
       queryClient.invalidateQueries({
-        queryKey: ["surveys", variables.surveyId],
+        queryKey: SURVEY_QUERY_KEYS.detail(variables.surveyId),
         exact: true,
       });
     },
@@ -372,54 +372,63 @@ export const useCreateSurveyBuilder = () => {
     }
   }, [getSurveyByIdQuery.data]);
 
-  const handleUpdateQuestion = (index, updatedQuestion) => {
-    const next = [...questions];
-    next[index] = updatedQuestion;
-    setQuestions(next);
-  };
+  const handleUpdateQuestion = useCallback((index, updatedQuestion) => {
+    setQuestions((prev) => {
+      const next = [...prev];
+      next[index] = updatedQuestion;
+      return next;
+    });
+  }, []);
 
-  const handleMoveUp = (index) => {
+  const handleMoveUp = useCallback((index) => {
     if (index === 0) return;
-    const next = [...questions];
-    const temp = next[index - 1];
-    next[index - 1] = next[index];
-    next[index] = temp;
-    setQuestions(next);
-  };
+    setQuestions((prev) => {
+      const next = [...prev];
+      const temp = next[index - 1];
+      next[index - 1] = next[index];
+      next[index] = temp;
+      return next;
+    });
+  }, []);
 
-  const handleMoveDown = (index) => {
-    if (index === questions.length - 1) return;
-    const next = [...questions];
-    const temp = next[index + 1];
-    next[index + 1] = next[index];
-    next[index] = temp;
-    setQuestions(next);
-  };
+  const handleMoveDown = useCallback((index) => {
+    setQuestions((prev) => {
+      if (index === prev.length - 1) return prev;
+      const next = [...prev];
+      const temp = next[index + 1];
+      next[index + 1] = next[index];
+      next[index] = temp;
+      return next;
+    });
+  }, []);
 
-  const handleDuplicate = (index) => {
-    const target = questions[index];
-    const duplicate = {
-      ...target,
-      _id: `q_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
-      question: `${target.question} (Copy)`,
-    };
-    const next = [...questions];
-    next.splice(index + 1, 0, duplicate);
-    setQuestions(next);
+  const handleDuplicate = useCallback((index) => {
+    setQuestions((prev) => {
+      const target = prev[index];
+      const duplicate = {
+        ...target,
+        _id: `q_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+        question: `${target.question} (Copy)`,
+      };
+      const next = [...prev];
+      next.splice(index + 1, 0, duplicate);
+      return next;
+    });
     showToast("Question duplicated.");
-  };
+  }, [showToast]);
 
-  const handleDelete = (index) => {
-    if (questions.length <= 1) {
-      showToast("Survey must contain at least 1 question", "error");
-      return;
-    }
-    const next = questions.filter((_, i) => i !== index);
-    setQuestions(next);
-    showToast("Question removed.");
-  };
+  const handleDelete = useCallback((index) => {
+    setQuestions((prev) => {
+      if (prev.length <= 1) {
+        showToast("Survey must contain at least 1 question", "error");
+        return prev;
+      }
+      showToast("Question removed.");
+      return prev.filter((_, i) => i !== index);
+    });
+  }, [showToast]);
 
-  const handleAddQuestion = (type = "csat") => {
+  const handleAddQuestion = useCallback((type = "csat") => {
     const newQ = {
       _id: `q_${Date.now()}`,
       type,
@@ -447,13 +456,13 @@ export const useCreateSurveyBuilder = () => {
     };
     setQuestions((prev) => [...prev, newQ]);
     showToast(`Added new ${type.toUpperCase()} question.`);
-  };
+  }, [showToast]);
 
   const isSaving = createSurveyMutation.isPending || updateSurveyMutation.isPending;
   const isPublished = getSurveyByIdQuery.data?.data?.status === "published";
 
   // Single cleanly guarded save draft / save changes handler
-  const handleSaveDraft = async () => {
+  const handleSaveDraft = useCallback(async () => {
     if (isSaving) return;
 
     if (!title.trim()) {
@@ -493,10 +502,10 @@ export const useCreateSurveyBuilder = () => {
     } catch (err) {
       showToast(err.message || "Failed to save", "error");
     }
-  };
+  }, [isSaving, title, description, questions, isPublished, surveyIdParam, updateSurveyMutation, createSurveyMutation, navigate, showToast]);
 
   // Single cleanly guarded publish handler
-  const handlePublishConfirm = async () => {
+  const handlePublishConfirm = useCallback(async () => {
     if (isSaving) return;
 
     if (!title.trim()) {
@@ -536,20 +545,20 @@ export const useCreateSurveyBuilder = () => {
     } catch (err) {
       showToast(err.message || "Failed to publish survey", "error");
     }
-  };
+  }, [isSaving, title, description, questions, surveyIdParam, createSurveyMutation, updateSurveyMutation, navigate, showToast]);
 
-  const openPublishModal = () => {
+  const openPublishModal = useCallback(() => {
     if (!title.trim()) {
       setHasValidationError(true);
       showToast("Survey title is required", "error");
       return;
     }
     setIsPublishModalOpen(true);
-  };
+  }, [title, showToast]);
 
-  const closePublishModal = () => {
+  const closePublishModal = useCallback(() => {
     setIsPublishModalOpen(false);
-  };
+  }, []);
 
   return {
     surveyIdParam,
@@ -591,7 +600,7 @@ export const usePublishSurveyHub = () => {
   const queryClient = useQueryClient();
 
   const getSurveyByIdQuery = useQuery({
-    queryKey: ["surveys", surveyIdParam],
+    queryKey: SURVEY_QUERY_KEYS.detail(surveyIdParam),
     queryFn: () => getSurveyById(surveyIdParam),
     enabled: Boolean(surveyIdParam && !surveyIdParam.startsWith("srv_sample_")),
     staleTime: 1000 * 60 * 10,
@@ -601,8 +610,8 @@ export const usePublishSurveyHub = () => {
     mutationFn: (id) => publishSurvey(id),
     retry: false,
     onSuccess: (_, id) => {
-      queryClient.invalidateQueries({ queryKey: ["surveys"], exact: true });
-      queryClient.invalidateQueries({ queryKey: ["surveys", id], exact: true });
+      queryClient.invalidateQueries({ queryKey: SURVEY_QUERY_KEYS.all });
+      queryClient.invalidateQueries({ queryKey: SURVEY_QUERY_KEYS.detail(id), exact: true });
     },
   });
 

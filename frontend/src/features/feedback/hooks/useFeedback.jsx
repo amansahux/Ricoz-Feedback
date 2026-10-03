@@ -255,7 +255,7 @@ export const useFeedback = (initialFilters = {}) => {
     showToast("Filters reset to default.");
   }, [showToast]);
 
-  const handleExportReport = () => {
+  const handleExportReport = useCallback(() => {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(responses, null, 2));
     const downloadAnchor = document.createElement("a");
     downloadAnchor.setAttribute("href", dataStr);
@@ -264,9 +264,9 @@ export const useFeedback = (initialFilters = {}) => {
     downloadAnchor.click();
     downloadAnchor.remove();
     showToast("Feedback report exported as JSON.");
-  };
+  }, [responses, showToast]);
 
-  const handleMarkResolved = async (responseId, e) => {
+  const handleMarkResolved = useCallback(async (responseId, e) => {
     if (e && e.stopPropagation) e.stopPropagation();
     try {
       await updateResponseMutation.mutateAsync({
@@ -276,16 +276,16 @@ export const useFeedback = (initialFilters = {}) => {
     } catch (err) {
       console.error("Mark resolved error:", err);
     }
-  };
+  }, [updateMutation, updateResponseMutation]);
 
-  const handlePageChange = (page) => {
+  const handlePageChange = useCallback((page) => {
     setCurrentPage(page);
-  };
+  }, []);
 
-  const handleSearchChange = (val) => {
+  const handleSearchChange = useCallback((val) => {
     setSearchQuery(val);
     setCurrentPage(1);
-  };
+  }, []);
 
   return {
     // Data lists
@@ -356,7 +356,7 @@ export const useFeedbackDetail = (feedbackId) => {
   const [isNoteSaved, setIsNoteSaved] = useState(false);
 
   // Sync state when real response arrives or changes
-  useMemo(() => {
+  useEffect(() => {
     if (response) {
       setCurrentStatus(response.status || "open");
       setInternalNote(response.followUpNote || "");
@@ -386,7 +386,7 @@ export const useFeedbackDetail = (feedbackId) => {
     },
   });
 
-  const handleStatusChange = async (newStatus) => {
+  const handleStatusChange = useCallback(async (newStatus) => {
     setCurrentStatus(newStatus);
     try {
       await updateMutation.mutateAsync({
@@ -398,9 +398,9 @@ export const useFeedbackDetail = (feedbackId) => {
     } catch (err) {
       showToast(err?.message || "Failed to update status", "error");
     }
-  };
+  }, [feedbackId, internalNote, updateMutation, showToast]);
 
-  const handleSaveNote = async () => {
+  const handleSaveNote = useCallback(async () => {
     try {
       await updateMutation.mutateAsync({
         id: feedbackId,
@@ -413,14 +413,14 @@ export const useFeedbackDetail = (feedbackId) => {
     } catch (err) {
       showToast(err?.message || "Failed to save note", "error");
     }
-  };
+  }, [feedbackId, currentStatus, internalNote, updateMutation, showToast]);
 
-  const handleToggleResolution = async () => {
+  const handleToggleResolution = useCallback(async () => {
     const nextStatus = currentStatus === "resolved" ? "open" : "resolved";
     await handleStatusChange(nextStatus);
-  };
+  }, [currentStatus, handleStatusChange]);
 
-  const handleExportJson = () => {
+  const handleExportJson = useCallback(() => {
     if (!response) return;
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(response, null, 2));
     const downloadAnchor = document.createElement("a");
@@ -430,7 +430,7 @@ export const useFeedbackDetail = (feedbackId) => {
     downloadAnchor.click();
     downloadAnchor.remove();
     showToast("Feedback JSON payload exported.");
-  };
+  }, [response, feedbackId, showToast]);
 
   const isNotFound = !isLoading && !response && !isError;
 
