@@ -20,6 +20,7 @@
   }
 }
 
+/* Font definitions — ensure swap behaviour for all loaded faces */
 .font-poppins {
   font-family: 'Poppins', sans-serif;
 }
