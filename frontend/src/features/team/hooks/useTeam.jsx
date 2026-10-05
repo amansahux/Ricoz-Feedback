@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
-import { teamApi } from '../apis/team.api';
+import { teamApi } from '../apis/team.api.jsx';
 import { useDebounce } from '../../../shared/hooks/useDebounce';
 import { useAuth } from '../../auth/hook/useAuth';
 

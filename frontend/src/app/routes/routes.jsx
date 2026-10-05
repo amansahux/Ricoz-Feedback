@@ -25,6 +25,7 @@ const Analytics = lazy(() => import("../../features/analytics/ui/pages/Analytics
 const NotFound = lazy(() => import("../../global/NotFound.jsx"));
 const Team = lazy(() => import("../../features/team/ui/pages/Team.jsx"));
 const MemberDetail = lazy(() => import("../../features/team/ui/pages/MemberDetail.jsx"));
+const AcceptInvitation = lazy(() => import("../../features/team/ui/pages/AcceptInvitation.jsx"));
 
 const withSuspense = (Component) => (
   <Suspense fallback={<PageLoader />}>
@@ -60,6 +61,10 @@ export const router = createBrowserRouter([
       {
         path: "forgot-password",
         element: withSuspense(ForgotPassword),
+      },
+      {
+        path: "invitations/:token",
+        element: withSuspense(AcceptInvitation),
       },
       {
         element: (
