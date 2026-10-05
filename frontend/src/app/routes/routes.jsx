@@ -23,6 +23,7 @@ const Customer = lazy(() => import("../../features/customers/ui/pages/Customer.j
 const CustomerDetail = lazy(() => import("../../features/customers/ui/pages/CustomerDetail.jsx"));
 const Analytics = lazy(() => import("../../features/analytics/ui/pages/Analytics.jsx"));
 const NotFound = lazy(() => import("../../global/NotFound.jsx"));
+const Team = lazy(() => import("../../features/team/ui/pages/Team.jsx"));
 
 const withSuspense = (Component) => (
   <Suspense fallback={<PageLoader />}>
@@ -69,6 +70,10 @@ export const router = createBrowserRouter([
           {
             path: "dashboard",
             element: withSuspense(Dashboard),
+          },
+          {
+            path: "team",
+            element: withSuspense(Team),
           },
           {
             path: "settings",

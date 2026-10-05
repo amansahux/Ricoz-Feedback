@@ -11,12 +11,14 @@ import {
   X,
   Plus,
   Sparkles,
+  User,
 } from "lucide-react";
 import useAuth from "../features/auth/hook/useAuth.jsx";
 import LogoutModal from "../shared/components/LogoutModal.jsx";
 
 const mainNavLinks = [
   { label: "Overview", href: "/dashboard", icon: LayoutGrid },
+  { label: "Team", href: "/team", icon: User } ,
   { label: "Surveys", href: "/surveys", icon: ClipboardList },
   { label: "Feedback", href: "/feedback", icon: MessageSquare, badge: "1 new" },
   { label: "Customers", href: "/customers", icon: Users },
@@ -93,7 +95,10 @@ export default function Sidebar({ isOpen, onClose }) {
               onClick={onClose}
               className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-[5px] bg-[#e61337] hover:bg-[#bb0028] text-white text-xs font-semibold shadow-sm shadow-[#e61337]/25 transition-all duration-150 group"
             >
-              <Plus size={15} className="group-hover:rotate-90 transition-transform duration-200" />
+              <Plus
+                size={15}
+                className="group-hover:rotate-90 transition-transform duration-200"
+              />
               <span>Create Survey</span>
             </Link>
           </div>
@@ -153,7 +158,9 @@ export default function Sidebar({ isOpen, onClose }) {
               <Settings
                 size={18}
                 strokeWidth={isSettingsActive ? 2.3 : 2}
-                className={isSettingsActive ? "text-[#bb0028]" : "text-[#7d7461]"}
+                className={
+                  isSettingsActive ? "text-[#bb0028]" : "text-[#7d7461]"
+                }
               />
               <span>Settings</span>
             </Link>
