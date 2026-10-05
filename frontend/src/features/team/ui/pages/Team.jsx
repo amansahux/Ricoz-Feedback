@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router";
 import useTeam from "../../hooks/useTeam.jsx";
 import ToastNotification from "../../../surveys/ui/components/shared/ToastNotification.jsx";
 import TeamHeader from "../components/TeamHeader.jsx";
@@ -14,6 +15,7 @@ import {
 } from "../components/TeamModals.jsx";
 
 export default function Team() {
+  const navigate = useNavigate();
   const {
     // Current User
     currentUser,
@@ -117,7 +119,7 @@ export default function Team() {
         isError={isMembersError}
         currentUserId={currentUser?._id || currentUser?.id}
         isOwner={isCurrentUserOwner}
-        onViewMember={(member) => setViewMemberData(member)}
+        onViewMember={(member) => navigate(`/team/${member.id || member._id}`)}
         onChangeRole={(member) => setChangeRoleModalData(member)}
         onToggleStatus={(member) => setDeactivateModalData(member)}
         onRemoveMember={(member) => setRemoveModalData(member)}
