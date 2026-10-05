@@ -23,16 +23,18 @@ export const teamController = {
 
   /**
    * GET /api/team/members
-   * List all members & pending invitations for the current organization
+   * List all members & pending invitations for the current organization (supports search, role, status, page, limit)
    */
   getMembers: asyncHandler(async (req, res) => {
     const organizationId = req.user.organizationId;
-    const result = await teamService.getMembers(organizationId);
+    const result = await teamService.getMembers(organizationId, req.query);
 
     res.status(200).json({
       success: true,
       data: result.members,
       pendingInvitations: result.pendingInvitations,
+      pagination: result.pagination,
+      stats: result.stats,
     });
   }),
 

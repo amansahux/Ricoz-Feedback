@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { teamApi } from '../apis/team.api';
 import { useDebounce } from '../../../shared/hooks/useDebounce';
 import { useAuth } from '../../auth/hook/useAuth';
@@ -10,12 +10,13 @@ import { useAuth } from '../../auth/hook/useAuth';
 export const TEAM_QUERY_KEYS = {
   all: ['team'],
   members: () => [...TEAM_QUERY_KEYS.all, 'members'],
+  membersList: (params) => [...TEAM_QUERY_KEYS.members(), params],
   member: (id) => [...TEAM_QUERY_KEYS.all, 'member', id],
   invitation: (token) => ['invitation', token],
 };
 
 /**
- * Custom hook to manage all Team operations with TanStack Query & React optimizations
+ * Custom hook to manage all Team operations with Server-side Pagination/Search/Filters, TanStack Query & React optimizations
  */
 export const useTeam = ({
   memberId,
@@ -24,21 +25,21 @@ export const useTeam = ({
   const queryClient = useQueryClient();
   const { user: currentUser } = useAuth();
 
-  // Local UI State (Managed in Hook Layer)
+  // Search, Filter & Pagination states
   const [searchQuery, setSearchQuery] = useState('');
-  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+  const debouncedSearchQuery = useDebounce(searchQuery, 350);
   const [filterRole, setFilterRole] = useState('ALL');
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
-  // Modal and Active Action States
+  // Modals state
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
-  const [changeRoleModalData, setChangeRoleModalData] = useState(null); // { member }
-  const [deactivateModalData, setDeactivateModalData] = useState(null); // { member }
-  const [removeModalData, setRemoveModalData] = useState(null); // { member }
+  const [changeRoleModalData, setChangeRoleModalData] = useState(null);
+  const [deactivateModalData, setDeactivateModalData] = useState(null);
+  const [removeModalData, setRemoveModalData] = useState(null);
 
-  // Toast Notification State
+  // Toast Notification state
   const [toast, setToast] = useState({ visible: false, message: '', type: 'success' });
 
   const showToast = useCallback((message, type = 'success') => {
@@ -49,18 +50,71 @@ export const useTeam = ({
     setToast((prev) => ({ ...prev, visible: false }));
   }, []);
 
+  // Handler to safely set search query and reset pagination to page 1
+  const handleSetSearchQuery = useCallback((query) => {
+    setSearchQuery(query);
+    setCurrentPage(1);
+  }, []);
+
+  // Handler to safely set filter role and reset pagination to page 1
+  const handleSetFilterRole = useCallback((role) => {
+    setFilterRole(role);
+    setCurrentPage(1);
+  }, []);
+
+  // Handler to safely set filter status and reset pagination to page 1
+  const handleSetFilterStatus = useCallback((status) => {
+    setFilterStatus(status);
+    setCurrentPage(1);
+  }, []);
+
   // -------------------------------------------------------------
-  // 1. Queries
+  // 1. Server-side Query Parameters
+  // -------------------------------------------------------------
+  const queryParams = useMemo(() => {
+    const params = {
+      page: currentPage,
+      limit: pageSize,
+    };
+    if (debouncedSearchQuery.trim()) {
+      params.search = debouncedSearchQuery.trim();
+    }
+    if (filterRole !== 'ALL') {
+      params.role = filterRole;
+    }
+    if (filterStatus !== 'ALL') {
+      params.status = filterStatus;
+    }
+    return params;
+  }, [currentPage, pageSize, debouncedSearchQuery, filterRole, filterStatus]);
+
+  // -------------------------------------------------------------
+  // 2. TanStack Query
   // -------------------------------------------------------------
 
-  // Fetch all members & pending invitations for the current organization
+  // Fetch paginated, filtered members & aggregate org stats from server
   const membersQuery = useQuery({
-    queryKey: TEAM_QUERY_KEYS.members(),
-    queryFn: teamApi.getMembers,
-    staleTime: 1000 * 60 * 3, // 3 minutes stale time
+    queryKey: TEAM_QUERY_KEYS.membersList(queryParams),
+    queryFn: () => teamApi.getMembers(queryParams),
+    placeholderData: keepPreviousData, // Smooth transitions between pagination & search
+    staleTime: 1000 * 60 * 2, // 2 minutes stale time
     select: (res) => ({
       members: res?.data || [],
       pendingInvitations: res?.pendingInvitations || [],
+      pagination: res?.pagination || {
+        total: res?.data?.length || 0,
+        page: currentPage,
+        limit: pageSize,
+        totalPages: 1,
+      },
+      stats: res?.stats || {
+        totalMembers: res?.data?.length || 0,
+        activeMembers: (res?.data || []).filter((m) => m.status === 'active').length,
+        inactiveMembers: 0,
+        pendingCount: (res?.pendingInvitations || []).length,
+        seatUtilization: 100,
+        roleDistribution: {},
+      },
     }),
   });
 
@@ -84,13 +138,13 @@ export const useTeam = ({
   });
 
   // -------------------------------------------------------------
-  // 2. Mutations
+  // 3. Mutations
   // -------------------------------------------------------------
 
-  // Invite Member
+  // Invite Member Mutation
   const inviteMemberMutation = useMutation({
     mutationFn: (payload) => teamApi.inviteMember(payload),
-    onSuccess: (data, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: TEAM_QUERY_KEYS.members() });
       setIsInviteModalOpen(false);
       showToast(`Invitation successfully sent to ${variables.email}`, 'success');
@@ -101,7 +155,7 @@ export const useTeam = ({
     },
   });
 
-  // Update Member Role
+  // Update Member Role Mutation
   const updateMemberRoleMutation = useMutation({
     mutationFn: ({ memberId: targetMemberId, role }) =>
       teamApi.updateMemberRole({ memberId: targetMemberId, role }),
@@ -109,7 +163,7 @@ export const useTeam = ({
       queryClient.invalidateQueries({ queryKey: TEAM_QUERY_KEYS.members() });
       queryClient.invalidateQueries({ queryKey: TEAM_QUERY_KEYS.member(variables.memberId) });
       setChangeRoleModalData(null);
-      showToast(`Role updated successfully`, 'success');
+      showToast('Role updated successfully', 'success');
     },
     onError: (err) => {
       const msg = err?.response?.data?.message || err?.message || 'Failed to update member role';
@@ -117,7 +171,7 @@ export const useTeam = ({
     },
   });
 
-  // Update Member Status (Active <-> Inactive)
+  // Update Member Status Mutation (Active <-> Inactive)
   const updateMemberStatusMutation = useMutation({
     mutationFn: ({ memberId: targetMemberId, status }) =>
       teamApi.updateMemberStatus({ memberId: targetMemberId, status }),
@@ -127,7 +181,7 @@ export const useTeam = ({
       setDeactivateModalData(null);
       const isDeactivating = variables.status === 'inactive';
       showToast(
-        isDeactivating ? `Member has been deactivated` : `Member reactivated successfully`,
+        isDeactivating ? 'Member has been deactivated' : 'Member reactivated successfully',
         'success'
       );
     },
@@ -137,14 +191,14 @@ export const useTeam = ({
     },
   });
 
-  // Remove Member
+  // Remove Member Mutation
   const removeMemberMutation = useMutation({
     mutationFn: (targetMemberId) => teamApi.removeMember(targetMemberId),
     onSuccess: (_, targetMemberId) => {
       queryClient.invalidateQueries({ queryKey: TEAM_QUERY_KEYS.members() });
       queryClient.removeQueries({ queryKey: TEAM_QUERY_KEYS.member(targetMemberId) });
       setRemoveModalData(null);
-      showToast(`Member removed from organization`, 'success');
+      showToast('Member removed from organization', 'success');
     },
     onError: (err) => {
       const msg = err?.response?.data?.message || err?.message || 'Failed to remove member';
@@ -152,7 +206,7 @@ export const useTeam = ({
     },
   });
 
-  // Accept Public Invitation
+  // Accept Public Invitation Mutation
   const acceptInvitationMutation = useMutation({
     mutationFn: (payload) => teamApi.acceptInvitation(payload),
     onSuccess: () => {
@@ -165,80 +219,35 @@ export const useTeam = ({
   });
 
   // -------------------------------------------------------------
-  // 3. React Optimizations (useMemo & Calculations)
+  // 4. Memoized Data Selectors
   // -------------------------------------------------------------
 
-  const rawMembers = useMemo(() => membersQuery.data?.members || [], [membersQuery.data?.members]);
-  const rawPendingInvitations = useMemo(
+  const members = useMemo(() => membersQuery.data?.members || [], [membersQuery.data?.members]);
+  const pendingInvitations = useMemo(
     () => membersQuery.data?.pendingInvitations || [],
     [membersQuery.data?.pendingInvitations]
   );
+  const pagination = useMemo(
+    () => membersQuery.data?.pagination || { total: 0, page: 1, limit: pageSize, totalPages: 1 },
+    [membersQuery.data?.pagination, pageSize]
+  );
+  const stats = useMemo(
+    () =>
+      membersQuery.data?.stats || {
+        totalMembers: 0,
+        activeMembers: 0,
+        inactiveMembers: 0,
+        pendingCount: 0,
+        roleDistribution: {},
+        seatUtilization: 0,
+      },
+    [membersQuery.data?.stats]
+  );
 
-  // Optimized Filtering & Search computation on members
-  const filteredMembers = useMemo(() => {
-    if (!rawMembers.length) return [];
-
-    const normalizedQuery = debouncedSearchQuery.trim().toLowerCase();
-
-    return rawMembers.filter((member) => {
-      // Role filter
-      if (filterRole !== 'ALL') {
-        const targetRole = filterRole.toLowerCase().replace(/\s+/g, '_');
-        const memberRole = (member.role || '').toLowerCase();
-        if (memberRole !== targetRole && member.role !== filterRole) {
-          return false;
-        }
-      }
-      // Status filter
-      if (filterStatus !== 'ALL') {
-        const targetStatus = filterStatus.toLowerCase();
-        const memberStatus = (member.status || '').toLowerCase();
-        if (memberStatus !== targetStatus) {
-          return false;
-        }
-      }
-      // Search by Name or Email
-      if (normalizedQuery) {
-        const name = (member.name || '').toLowerCase();
-        const email = (member.email || '').toLowerCase();
-        return name.includes(normalizedQuery) || email.includes(normalizedQuery);
-      }
-      return true;
-    });
-  }, [rawMembers, filterRole, filterStatus, debouncedSearchQuery]);
-
-  // Paginated Members computation
-  const totalPages = Math.max(1, Math.ceil(filteredMembers.length / pageSize));
-  const paginatedMembers = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return filteredMembers.slice(start, start + pageSize);
-  }, [filteredMembers, currentPage, pageSize]);
-
-  // Optimized statistics calculation
-  const stats = useMemo(() => {
-    const totalMembers = rawMembers.length;
-    const activeMembers = rawMembers.filter((m) => (m.status || '').toLowerCase() === 'active').length;
-    const inactiveMembers = totalMembers - activeMembers;
-    const pendingCount = rawPendingInvitations.length;
-
-    // Role distributions
-    const roleDistribution = rawMembers.reduce((acc, curr) => {
-      const role = curr.role || 'unknown';
-      acc[role] = (acc[role] || 0) + 1;
-      return acc;
-    }, {});
-
-    const seatUtilization = totalMembers > 0 ? Math.round((activeMembers / totalMembers) * 100) : 0;
-
-    return {
-      totalMembers,
-      activeMembers,
-      inactiveMembers,
-      pendingCount,
-      roleDistribution,
-      seatUtilization,
-    };
-  }, [rawMembers, rawPendingInvitations]);
+  // Filter indicator
+  const hasActiveFilters = useMemo(() => {
+    return Boolean(searchQuery.trim() || filterRole !== 'ALL' || filterStatus !== 'ALL');
+  }, [searchQuery, filterRole, filterStatus]);
 
   // Reset filters helper
   const resetFilters = useCallback(() => {
@@ -248,35 +257,44 @@ export const useTeam = ({
     setCurrentPage(1);
   }, []);
 
-  // Export report helper (CSV trigger)
-  const exportTeamReport = useCallback(() => {
-    if (!rawMembers.length) {
-      showToast('No members to export', 'info');
-      return;
-    }
-    const headers = ['Name', 'Email', 'Role', 'Status', 'Joined Date'];
-    const rows = rawMembers.map((m) => [
-      `"${m.name || 'Unknown'}"`,
-      `"${m.email || ''}"`,
-      `"${m.role || ''}"`,
-      `"${m.status || ''}"`,
-      `"${m.joinedAt ? new Date(m.joinedAt).toLocaleDateString() : ''}"`,
-    ]);
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `team-members-export-${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    showToast('Team report exported successfully', 'success');
-  }, [rawMembers, showToast]);
-
-  // Helper to check if current logged-in user is Owner
+  // Check if current user is owner
   const isCurrentUserOwner = useMemo(() => {
     return currentUser?.role === 'owner';
-  }, [currentUser]);
+  }, [currentUser?.role]);
+
+  // Export report helper (CSV trigger)
+  const exportTeamReport = useCallback(async () => {
+    try {
+      showToast('Preparing export report...', 'info');
+      // Fetch all members for export without pagination limits
+      const allMembersData = await teamApi.getMembers({ limit: 1000 });
+      const rawList = allMembersData?.data || [];
+      if (!rawList.length) {
+        showToast('No members to export', 'info');
+        return;
+      }
+      const headers = ['Name', 'Email', 'Role', 'Status', 'Joined Date'];
+      const rows = rawList.map((m) => [
+        `"${m.name || 'Unknown'}"`,
+        `"${m.email || ''}"`,
+        `"${m.role || ''}"`,
+        `"${m.status || ''}"`,
+        `"${m.joinedAt ? new Date(m.joinedAt).toLocaleDateString() : ''}"`,
+      ]);
+      const csvContent =
+        'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement('a');
+      link.setAttribute('href', encodedUri);
+      link.setAttribute('download', `team-export-${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast('Team report exported successfully', 'success');
+    } catch (err) {
+      showToast('Failed to export team report', 'error');
+    }
+  }, [showToast]);
 
   // Invalidate queries helper
   const invalidateTeamData = useCallback(() => {
@@ -284,7 +302,7 @@ export const useTeam = ({
   }, [queryClient]);
 
   // -------------------------------------------------------------
-  // 4. Return Object
+  // 5. Return Hook API
   // -------------------------------------------------------------
   return {
     // Current User Info
@@ -292,10 +310,8 @@ export const useTeam = ({
     isCurrentUserOwner,
 
     // Data lists & stats
-    members: paginatedMembers,
-    allFilteredMembers: filteredMembers,
-    rawMembers,
-    pendingInvitations: rawPendingInvitations,
+    members,
+    pendingInvitations,
     selectedMember: memberDetailsQuery.data,
     invitationDetails: invitationQuery.data,
     stats,
@@ -303,19 +319,19 @@ export const useTeam = ({
     // Pagination
     currentPage,
     setCurrentPage,
-    totalPages,
+    totalPages: pagination.totalPages,
     pageSize,
-    totalCount: rawMembers.length,
-    filteredCount: filteredMembers.length,
+    totalCount: stats.totalMembers,
+    filteredCount: pagination.total,
 
     // Filter controls
     searchQuery,
-    setSearchQuery,
+    setSearchQuery: handleSetSearchQuery,
     filterRole,
-    setFilterRole,
+    setFilterRole: handleSetFilterRole,
     filterStatus,
-    setFilterStatus,
-    hasActiveFilters: Boolean(searchQuery.trim() || filterRole !== 'ALL' || filterStatus !== 'ALL'),
+    setFilterStatus: handleSetFilterStatus,
+    hasActiveFilters,
     resetFilters,
 
     // Modals state & handlers

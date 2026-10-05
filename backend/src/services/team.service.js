@@ -140,14 +140,71 @@ export const teamService = {
   },
 
   /**
-   * Get all team members of an organization
+   * Get team members of an organization with server-side searching, filtering, and pagination
    */
-  async getMembers(organizationId) {
-    const [members, pendingInvitations] = await Promise.all([
-      OrganizationMember.find({ organizationId })
+  async getMembers(organizationId, query = {}) {
+    const {
+      search,
+      role,
+      status,
+      page = 1,
+      limit = 10,
+      sortBy = 'createdAt',
+      sortOrder = -1,
+    } = query;
+
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = Math.max(1, Math.min(100, parseInt(limit, 10) || 10));
+    const skipNum = (pageNum - 1) * limitNum;
+
+    // Build base filter for organization members
+    const memberFilter = { organizationId };
+
+    if (role && role !== 'ALL') {
+      const normalizedRole = role.toLowerCase().replace(/\s+/g, '_');
+      memberFilter.role = normalizedRole;
+    }
+
+    if (status && status !== 'ALL') {
+      memberFilter.status = status.toLowerCase();
+    }
+
+    // If search keyword is provided, search users in the organization first
+    if (search && search.trim()) {
+      const searchRegex = new RegExp(search.trim(), 'i');
+      const matchedUsers = await User.find({
+        $or: [{ name: searchRegex }, { email: searchRegex }],
+      })
+        .select('_id')
+        .lean();
+
+      const matchedUserIds = matchedUsers.map((u) => u._id);
+      memberFilter.userId = { $in: matchedUserIds };
+    }
+
+    const sortOptions = {};
+    if (sortBy === 'name_asc' || sortBy === 'name_desc') {
+      // default fallback to createdAt
+      sortOptions.createdAt = -1;
+    } else {
+      sortOptions[sortBy] = Number(sortOrder) || -1;
+    }
+
+    // Run parallel queries for paginated members, total filtered count, all org stats & pending invites
+    const [
+      members,
+      filteredCount,
+      allOrgMembers,
+      pendingInvitations,
+    ] = await Promise.all([
+      OrganizationMember.find(memberFilter)
         .populate('userId', 'name email verified createdAt')
-        .sort({ createdAt: -1 })
+        .sort(sortOptions)
+        .skip(skipNum)
+        .limit(limitNum)
         .lean(),
+      OrganizationMember.countDocuments(memberFilter),
+      OrganizationMember.find({ organizationId }).select('role status').lean(),
       OrganizationInvitation.find({
         organizationId,
         status: INVITATION_STATUS.PENDING,
@@ -157,6 +214,19 @@ export const teamService = {
         .sort({ createdAt: -1 })
         .lean(),
     ]);
+
+    // Aggregate Organization-wide metrics (accurate regardless of filters applied)
+    const totalMembers = allOrgMembers.length;
+    const activeMembers = allOrgMembers.filter((m) => m.status === MEMBER_STATUS.ACTIVE).length;
+    const inactiveMembers = totalMembers - activeMembers;
+    const pendingCount = pendingInvitations.length;
+    const roleDistribution = allOrgMembers.reduce((acc, curr) => {
+      acc[curr.role] = (acc[curr.role] || 0) + 1;
+      return acc;
+    }, {});
+    const seatUtilization = totalMembers > 0 ? Math.round((activeMembers / totalMembers) * 100) : 0;
+
+    const totalPages = Math.max(1, Math.ceil(filteredCount / limitNum));
 
     return {
       members: members.map((m) => ({
@@ -178,6 +248,22 @@ export const teamService = {
         invitedBy: inv.invitedBy?.name || 'Owner',
         createdAt: inv.createdAt,
       })),
+      pagination: {
+        total: filteredCount,
+        page: pageNum,
+        limit: limitNum,
+        totalPages,
+        hasPrevPage: pageNum > 1,
+        hasNextPage: pageNum < totalPages,
+      },
+      stats: {
+        totalMembers,
+        activeMembers,
+        inactiveMembers,
+        pendingCount,
+        roleDistribution,
+        seatUtilization,
+      },
     };
   },
 

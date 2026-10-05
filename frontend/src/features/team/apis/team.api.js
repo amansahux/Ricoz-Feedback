@@ -14,10 +14,18 @@ export const teamApi = {
   },
 
   /**
-   * List all members & pending invitations for the current organization
+   * List members & pending invitations with server-side searching, filtering, and pagination
+   * @param {Object} [params]
+   * @param {string} [params.search]
+   * @param {string} [params.role]
+   * @param {string} [params.status]
+   * @param {number} [params.page]
+   * @param {number} [params.limit]
+   * @param {string} [params.sortBy]
+   * @param {number} [params.sortOrder]
    */
-  getMembers: async () => {
-    const response = await apiClient.get('/team/members');
+  getMembers: async (params = {}) => {
+    const response = await apiClient.get('/team/members', { params });
     return response.data;
   },
 
@@ -31,7 +39,7 @@ export const teamApi = {
   },
 
   /**
-   * Update team member role (e.g. admin, support_agent, manager, etc.)
+   * Update team member role (e.g. admin, support_agent)
    * @param {{ memberId: string, role: string }} params
    */
   updateMemberRole: async ({ memberId, role }) => {
@@ -68,7 +76,7 @@ export const teamApi = {
 
   /**
    * Public: Accept an invitation and sign up / sign in
-   * @param {{ token: string, data: { name: string, email?: string, password?: string } }} params
+   * @param {{ token: string, name: string, email?: string, password?: string }} params
    */
   acceptInvitation: async ({ token, ...userData }) => {
     const response = await apiClient.post(`/invitations/${token}/accept`, userData);
