@@ -219,7 +219,7 @@ export default function TeamTable({
             <select
               value={filterRole}
               onChange={(e) => setFilterRole(e.target.value)}
-              className="h-9.5 pl-3 pr-8 text-xs bg-[#fff8f5] border border-[#eae1db] rounded-lg text-[#1f1b18] focus:outline-none focus:border-[#bb0028] font-medium"
+              className="h-9.5 pl-3 pr-8 text-xs bg-[#fff8f5] border border-[#eae1db] rounded-lg text-[#1f1b18] focus:outline-none focus:border-[#bb0028] font-medium cursor-pointer"
             >
               <option value="ALL">All roles</option>
               <option value="owner">Owner</option>
@@ -233,7 +233,7 @@ export default function TeamTable({
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="h-9.5 pl-3 pr-8 text-xs bg-[#fff8f5] border border-[#eae1db] rounded-lg text-[#1f1b18] focus:outline-none focus:border-[#bb0028] font-medium"
+              className="h-9.5 pl-3 pr-8 text-xs bg-[#fff8f5] border border-[#eae1db] rounded-lg text-[#1f1b18] focus:outline-none focus:border-[#bb0028] font-medium cursor-pointer"
             >
               <option value="ALL">All status</option>
               <option value="active">Active</option>

@@ -27,7 +27,7 @@ export const useTeam = ({
 
   // Search, Filter & Pagination states
   const [searchQuery, setSearchQuery] = useState('');
-  const debouncedSearchQuery = useDebounce(searchQuery, 350);
+  const debouncedSearchQuery = useDebounce(searchQuery, 1000);
   const [filterRole, setFilterRole] = useState('ALL');
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [currentPage, setCurrentPage] = useState(1);

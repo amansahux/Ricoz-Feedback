@@ -63,7 +63,7 @@ export const router = createBrowserRouter([
         element: withSuspense(ForgotPassword),
       },
       {
-        path: "invitations/:token",
+        path: "invitation/:token",
         element: withSuspense(AcceptInvitation),
       },
       {

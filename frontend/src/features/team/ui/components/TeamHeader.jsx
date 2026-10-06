@@ -24,7 +24,7 @@ export default function TeamHeader({ onOpenInvite, onExportReport, isOwner = tru
       <div className="flex items-center gap-2.5 shrink-0">
         <button
           onClick={onExportReport}
-          className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-[#f9dfb9]/40 hover:bg-[#f9dfb9]/70 text-[#261903] text-xs font-semibold rounded-lg border border-[#e7bcbb]/60 transition-colors shadow-sm"
+          className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-[#f9dfb9]/40 hover:bg-[#f9dfb9]/70 text-[#261903] text-xs font-semibold rounded-lg border border-[#e7bcbb]/60 transition-colors shadow-sm cursor-pointer"
           title="Export team members directory as CSV"
         >
           <Download size={15} />
@@ -34,7 +34,7 @@ export default function TeamHeader({ onOpenInvite, onExportReport, isOwner = tru
         {isOwner && (
           <button
             onClick={onOpenInvite}
-            className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-[#bb0028] hover:bg-[#e61337] text-white text-xs font-semibold rounded-lg shadow-sm shadow-[#bb0028]/20 hover:shadow-md hover:shadow-[#bb0028]/30 transition-all duration-150"
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-[#bb0028] hover:bg-[#e61337] text-white text-xs font-semibold rounded-lg shadow-sm shadow-[#bb0028]/20 hover:shadow-md hover:shadow-[#bb0028]/30 transition-all duration-150 cursor-pointer"
           >
             <Plus size={16} />
             <span>Invite member</span>

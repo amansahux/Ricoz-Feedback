@@ -23,7 +23,7 @@ export default function PendingInvitations({
         {isOwner && (
           <button
             onClick={onOpenInvite}
-            className="text-xs font-semibold text-[#bb0028] hover:text-[#e61337] flex items-center gap-1 self-start sm:self-auto transition-colors"
+            className="text-xs font-semibold text-[#bb0028] hover:text-[#e61337] flex items-center gap-1 self-start sm:self-auto transition-colors cursor-pointer"
           >
             <Plus size={14} />
             <span>Invite new person</span>
@@ -102,7 +102,7 @@ export default function PendingInvitations({
                     <button
                       onClick={() => onResendInvite?.(invitation)}
                       disabled={isResending}
-                      className="px-3 py-1.5 text-xs font-semibold text-[#1f1b18] bg-[#f6ece7] hover:bg-[#eae1db] rounded-lg transition-colors flex items-center gap-1.5 shadow-sm"
+                      className="px-3 py-1.5 text-xs font-semibold text-[#1f1b18] bg-[#f6ece7] hover:bg-[#eae1db] rounded-lg transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
                     >
                       <Send size={12} className="text-[#926e6d]" />
                       <span>Resend</span>
