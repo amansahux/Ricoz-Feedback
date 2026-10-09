@@ -300,7 +300,7 @@ export default function AcceptInvitation() {
                 type="button"
                 onClick={async () => {
                   try {
-                    await logout();
+                    await logout({ redirectTo: false });
                   } catch (e) {
                     // ignore
                   }

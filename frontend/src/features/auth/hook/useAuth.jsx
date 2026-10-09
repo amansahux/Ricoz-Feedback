@@ -126,13 +126,15 @@ export function useAuth() {
     [registeredEmail, countdown, isResending],
   );
 
-  const handleLogout = useCallback(async () => {
+  const handleLogout = useCallback(async ({ redirectTo = "/login" } = {}) => {
     try {
       await dispatch(Logout());
     } catch {
       // ignore
     } finally {
-      navigate("/login");
+      if (redirectTo !== false) {
+        navigate(redirectTo);
+      }
     }
   }, [dispatch, navigate]);
 
