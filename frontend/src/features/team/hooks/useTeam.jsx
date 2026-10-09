@@ -96,6 +96,7 @@ export const useTeam = ({
   const membersQuery = useQuery({
     queryKey: TEAM_QUERY_KEYS.membersList(queryParams),
     queryFn: () => teamApi.getMembers(queryParams),
+    enabled: !invitationToken,
     placeholderData: keepPreviousData, // Smooth transitions between pagination & search
     staleTime: 1000 * 60 * 2, // 2 minutes stale time
     select: (res) => ({

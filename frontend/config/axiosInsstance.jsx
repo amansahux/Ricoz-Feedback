@@ -71,6 +71,7 @@ apiClient.interceptors.response.use(
           currentPath.startsWith('/verify-email') ||
           currentPath.startsWith('/forgot-password') ||
           currentPath.startsWith('/reset-password') ||
+          currentPath.startsWith('/invitations') ||
           currentPath.startsWith('/f/');
 
         if (!isPublicAuthPage) {

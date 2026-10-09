@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router";
 import { useTeam } from "../../hooks/useTeam.jsx";
+import { useAuth } from "../../../auth/hook/useAuth.jsx";
 import ToastNotification from "../../../surveys/ui/components/shared/ToastNotification.jsx";
 import {
   Shield,
@@ -21,6 +22,7 @@ import {
 export default function AcceptInvitation() {
   const { token } = useParams();
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   const {
     invitationDetails,
@@ -279,28 +281,35 @@ export default function AcceptInvitation() {
         ) : isEmailMismatch ? (
           /* 3. Logged-in Email Mismatch Warning State */
           <div className="p-6 sm:p-7 space-y-4">
-            <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-[#bb0028] flex items-start gap-3">
-              <AlertCircle size={20} className="shrink-0 mt-0.5" />
+            <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-[#854d0e] flex items-start gap-3">
+              <AlertCircle size={20} className="shrink-0 mt-0.5 text-amber-600" />
               <div className="space-y-1 text-xs">
-                <h4 className="font-semibold text-sm text-[#bb0028]">
-                  Account Email Mismatch
+                <h4 className="font-semibold text-sm text-amber-900">
+                  Different Account Signed In
                 </h4>
                 <p className="text-[#1f1b18]">
-                  This invitation was sent specifically to <strong>{email}</strong>.
+                  This invitation was sent to <strong className="text-[#bb0028]">{email}</strong>.
                 </p>
                 <p className="text-[#5d3f3e]">
-                  You are currently signed in as <strong>{currentUser.email}</strong>. Please switch to the correct account to accept.
+                  You are currently signed in as <strong>{currentUser.email}</strong>. Please sign out of this account to accept the invitation.
                 </p>
               </div>
             </div>
-            <button
-              onClick={() => {
-                window.location.href = "/login";
-              }}
-              className="w-full h-10 rounded-lg bg-[#bb0028] hover:bg-[#e61337] text-white text-xs font-semibold transition-colors"
-            >
-              Switch Account & Sign In
-            </button>
+            <div className="flex flex-col sm:flex-row items-center gap-3 pt-1">
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    await logout();
+                  } catch (e) {
+                    // ignore
+                  }
+                }}
+                className="w-full h-10 rounded-lg bg-[#bb0028] hover:bg-[#e61337] text-white text-xs font-semibold transition-colors cursor-pointer"
+              >
+                Sign out & accept as {email}
+              </button>
+            </div>
           </div>
         ) : (
           /* 4. Accept / Register Form */

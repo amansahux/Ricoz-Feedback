@@ -276,7 +276,7 @@ export const useFeedback = (initialFilters = {}) => {
     } catch (err) {
       console.error("Mark resolved error:", err);
     }
-  }, [updateMutation, updateResponseMutation]);
+  }, [updateResponseMutation]);
 
   const handlePageChange = useCallback((page) => {
     setCurrentPage(page);
