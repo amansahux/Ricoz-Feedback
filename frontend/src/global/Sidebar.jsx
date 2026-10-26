@@ -16,19 +16,26 @@ import {
 import useAuth from "../features/auth/hook/useAuth.jsx";
 import LogoutModal from "../shared/components/LogoutModal.jsx";
 
-const mainNavLinks = [
-  { label: "Overview", href: "/dashboard", icon: LayoutGrid },
-  { label: "Team", href: "/team", icon: User } ,
-  { label: "Surveys", href: "/surveys", icon: ClipboardList },
+// Full nav links with role restrictions
+// allowedRoles: if omitted → visible to everyone; otherwise only those roles can see it
+const ALL_NAV_LINKS = [
+  { label: "Overview", href: "/dashboard", icon: LayoutGrid , allowedRoles:["owner", "admin"]},
+  { label: "Team", href: "/team", icon: User, allowedRoles: ["owner"] },
+  { label: "Surveys", href: "/surveys", icon: ClipboardList, allowedRoles: ["owner", "admin"] },
   { label: "Feedback", href: "/feedback", icon: MessageSquare, badge: "1 new" },
   { label: "Customers", href: "/customers", icon: Users },
-  { label: "Analytics", href: "/analytics", icon: BarChart2 },
+  { label: "Analytics", href: "/analytics", icon: BarChart2, allowedRoles: ["owner"] },
 ];
 
 export default function Sidebar({ isOpen, onClose }) {
   const location = useLocation();
   const { user, organization, logout, isLoggingOut } = useAuth();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  // Filter nav links based on user's role
+  const mainNavLinks = ALL_NAV_LINKS.filter(
+    ({ allowedRoles }) => !allowedRoles || allowedRoles.includes(user?.role)
+  );
 
   const isSettingsActive = location.pathname.startsWith("/settings");
 
