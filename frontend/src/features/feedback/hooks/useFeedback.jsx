@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import {
   getResponses as getResponsesApi,
@@ -15,7 +15,6 @@ export const FEEDBACK_QUERY_KEYS = {
   details: () => [...FEEDBACK_QUERY_KEYS.all, "detail"],
   detail: (id) => [...FEEDBACK_QUERY_KEYS.details(), id],
 };
-
 /**
  * Hook: Fetch all feedback responses for the organization with optional query filters and pagination
  */

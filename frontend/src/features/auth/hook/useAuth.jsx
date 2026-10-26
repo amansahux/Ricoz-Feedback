@@ -53,7 +53,9 @@ export function useAuth() {
       try {
         const resultAction = await dispatch(Login(formData));
         if (Login.fulfilled.match(resultAction)) {
-          navigate("/dashboard");
+          const role = resultAction.payload?.user?.role;
+          // support_agent lands on /feedback; everyone else goes to /dashboard
+          navigate(role === "support_agent" ? "/feedback" : "/dashboard");
           return { success: true, data: resultAction.payload };
         } else {
           const message = resultAction.payload || "Sign in failed";
