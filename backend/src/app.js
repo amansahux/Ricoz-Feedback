@@ -59,6 +59,10 @@ const authLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+// 4. Health check
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', service: 'Recoz Feedback API' });
+});
 
 app.use(limiter);
 app.use(express.json());
@@ -75,10 +79,6 @@ app.use('/api/responses', responseRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/customers', customerRoutes);
 
-// 4. Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', service: 'Recoz Feedback API' });
-});
 
 // 5. Public Frontend SPA fallback
 app.get('{*splat}', (req, res) => {
