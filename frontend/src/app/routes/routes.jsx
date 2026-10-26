@@ -3,6 +3,7 @@ import { createBrowserRouter } from "react-router";
 import RootLayout from "../layout/RootLayout.jsx";
 import AppLayout from "../layout/AppLayout.jsx";
 import ProtectedRoute from "./ProtectedRoute.jsx";
+import PermissionRoute from "./PermissionRoute.jsx";
 import PageLoader from "../../shared/components/PageLoader.jsx";
 
 // Route-level Code Splitting (Lazy-loaded chunks)
@@ -75,31 +76,59 @@ export const router = createBrowserRouter([
         children: [
           {
             path: "dashboard",
-            element: withSuspense(Dashboard),
+            element: (
+              <PermissionRoute allowedRoles={["owner", "admin"]}>
+                {withSuspense(Dashboard)}
+              </PermissionRoute>
+            ),
           },
           {
             path: "team",
-            element: withSuspense(Team),
+            element: (
+              <PermissionRoute allowedRoles={["owner"]}>
+                {withSuspense(Team)}
+              </PermissionRoute>
+            ),
           },
           {
             path: "team/:memberId",
-            element: withSuspense(MemberDetail),
+            element: (
+              <PermissionRoute allowedRoles={["owner"]}>
+                {withSuspense(MemberDetail)}
+              </PermissionRoute>
+            ),
           },
           {
             path: "settings",
-            element: withSuspense(Setting),
+            element: (
+              <PermissionRoute allowedRoles={["owner", "admin","support_agent"]}>
+                {withSuspense(Setting)}
+              </PermissionRoute>
+            ),
           },
           {
             path: "surveys",
-            element: withSuspense(Survey),
+            element: (
+              <PermissionRoute allowedRoles={["owner", "admin"]}>
+                {withSuspense(Survey)}
+              </PermissionRoute>
+            ),
           },
           {
             path: "surveys/create",
-            element: withSuspense(CreateSurvey),
+            element: (
+              <PermissionRoute allowedRoles={["owner", "admin"]}>
+                {withSuspense(CreateSurvey)}
+              </PermissionRoute>
+            ),
           },
           {
             path: "surveys/publish",
-            element: withSuspense(PublishSurvey),
+            element: (
+              <PermissionRoute allowedRoles={["owner", "admin"]}>
+                {withSuspense(PublishSurvey)}
+              </PermissionRoute>
+            ),
           },
           {
             path: "feedback",
@@ -119,7 +148,11 @@ export const router = createBrowserRouter([
           },
           {
             path: "analytics",
-            element: withSuspense(Analytics),
+            element: (
+              <PermissionRoute allowedRoles={["owner"]}>
+                {withSuspense(Analytics)}
+              </PermissionRoute>
+            ),
           },
         ],
       },
