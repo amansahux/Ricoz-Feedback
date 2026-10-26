@@ -92,25 +92,29 @@ const Setting = () => {
           onSubmit={handleChangePassword}
         />
 
-        {/* Section 3: Organization */}
-        <OrganizationSection
-          organizationName={formData.organizationName}
-          slug={organization?.slug}
-          copiedSlug={copiedSlug}
-          onNameChange={(val) => handleFieldChange("organizationName", val)}
-          onCopySlug={copySlug}
-        />
+        {/* Section 3: Organization — owner only */}
+        {user?.role === "owner" && (
+          <OrganizationSection
+            organizationName={formData.organizationName}
+            slug={organization?.slug}
+            copiedSlug={copiedSlug}
+            onNameChange={(val) => handleFieldChange("organizationName", val)}
+            onCopySlug={copySlug}
+          />
+        )}
 
-        {/* Section 4: Branding & Live Feedback Preview */}
-        <BrandingSection
-          logoUrl={formData.logoUrl}
-          primaryColor={formData.primaryColor}
-          organizationName={formData.organizationName}
-          previewRating={previewRating}
-          onLogoChange={(val) => handleFieldChange("logoUrl", val)}
-          onColorChange={handleColorChange}
-          onRatingSelect={setPreviewRating}
-        />
+        {/* Section 4: Branding & Live Feedback Preview — owner only */}
+        {user?.role === "owner" && (
+          <BrandingSection
+            logoUrl={formData.logoUrl}
+            primaryColor={formData.primaryColor}
+            organizationName={formData.organizationName}
+            previewRating={previewRating}
+            onLogoChange={(val) => handleFieldChange("logoUrl", val)}
+            onColorChange={handleColorChange}
+            onRatingSelect={setPreviewRating}
+          />
+        )}
       </div>
 
       {/* Bottom Save Action Bar */}
