@@ -140,6 +140,7 @@ export const responseService = {
       Response.find(query)
         .populate('customerId', 'name email phone')
         .populate('surveyId', 'title slug status questions')
+        .populate('resolvedBy', 'name email')
         .sort(sortOptions)
         .skip(skipNum)
         .limit(limitNum)
@@ -170,6 +171,7 @@ export const responseService = {
     const response = await Response.findOne({ _id: responseId, organizationId })
       .populate('customerId', 'name email phone')
       .populate('surveyId', 'title slug status questions')
+      .populate('resolvedBy', 'name email')
       .lean();
 
     if (!response) {
@@ -225,16 +227,24 @@ export const responseService = {
       status: response.status || 'open',
       followUpNote: response.followUpNote || '',
       resolvedAt: response.resolvedAt || null,
+      resolvedBy: response.resolvedBy || null,
       createdAt: response.createdAt,
       updatedAt: response.updatedAt,
       answers: enrichedAnswers,
     };
   },
 
-  async updateResponseStatus(responseId, organizationId, status, followUpNote = null) {
+  async updateResponseStatus(responseId, organizationId, status, followUpNote = null, userId = null) {
     const update = { status };
     if (status === 'resolved') {
       update.resolvedAt = new Date();
+      if (userId) {
+        update.resolvedBy = userId;
+      }
+    } else {
+      // Clear resolvedBy and resolvedAt when reopening
+      update.resolvedBy = null;
+      update.resolvedAt = null;
     }
     if (followUpNote !== undefined && followUpNote !== null) {
       update.followUpNote = followUpNote;
@@ -247,6 +257,7 @@ export const responseService = {
     )
       .populate('customerId', 'name email phone')
       .populate('surveyId', 'title slug status questions')
+      .populate('resolvedBy', 'name email')
       .lean();
 
     if (!updatedDoc) return null;

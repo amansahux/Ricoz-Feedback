@@ -42,12 +42,17 @@ const responseSchema = new mongoose.Schema(
       enum: ['open', 'in_progress', 'resolved'],
       default: 'open',
     },
+    resolvedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
     followUpNote: String,
     resolvedAt: Date,
   },
   {
     timestamps: true,
-  }
+  },
+
 );
 
 responseSchema.index({ organizationId: 1, createdAt: -1 });

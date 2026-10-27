@@ -85,13 +85,15 @@ export const responseController = {
   updateResponseStatus: asyncHandler(async (req, res) => {
     const { id } = req.params;
     const organizationId = req.user.organizationId;
+    const userId = req.user._id;
     const { status, followUpNote } = req.body;
 
     const response = await responseService.updateResponseStatus(
       id,
       organizationId,
       status,
-      followUpNote
+      followUpNote,
+      userId
     );
 
     if (!response) {

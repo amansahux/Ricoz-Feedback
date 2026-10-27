@@ -3,6 +3,8 @@ import { CheckCircle2 } from "lucide-react";
 import { formatDate } from "./DetailHelpers.jsx";
 
 export default function DetailResolvedBanner({ response, internalNote, onReopen }) {
+  const resolvedByName = response?.resolvedBy?.name || response?.resolvedBy?.email || null;
+
   return (
     <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
       <div className="flex items-center gap-3">
@@ -13,6 +15,7 @@ export default function DetailResolvedBanner({ response, internalNote, onReopen 
             {response?.resolvedAt
               ? `Closed on ${formatDate(response.resolvedAt)}`
               : "Closed recently"}
+            {resolvedByName ? ` • Resolved by ${resolvedByName}` : ""}
             {internalNote ? " • Follow-up note logged" : ""}
           </p>
         </div>
