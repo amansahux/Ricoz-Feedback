@@ -265,7 +265,7 @@ export default function Register() {
                 </div>
               )}
 
-              {/* Google OAuth Button */}
+              {/* Google OAuth Button
               <a
                 href={
                   import.meta.env.PROD
@@ -293,7 +293,7 @@ export default function Register() {
                   />
                 </svg>
                 <span>Sign up with Google</span>
-              </a>
+              </a> */}
 
               {/* Divider */}
               <div className="relative flex py-2 items-center mb-4">
