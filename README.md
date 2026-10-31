@@ -1384,8 +1384,26 @@ Recoz employs defense-in-depth security principles across frontend routing and b
 
 | Method | Endpoint | Purpose | Access |
 |---|---|---|---|
-| GET | `/api/analytics/overview` | Dashboard analytics overview | Protected |
-| GET | `/api/analytics/trends` | Trend-oriented analytics | Protected |
+| GET | `/api/analytics/overview` | Dashboard analytics overview | Protected (Owner, Admin) |
+| GET | `/api/analytics/trends` | Trend-oriented analytics | Protected (Owner only) |
+
+## Team Management (Owner Only)
+
+| Method | Endpoint | Purpose | Access |
+|---|---|---|---|
+| POST | `/api/team/invitations` | Send role invitation email to employee | Protected (Owner only) |
+| GET | `/api/team/members` | List organization team members and pending invites | Protected (Owner only) |
+| GET | `/api/team/members/:memberId` | Get individual member details & feedback activity | Protected (Owner only) |
+| PATCH | `/api/team/members/:memberId/role` | Update member role (`admin` or `support_agent`) | Protected (Owner only) |
+| PATCH | `/api/team/members/:memberId/status` | Toggle member status (`active` or `inactive`) | Protected (Owner only) |
+| DELETE | `/api/team/members/:memberId` | Remove member from organization | Protected (Owner only) |
+
+## Invitations (Public / Employee Onboarding)
+
+| Method | Endpoint | Purpose | Access |
+|---|---|---|---|
+| GET | `/api/invitations/:token` | Validate invitation token & retrieve org details | Public (Valid token required) |
+| POST | `/api/invitations/:token/accept` | Accept invitation & provision/bind account | Public (Valid token required) |
 
 ---
 
