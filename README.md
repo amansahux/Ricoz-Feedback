@@ -1520,11 +1520,14 @@ React App
 Axios
     │
     ▼
-Auth Middleware
+Auth Middleware & RBAC Guard
     │
-    ├── Read JWT from cookie
-    ├── Verify token
-    └── Attach authenticated user
+    ├── Read JWT from HTTP-only cookie
+    ├── Verify token signature & expiry
+    ├── Query OrganizationMember for active membership & role
+    ├── Reject if member inactive / revoked
+    ├── Populate req.user (userId, organizationId, role, permissions)
+    └── Check requireRole / requirePermission (if route protected)
     │
     ▼
 Controller
