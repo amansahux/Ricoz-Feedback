@@ -101,6 +101,7 @@ Landing Page
 | Feedback | Search, filter, inspect, update, and resolve customer feedback |
 | Customers | View people who submitted feedback and their feedback history |
 | Analytics | NPS, CSAT, CES, response volume, topics, and sentiment trends |
+| Team Management | Organization member directory, role assignment, and email invitation workflow |
 | Settings | Profile, organization, branding, and account security |
 
 ---
@@ -158,14 +159,16 @@ Recoz-Feedback/
 │   │   │   ├── cookie.js
 │   │   │   ├── db.js
 │   │   │   ├── env.js
-│   │   │   └── passport.js
+│   │   │   ├── passport.js
+│   │   │   └── roles.js
 │   │   │
 │   │   ├── controllers/
 │   │   │   ├── analytics.controller.js
 │   │   │   ├── auth.controller.js
 │   │   │   ├── customer.controller.js
 │   │   │   ├── response.controller.js
-│   │   │   └── survey.controller.js
+│   │   │   ├── survey.controller.js
+│   │   │   └── team.controller.js
 │   │   │
 │   │   ├── middlewares/
 │   │   │   ├── auth.middleware.js
@@ -175,6 +178,8 @@ Recoz-Feedback/
 │   │   ├── models/
 │   │   │   ├── customer.model.js
 │   │   │   ├── organization.model.js
+│   │   │   ├── organizationInvitation.model.js
+│   │   │   ├── organizationMember.model.js
 │   │   │   ├── question.schema.js
 │   │   │   ├── response.model.js
 │   │   │   ├── survey.model.js
@@ -184,8 +189,10 @@ Recoz-Feedback/
 │   │   │   ├── analytics.routes.js
 │   │   │   ├── auth.routes.js
 │   │   │   ├── customer.routes.js
+│   │   │   ├── invitation.routes.js
 │   │   │   ├── response.routes.js
-│   │   │   └── survey.routes.js
+│   │   │   ├── survey.routes.js
+│   │   │   └── team.routes.js
 │   │   │
 │   │   ├── services/
 │   │   │   ├── analytics.service.js
@@ -194,7 +201,8 @@ Recoz-Feedback/
 │   │   │   ├── email.service.js
 │   │   │   ├── response.service.js
 │   │   │   ├── sentiment.service.js
-│   │   │   └── survey.service.js
+│   │   │   ├── survey.service.js
+│   │   │   └── team.service.js
 │   │   │
 │   │   ├── utils/
 │   │   │   ├── ApiError.js
@@ -206,7 +214,8 @@ Recoz-Feedback/
 │   │   ├── validators/
 │   │   │   ├── auth.validator.js
 │   │   │   ├── response.validator.js
-│   │   │   └── survey.validator.js
+│   │   │   ├── survey.validator.js
+│   │   │   └── team.validator.js
 │   │   │
 │   │   ├── app.js
 │   │   └── server.js
@@ -240,7 +249,8 @@ Recoz-Feedback/
 │   │   │   ├── dashboard/
 │   │   │   ├── feedback/
 │   │   │   ├── setting/
-│   │   │   └── surveys/
+│   │   │   ├── surveys/
+│   │   │   └── team/
 │   │   │
 │   │   ├── global/
 │   │   │   └── NotFound.jsx
@@ -341,6 +351,8 @@ Data Relationships
 
 Organization
 ├── Users
+├── OrganizationMembers (RBAC & Status)
+├── OrganizationInvitations (Token Hash, Expiry & Role)
 ├── Surveys
 ├── Customers
 └── Responses
@@ -352,7 +364,11 @@ Customer
 └── Responses
 
 User
-└── belongs to Organization
+└── belongs to Organization via OrganizationMember (role: owner | admin | support_agent)
+
+OrganizationInvitation
+├── belongs to Organization
+└── tracks invited email, role, tokenHash, status, and expiresAt
 
 Response
 ├── belongs to Organization
@@ -473,7 +489,8 @@ PUBLIC
 ├── /login                    → Login
 ├── /register                 → Register
 ├── /verify-email             → Email Verification
-└── /forgot-password          → Password Recovery
+├── /forgot-password          → Password Recovery
+├── /invitations/:token       → Accept Team Invitation
 │
 └── /f/:organizationSlug/:surveySlug
     → Public Customer Survey
@@ -483,20 +500,22 @@ AUTHENTICATION CHECK
 │
 ├── Authenticated
 │   └── /dashboard
-│       └── AppLayout
-│           ├── /surveys
-│           ├── /surveys/create
-│           ├── /surveys/publish
-│           ├── /feedback
+│       └── AppLayout (Role-Guarded via PermissionRoute)
+│           ├── /surveys               [owner, admin]
+│           ├── /surveys/create        [owner, admin]
+│           ├── /surveys/publish       [owner, admin]
+│           ├── /feedback              [all roles]
 │           │   └── /feedback/:feedbackId
-│           ├── /customers
+│           ├── /customers             [all roles]
 │           │   └── /customers/:customerId
-│           ├── /analytics
-│           └── /settings
+│           ├── /analytics             [owner]
+│           ├── /team                  [owner only]
+│           │   └── /team/:memberId    [owner only]
+│           └── /settings              [all roles]
 │
 └── Not Authenticated
     └── Stay on Public Route
-        └── Login / Register
+        └── Login / Register / Accept Invitation
 ```
 
 ## Route categories
@@ -509,6 +528,7 @@ AUTHENTICATION CHECK
 /register
 /verify-email
 /forgot-password
+/invitations/:token
 /f/:organizationSlug/:surveySlug
 ```
 
@@ -524,10 +544,12 @@ AUTHENTICATION CHECK
 /customers
 /customers/:customerId
 /analytics
+/team
+/team/:memberId
 /settings
 ```
 
-`ProtectedRoute` wraps the authenticated application layout and prevents unauthenticated access to private pages.
+`ProtectedRoute` wraps the authenticated application layout and ensures a valid session, while `PermissionRoute` enforces role-based access control (RBAC) per page.
 
 ---
 
@@ -770,6 +792,79 @@ Question Object
       ├── multiple-choice → Options
       └── yes-no          → Yes / No
 ```
+
+---
+
+## 11. Team Management `/team` & `/team/:memberId`
+
+The organization control center for team collaboration and workforce management (Owner only).
+
+```text
+Team Management Flow
+
+Owner Dashboard
+      │
+      ▼
+/team (Members & Pending Directory)
+      ├── Invite Member Modal ──► POST /api/team/invitations
+      │                             │
+      │                             ├── Issue Secure Token (SHA-256 hashed)
+      │                             └── Send Invitation Email
+      │
+      ├── Manage Roles ──────────► PATCH /api/team/members/:id/role
+      ├── Deactivate / Reactivate ─► PATCH /api/team/members/:id/status
+      └── Remove Member ─────────► DELETE /api/team/members/:id
+```
+
+Purpose & Capabilities:
+- Organization-wide member directory with search, role filters, status filters, and pagination.
+- Operational metrics: total members, active operators, pending invites, and seat utilization percentage.
+- Sending role-scoped invitations (`admin` or `support_agent`) via email.
+- Managing pending invitations (tracking sent date, expiration, and status).
+- Viewing granular member profiles, activity history, and operational feedback workloads (`/team/:memberId`).
+- Changing roles, toggling active/inactive status, or revoking team membership.
+- Exporting the team member directory as CSV.
+
+---
+
+## 12. Accept Invitation `/invitations/:token`
+
+The onboarding gateway for new and existing employees to join an organization.
+
+```text
+Invitation Acceptance Flow
+
+Employee opens secure invitation link from email
+                       │
+                       ▼
+            GET /api/invitations/:token
+       (Validates token hash, status, & expiry)
+                       │
+             ┌─────────┴─────────┐
+             ▼                   ▼
+       Existing User         New User
+             │                   │
+      Account detected    Enter name & password
+             │                   │
+             └─────────┬─────────┘
+                       │
+                       ▼
+          POST /api/invitations/:token/accept
+                       │
+        ├── Auto-verify email
+        ├── Create/Activate OrganizationMember
+        ├── Assign specified Role (Admin / Support Agent)
+        ├── Mark invitation as Accepted
+        └── Issue JWT tokens in HTTP-only cookies
+                       │
+                       ▼
+             Redirect to Dashboard / Allowed Feature
+```
+
+Key features:
+- Secure token lookup using SHA-256 hash matching and 24-hour expiration checks.
+- Smooth dual-path onboarding: seamlessly connects existing users or provisions new accounts with automatic email verification.
+- Enforces single active organization membership and locks the assigned role immediately upon acceptance.
 
 ---
 
@@ -1091,6 +1186,140 @@ Delivery / Support / Product / Checkout / etc.
 The current backend also has a dedicated `sentiment.service.js`, keeping analysis logic outside the controller layer.
 
 This separation leaves room for swapping or extending the analysis implementation later without changing the response workflow.
+
+---
+
+# Team Management & Role-Based Access Control (RBAC)
+
+Recoz Feedback includes an enterprise-grade Team Management and Role-Based Access Control (RBAC) architecture designed for organization-scoped multi-tenant operations. Organization owners can build and manage teams with fine-grained access boundaries, keeping sensitive administrative dashboards and settings protected while empowering support agents to handle day-to-day customer issues.
+
+```text
+Team Management & RBAC Architecture
+
+                      ┌──────────────────────────────────────┐
+                      │          Organization Owner          │
+                      │  (Full control, invites & team CRUD) │
+                      └──────────────────┬───────────────────┘
+                                         │
+                        Sends Secure Email Invitation
+                        (Token SHA-256 Hashed, 24h Expiry)
+                                         │
+                    ┌────────────────────┴────────────────────┐
+                    ▼                                         ▼
+      ┌───────────────────────────┐             ┌───────────────────────────┐
+      │           Admin           │             │       Support Agent       │
+      │   Full Operational Access │             │    Restricted Feedback    │
+      │   (No Team Management)    │             │      & Customer Queue     │
+      └───────────────────────────┘             └───────────────────────────┘
+```
+
+---
+
+## 1. Role Hierarchy & Permissions
+
+Recoz defines three distinct access tiers. Permissions are verified on the backend via Express middleware (`authMiddleware`, `requireRole`, `requirePermission`) and enforced on the frontend with route-level guards (`PermissionRoute`).
+
+- **Owner:** Full organization access. The creator of the organization holds permanent ownership rights. **Only the owner** can invite employees to join their organization by sending email invitations, change member roles, deactivate members, or remove members.
+- **Admin:** Full access to Dashboard, Analytics overview, Surveys (create, edit, publish, view), Feedback, and Customers, but **strictly no access to the Team Management page** or member administration endpoints.
+- **Support Agent:** Operational triage access limited to **Feedback and Customers only**. Support agents cannot access Dashboard, Analytics, Surveys, or Team Management.
+
+### Role Permission Matrix
+
+| Feature / Resource | Permission Key | Owner | Admin | Support Agent |
+|---|---|:---:|:---:|:---:|
+| **Dashboard** | `dashboard.view` | ✅ Full Access | ✅ Full Access | ❌ No Access |
+| **Analytics Overview** | `analytics.view` | ✅ Full Access | ✅ Full Access | ❌ No Access |
+| **Analytics Deep Trends** | `analytics.trends` | ✅ Full Access | ❌ Restricted | ❌ No Access |
+| **Survey Creation & Editing** | `survey.create`, `survey.update` | ✅ Full Access | ✅ Full Access | ❌ No Access |
+| **Survey Publishing** | `survey.publish` | ✅ Full Access | ✅ Full Access | ❌ No Access |
+| **Survey Deletion** | `survey.delete` | ✅ Full Access | ❌ Restricted | ❌ No Access |
+| **Survey List & View** | `survey.view` | ✅ Full Access | ✅ Full Access | ❌ No Access |
+| **Feedback Inbox & Detail** | `feedback.view` | ✅ Full Access | ✅ Full Access | ✅ Full Access |
+| **Feedback Status & Notes** | `feedback.update`, `feedback.resolve` | ✅ Full Access | ✅ Full Access | ✅ Full Access |
+| **Customers Directory & History** | `customer.view`, `customer.reply` | ✅ Full Access | ✅ Full Access | ✅ Full Access |
+| **Team Management Page (`/team`)** | `team.view` | ✅ Full Access | ❌ No Access | ❌ No Access |
+| **Invite Team Members** | `team.invite` | ✅ Full Access | ❌ No Access | ❌ No Access |
+| **Modify Member Roles & Status** | `team.update_role`, `team.deactivate` | ✅ Full Access | ❌ No Access | ❌ No Access |
+| **Remove Team Members** | `team.remove` | ✅ Full Access | ❌ No Access | ❌ No Access |
+| **Settings & Profile** | `organization.settings` | ✅ Full Access | ✅ Full Access | ✅ Profile Only |
+
+---
+
+## 2. Organization Membership Model
+
+Team memberships are decoupled from user credentials through dedicated multi-tenant domain models:
+
+1. **User (`User`):** Stores identity credentials (name, email, hashed password, verification status). A user can belong to an organization and operate with their assigned role.
+2. **Organization Member (`OrganizationMember`):** Binds a `userId` to an `organizationId` with an explicit `role` (`owner`, `admin`, `support_agent`), membership `status` (`active`, `inactive`), and `joinedAt` timestamp.
+3. **Organization Invitation (`OrganizationInvitation`):** Stores pending invitations with target `email`, assigned `role`, cryptographically hashed verification token (`tokenHash`), `invitedBy` user reference, `status` (`pending`, `accepted`, `expired`, `cancelled`), and `expiresAt` expiration date.
+
+### Membership Invariants & Safety Rules
+
+- **Unique Active Membership:** An email can only have one active membership per organization.
+- **Owner Immutability:** An owner's role cannot be downgraded or altered via team member endpoints, preventing accidental lockout.
+- **Self-Action Prevention:** An owner cannot demote, deactivate, or delete their own active account from the team interface.
+- **Deactivation Handling:** Deactivating a member changes their status to `inactive`. The authentication middleware immediately blocks inactive members on their next API request with a `403 Forbidden` status.
+
+---
+
+## 3. Invitation Workflow
+
+The invitation lifecycle ensures secure, verifiable team onboarding with zero password exposure:
+
+```text
+Step-by-Step Invitation Flow
+
+  [Owner Action]
+        │
+        ├── 1. Enters employee's email and selects role ('Admin' or 'Support Agent')
+        ├── 2. Backend generates cryptographically secure 32-byte hex token
+        ├── 3. SHA-256 hash stored in DB with 24-hour expiration window
+        └── 4. HTML invitation email dispatched with secure link:
+               https://<app-domain>/invitations/<rawToken>
+        │
+  [Employee Action]
+        │
+        ├── 5. Employee clicks secure link in invitation email
+        ├── 6. Frontend loads /invitations/:token and validates token status
+        │
+        ├── 7. Authentication / Account Option:
+        │        ├── Existing Account: Signs in or links directly
+        │        └── New Account: Enters full name and password
+        │
+        └── 8. Submits acceptance:
+                 POST /api/invitations/:token/accept
+        │
+  [System Result]
+        │
+        ├── Automatically marks user email as verified
+        ├── Creates or activates OrganizationMember record with assigned role
+        ├── Transitions invitation status from 'pending' to 'accepted'
+        ├── Issues secure HTTP-only access & refresh JWT tokens
+        └── Redirects employee to authorized workspace features
+```
+
+### Detailed Steps:
+
+1. **Owner sends invite:** The organization owner opens the Team Management screen (`/team`), clicks **Invite member**, inputs the employee's corporate email, and selects their target role (`Admin` or `Support Agent`).
+2. **Secure token creation & email delivery:** The backend creates an `OrganizationInvitation` document storing a one-way `SHA-256` hash of a 32-byte random hex token. A transactional invitation email is delivered to the recipient containing the secure URL (`/invitations/:token`).
+3. **Dual-path onboarding:**
+   - **Existing users:** If an account already exists with the invited email, the user can immediately confirm and join the organization.
+   - **New users:** New team members can complete registration right on the acceptance page by providing their name and password without a separate sign-up hoop.
+4. **Acceptance & auto-activation:** Upon submission to `/api/invitations/:token/accept`, the backend validates token validity and expiration. It automatically marks the user account as verified, creates the active `OrganizationMember` binding with the designated role, marks the invitation as accepted, and issues HTTP-only authentication tokens.
+5. **Role-governed workspace:** The employee lands in the app with their view and API access automatically tailored to their role.
+
+---
+
+## 4. Security & Access Control Enforcement
+
+Recoz employs defense-in-depth security principles across frontend routing and backend middleware:
+
+- **Cryptographic Invitation Tokens:** Raw tokens are never stored in plaintext in MongoDB. Only the one-way `SHA-256` hash is persisted, preventing token compromise even in the event of database inspection.
+- **Strict Expiration Windows:** Invitations automatically expire after 24 hours. Expired or cancelled tokens are immediately rejected.
+- **Double-Layer Authorization:**
+  - **Backend Layer (Express):** Endpoints are protected by `authMiddleware` which resolves the user's active membership in the organization. Sensitive routes use `requireRole([ROLES.OWNER])` or `requirePermission(...)` to block unauthorized requests at the controller boundary.
+  - **Frontend Layer (React Router):** `PermissionRoute` inspects the authenticated user's role in client state and blocks unauthorized navigation, while UI navigation elements dynamically hide links to unauthorized pages (e.g., hiding Team Management from Admins and Support Agents).
+- **Tenant Isolation:** Every member operation and team listing query strictly scopes database operations to `req.user.organizationId`, ensuring no cross-organization data leakage.
 
 ---
 
