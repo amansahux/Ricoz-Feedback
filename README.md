@@ -1582,6 +1582,7 @@ This applies to:
 - responses
 - customers
 - analytics
+- team members and invitations
 - organization settings
 
 A resource ID alone must not be enough to access another organization's data.
@@ -1747,6 +1748,7 @@ Values should be derived from actual organization-scoped responses.
 The backend contains a dedicated `email.service.js` and authentication routes for:
 
 - verification email
+- employee invitations to join organization (`sendEmployeeInvitationEmail`)
 - OTP password recovery
 - OTP resend/invalidation
 - reset password
@@ -1927,6 +1929,16 @@ CUSTOMERS
 ANALYTICS
 ├── overview
 └── trends
+
+TEAM MANAGEMENT
+├── invite member
+├── list members & pending
+├── get member detail
+├── update role
+├── update status (activate / deactivate)
+├── remove member
+├── validate invitation token
+└── accept invitation
 ```
 
 ---
@@ -2006,8 +2018,10 @@ Recoz uses a premium light visual language across the marketing site, auth flow,
 
 - Access/refresh JWTs are kept in HTTP-only cookies instead of browser local storage.
 - Passwords are hashed before storage.
-- Authentication middleware protects business-only routes.
-- Organization ownership is checked before reading or updating private resources.
+- Authentication middleware protects business-only routes and validates active organization membership.
+- Role-based permissions (`Owner`, `Admin`, `Support Agent`) restrict access to administrative tools and sensitive analytics.
+- Organization ownership is checked before reading or updating private resources or inviting members.
+- Team invitations use cryptographically secure 32-byte tokens hashed with SHA-256 and enforce a 24-hour expiration window.
 - Public survey routes do not require customer authentication.
 - Password recovery uses an OTP/token workflow rather than trusting an email address alone.
 - Secrets belong in environment variables, never in source code.
@@ -2059,6 +2073,8 @@ Included:
 - feedback status workflow
 - customer history
 - analytics dashboard
+- team management & role-based access control (RBAC)
+- employee email invitation workflow
 - QR sharing
 - website widget sharing
 - organization branding
@@ -2066,7 +2082,6 @@ Included:
 Intentionally outside the current MVP scope:
 
 - billing and subscriptions
-- team/role management
 - enterprise SSO
 - CRM integrations
 - SMS / WhatsApp messaging
