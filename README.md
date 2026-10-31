@@ -1464,7 +1464,8 @@ src/
 │   ├── customers
 │   ├── dashboard
 │   ├── analytics
-│   └── setting
+│   ├── setting
+│   └── team
 │
 ├── global/
 │   └── NotFound
