@@ -1419,20 +1419,23 @@ PUBLIC
 ├── /register
 ├── /verify-email
 ├── /forgot-password
+├── /invitations/:token
 └── /f/:organizationSlug/:surveySlug
 
-PROTECTED
+PROTECTED (Subject to Role Permissions)
 │
-├── /dashboard
-├── /settings
-├── /surveys
-├── /surveys/create
-├── /surveys/publish
-├── /feedback
-├── /feedback/:feedbackId
-├── /customers
-├── /customers/:customerId
-└── /analytics
+├── /dashboard              [owner, admin]
+├── /surveys                [owner, admin]
+├── /surveys/create         [owner, admin]
+├── /surveys/publish        [owner, admin]
+├── /feedback               [owner, admin, support_agent]
+├── /feedback/:feedbackId   [owner, admin, support_agent]
+├── /customers              [owner, admin, support_agent]
+├── /customers/:customerId  [owner, admin, support_agent]
+├── /analytics              [owner]
+├── /team                   [owner only]
+├── /team/:memberId         [owner only]
+└── /settings               [owner, admin, support_agent]
 ```
 
 A catch-all route renders the `NotFound` page.
